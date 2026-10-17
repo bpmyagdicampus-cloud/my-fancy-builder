@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { lhStats, pct } from "./progress";
-import { daysInBsMonth, adToBs, weekday } from "./bs";
-import type { Diary } from "./store";
+import { lhStats, pct } from "@/lib/progress";
+import { daysInBsMonth, adToBs, weekday } from "@/lib/bs";
+import type { Diary } from "@/lib/store";
 
 const e = (date: string, lh: number, classId = "a") => ({ classId, date, lh }) as unknown as Diary;
 
