@@ -36,7 +36,7 @@ function Reports() {
 function Monthly() {
   const { profile, data } = useTeacher();
   const [month, setMonth] = useState(todayBs().slice(0, 7));
-  const [y, m] = month.split("-").map(Number);
+  const [y = 2083, m = 1] = month.split("-").map(Number);
   const days = Array.from({ length: daysInBsMonth(y, m - 1) }, (_, i) => bsKey(y, m - 1, i + 1));
   const cls = data.classes;
   const leave = days.filter((d) => data.cal.some((e) => e.type === "Personal leave" && inRange(d, e.from, e.to))).length;
@@ -124,7 +124,7 @@ function Student() {
   const as = data.assess.filter((a) => a.classId === cls).sort((a, b) => a.date.localeCompare(b.date));
   const regular = as.filter((a) => a.kind !== "Internal exam" && a.kind !== "Final exam");
   const exam = (k: string, s: string) => as.filter((a) => a.kind === k).map((a) => `${a.marks[s]?.m ?? "-"}/${a.max}`).join(", ") || "—";
-  const avg = (s: string) => { const xs = regular.filter((a) => a.marks[s]?.m !== undefined && a.marks[s]?.m !== "" && a.max); return xs.length ? Math.round(xs.reduce((t, a) => t + (Number(a.marks[s].m) / a.max) * 100, 0) / xs.length) + "%" : "—"; };
+  const avg = (s: string) => { const xs = regular.filter((a) => a.marks[s]?.m !== undefined && a.marks[s]?.m !== "" && a.max); return xs.length ? Math.round(xs.reduce((t, a) => t + (Number(a.marks[s]!.m) / a.max) * 100, 0) / xs.length) + "%" : "—"; };
   return (<>
     <div className="no-print mb-3 flex flex-wrap gap-2"><div className="w-72"><ClassSelect value={cls} onChange={(v) => { setCls(v); setSel(""); }} /></div>
       {c && <select className="field w-60" value={sel} onChange={(e) => setSel(e.target.value)}><option value="">All students (summary)</option>{stu.map((s) => <option key={s}>{s}</option>)}</select>}</div>

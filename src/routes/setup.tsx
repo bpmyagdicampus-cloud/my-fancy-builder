@@ -25,7 +25,7 @@ function Setup() {
       <section className="panel mb-4">
         <h2 className="mb-3 text-lg font-bold">Campus & teacher</h2>
         <FormFields fields={PROFILE_FIELDS} value={f} onChange={setF} />
-        <button className="btn mt-3" onClick={() => mutate((x) => { const i = x.profiles.findIndex((p) => p.id === profile.id); x.profiles[i] = { ...x.profiles[i], ...f }; })}>Save</button>
+        <button className="btn mt-3" onClick={() => mutate((x) => { const i = x.profiles.findIndex((p) => p.id === profile.id); x.profiles[i] = { ...x.profiles[i]!, ...f, id: profile.id }; })}>Save</button>
       </section>
       <Collection k="classes" title="Classes & students" sort={(a, b) => a.name.localeCompare(b.name)}
         fields={[

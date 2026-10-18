@@ -62,7 +62,7 @@ export function updateData(fn: (d: Data) => void) {
   mutate((x) => {
     if (!x.current) return;
     x.data[x.current] = { ...emptyData(), ...x.data[x.current] };
-    fn(x.data[x.current]);
+    fn(x.data[x.current]!);
   });
 }
 
