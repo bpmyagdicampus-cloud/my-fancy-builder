@@ -24,7 +24,7 @@ function Profiles() {
   const nav = useNavigate();
   const [f, setF] = useState<Record<string, string> | null>(null);
   const create = () => {
-    if (!f?.name) return alert("Enter teacher's name");
+    if (!f?.["name"]) return alert("Enter teacher's name");
     mutate((x) => { const id = uid(); x.profiles.push({ id, name: "", designation: "", dept: "", campus: "", address: "", hod: "", chief: "", ...f }); x.data[id] = emptyData(); x.current = id; });
     nav({ to: "/" });
   };

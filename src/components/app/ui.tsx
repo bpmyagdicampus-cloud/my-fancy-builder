@@ -50,7 +50,7 @@ export function BsDate({ value, onChange }: { value: string; onChange: (v: strin
 }
 
 export function BsMonth({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [y, m] = value.split("-").map(Number);
+  const [y = 2083, m = 1] = value.split("-").map(Number);
   return (
     <div className="flex gap-1">
       <select className="field" value={y} onChange={(e) => onChange(`${e.target.value}-${String(m).padStart(2, "0")}`)}>
@@ -79,7 +79,7 @@ export type Field = {
   t?: "text" | "area" | "num" | "date" | "time" | "sel" | "cls" | "rows";
   opts?: string[]; cols?: [string, string][]; wide?: boolean;
 };
-type Rec = Record<string, any>;
+type Rec = any;
 
 function blank(fields: Field[]): Rec {
   const o: Rec = {};
@@ -180,7 +180,7 @@ export function PrintHead({ title }: { title: ReactNode }) {
   );
 }
 
-export function Signatures({ roles }: { roles: [string, string?][] }) {
+export function Signatures({ roles }: { roles: [string, (string | undefined)?][] }) {
   return (
     <div className="mt-12 flex gap-8 text-center text-sm">
       {roles.map(([r, n]) => (

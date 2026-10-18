@@ -1,4 +1,9 @@
-import NepaliDate from "nepali-date-converter";
+import * as ND from "nepali-date-converter";
+
+// The package ships CJS/ESM builds whose default export resolves differently in SSR vs browser.
+const anyND = ND as any;
+const NepaliDate: typeof import("nepali-date-converter").default =
+  anyND.default?.default ?? anyND.default ?? anyND;
 
 export const BS_MONTHS = [
   "Baishakh", "Jestha", "Ashadh", "Shrawan", "Bhadra", "Ashwin",
@@ -13,7 +18,7 @@ export const bsKey = (y: number, m0: number, d: number) => `${y}-${p(m0 + 1)}-${
 export const monthKey = (y: number, m0: number) => `${y}-${p(m0 + 1)}`;
 
 export function parseBs(s: string) {
-  const [y, m, d] = (s || "").split("-").map(Number);
+  const [y = 2083, m = 1, d = 1] = (s || "").split("-").map(Number);
   return { y, m0: (m || 1) - 1, d: d || 1 };
 }
 

@@ -52,7 +52,7 @@ function Assessments() {
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <div className="w-72"><ClassSelect all value={cls} onChange={setCls} /></div>
         <div className="flex-1" />
-        {!ed && <button className="btn" onClick={() => setEd({ id: "", classId: cls, date: todayBs(), kind: ASSESS_KINDS[0], title: "", max: 10, marks: {} })}>+ New assessment</button>}
+        {!ed && <button className="btn" onClick={() => setEd({ id: "", classId: cls, date: todayBs(), kind: ASSESS_KINDS[0]!, title: "", max: 10, marks: {} })}>+ New assessment</button>}
       </div>
       {ed && (
         <div className="mb-4 space-y-3 rounded-lg border border-primary/30 bg-secondary/40 p-3">
