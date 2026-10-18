@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Page, FormFields, type Field } from "@/components/app/ui";
+import { useCloud } from "@/lib/cloud";
 import { mutate, uid, useDB, exportProfile, importProfile, emptyData, markBackup } from "@/lib/store";
 
 export const Route = createFileRoute("/profiles")({
@@ -21,6 +22,8 @@ export const PROFILE_FIELDS: Field[] = [
 
 function Profiles() {
   const db = useDB();
+  const cloud = useCloud();
+  const signedIn = cloud.status === "ready" && !!cloud.userId;
   const nav = useNavigate();
   const [f, setF] = useState<Record<string, string> | null>(null);
   const create = () => {
@@ -39,19 +42,24 @@ function Profiles() {
     try { importProfile(await file.text()); nav({ to: "/" }); } catch (e) { alert((e as Error).message); }
   };
   return (
-    <Page title="Teacher profiles" sub="Each teacher keeps a separate diary on this device. Back up regularly.">
+    <Page title="Teacher profiles" sub={signedIn ? "Your diary is saved in the cloud. Profiles below that are marked \"old\" are copies kept only on this device." : "Each teacher keeps a separate diary on this device. Back up regularly."}>
       <div className="grid gap-3 sm:grid-cols-2">
-        {db.profiles.map((p) => (
+        {db.profiles.map((p) => {
+          const isCloud = cloud.cloudIds.includes(p.id);
+          return (
           <div key={p.id} className={`panel ${db.current === p.id ? "ring-2 ring-primary" : ""}`}>
             <div className="font-bold">{p.name}</div>
             <div className="text-sm text-muted-foreground">{p.designation} · {p.campus}</div>
             <div className="mt-3 flex flex-wrap gap-2">
-              <button className="btn" onClick={() => { mutate((x) => { x.current = p.id; }); nav({ to: "/" }); }}>Open</button>
+              {signedIn && !isCloud && <span className="chip self-center">old · this device only</span>}
+              {(!signedIn || isCloud) && <button className="btn" onClick={() => { mutate((x) => { x.current = p.id; }); nav({ to: "/" }); }}>Open</button>}
               <button className="btn-soft" onClick={() => download(p.id, p.name)}>Backup</button>
-              <button className="btn-danger" onClick={() => confirm(`Delete ${p.name} and all their data?\n\nThis cannot be undone. Download a Backup first if unsure.`) && mutate((x) => { x.profiles = x.profiles.filter((y) => y.id !== p.id); delete x.data[p.id]; if (x.current === p.id) x.current = null; })}>Delete</button>
+              {signedIn && !isCloud && <button className="btn-soft" onClick={() => nav({ to: "/account" })}>Move to cloud…</button>}
+              {!isCloud && <button className="btn-danger" onClick={() => confirm(`Delete ${p.name} and all their data?\n\nThis cannot be undone. Download a Backup first if unsure.`) && mutate((x) => { x.profiles = x.profiles.filter((y) => y.id !== p.id); delete x.data[p.id]; if (x.current === p.id) x.current = null; })}>Delete</button>}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
       <div className="panel mt-4">
         {f ? (<>
@@ -59,7 +67,7 @@ function Profiles() {
           <div className="mt-3 flex gap-2"><button className="btn" onClick={create}>Create profile</button><button className="btn-soft" onClick={() => setF(null)}>Cancel</button></div>
         </>) : (
           <div className="flex flex-wrap gap-2">
-            <button className="btn" onClick={() => setF({})}>+ New teacher</button>
+            {!signedIn && <button className="btn" onClick={() => setF({})}>+ New teacher</button>}
             <label className="btn-soft cursor-pointer">Restore from backup<input type="file" accept=".json" className="hidden" onChange={(e) => upload(e.target.files?.[0])} /></label>
           </div>
         )}

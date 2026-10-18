@@ -40,6 +40,9 @@ let db: DB = EMPTY;
 let loaded = false;
 let loadError: string | null = null;
 let warned = false;
+let afterMutate: (() => void) | null = null;
+/** The cloud layer registers here to be told about every normal (non-silent) change. */
+export const setAfterMutate = (fn: (() => void) | null) => { afterMutate = fn; };
 const listeners = new Set<() => void>();
 
 function load() {
@@ -69,7 +72,7 @@ function load() {
 export const getLoadError = () => { load(); return loadError; };
 
 /** `force` is used only by "Restore from backup", which is allowed to start from a clean state. */
-export function mutate(fn: (d: DB) => void, force = false) {
+export function mutate(fn: (d: DB) => void, force = false, silent = false) {
   load();
   if (loadError) {
     if (!force) {
@@ -85,6 +88,36 @@ export function mutate(fn: (d: DB) => void, force = false) {
   try { localStorage.setItem(KEY, JSON.stringify(db)); }
   catch { alert("Could not save to this browser (storage may be full). Please download a backup now (Teacher profiles → Backup)."); }
   listeners.forEach((l) => l());
+  if (!silent) afterMutate?.();
+}
+
+export const getDB = () => { load(); return db; };
+
+/** Put cloud data into the local working copy WITHOUT triggering a cloud save. */
+export function cloudApply(id: string, profile: Profile, content: unknown, keepLocalData = false) {
+  mutate((x) => {
+    const i = x.profiles.findIndex((p) => p.id === id);
+    if (i >= 0) x.profiles[i] = profile; else x.profiles.push(profile);
+    if (!keepLocalData || !x.data[id]) x.data[id] = normalizeData(content);
+    x.current = id;
+  }, false, true);
+}
+/** Remove cloud users' data from this device (on sign-out). Old local-only profiles are never touched. */
+export function cloudRemove(ids: string[]) {
+  if (!ids.length) return;
+  mutate((x) => {
+    x.profiles = x.profiles.filter((p) => !ids.includes(p.id));
+    for (const id of ids) delete x.data[id];
+    if (x.current && ids.includes(x.current)) x.current = x.profiles.find((p) => !ids.includes(p.id))?.id ?? null;
+  }, false, true);
+}
+/** Replace one profile's data (used when importing an old local profile into the cloud account). Triggers a cloud save. */
+export function replaceData(id: string, content: unknown, patch: Partial<Profile>) {
+  mutate((x) => {
+    x.data[id] = normalizeData(content);
+    const i = x.profiles.findIndex((p) => p.id === id);
+    if (i >= 0) x.profiles[i] = { ...x.profiles[i]!, ...patch, id };
+  });
 }
 
 const subscribe = (l: () => void) => { load(); listeners.add(l); return () => listeners.delete(l); };

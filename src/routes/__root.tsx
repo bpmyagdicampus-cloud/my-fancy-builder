@@ -11,6 +11,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { AppNav } from "../components/app/AppNav";
+import { AuthGate, Background } from "../components/app/auth";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -121,8 +122,9 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      <Background />
       <AppNav />
-      <Outlet />
+      <AuthGate><Outlet /></AuthGate>
     </QueryClientProvider>
   );
 }

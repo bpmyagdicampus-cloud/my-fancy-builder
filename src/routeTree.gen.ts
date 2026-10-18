@@ -10,7 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as DiaryRouteImport } from './routes/diary'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as ProfilesRouteImport } from './routes/profiles'
 import { Route as RecordsRouteImport } from './routes/records'
@@ -22,9 +25,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DiaryRoute = DiaryRouteImport.update({
   id: '/diary',
   path: '/diary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlansRoute = PlansRouteImport.update({
@@ -55,7 +73,10 @@ const SetupRoute = SetupRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/admin': typeof AdminRoute
   '/diary': typeof DiaryRoute
+  '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
   '/profiles': typeof ProfilesRoute
   '/records': typeof RecordsRoute
@@ -64,7 +85,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/admin': typeof AdminRoute
   '/diary': typeof DiaryRoute
+  '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
   '/profiles': typeof ProfilesRoute
   '/records': typeof RecordsRoute
@@ -74,7 +98,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/admin': typeof AdminRoute
   '/diary': typeof DiaryRoute
+  '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
   '/profiles': typeof ProfilesRoute
   '/records': typeof RecordsRoute
@@ -84,14 +111,17 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/diary' | '/plans' | '/profiles' | '/records' | '/reports' | '/setup'
+    '/' | '/account' | '/admin' | '/diary' | '/login' | '/plans' | '/profiles' | '/records' | '/reports' | '/setup'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/diary' | '/plans' | '/profiles' | '/records' | '/reports' | '/setup'
+    '/' | '/account' | '/admin' | '/diary' | '/login' | '/plans' | '/profiles' | '/records' | '/reports' | '/setup'
   id:
     | '__root__'
     | '/'
+    | '/account'
+    | '/admin'
     | '/diary'
+    | '/login'
     | '/plans'
     | '/profiles'
     | '/records'
@@ -101,7 +131,10 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
+  AdminRoute: typeof AdminRoute
   DiaryRoute: typeof DiaryRoute
+  LoginRoute: typeof LoginRoute
   PlansRoute: typeof PlansRoute
   ProfilesRoute: typeof ProfilesRoute
   RecordsRoute: typeof RecordsRoute
@@ -118,11 +151,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/diary': {
       id: '/diary'
       path: '/diary'
       fullPath: '/diary'
       preLoaderRoute: typeof DiaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/plans': {
@@ -165,7 +219,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
+  AdminRoute: AdminRoute,
   DiaryRoute: DiaryRoute,
+  LoginRoute: LoginRoute,
   PlansRoute: PlansRoute,
   ProfilesRoute: ProfilesRoute,
   RecordsRoute: RecordsRoute,
