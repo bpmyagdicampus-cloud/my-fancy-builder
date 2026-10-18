@@ -58,3 +58,11 @@ export function addDaysBs(s: string, n: number) {
 
 export const inRange = (d: string, from?: string, to?: string) =>
   !!from && d >= from && d <= (to || from);
+
+/** Number of days from `from` to `to`, both included (1 for a single day; 0 if `to` is before `from`). */
+export function daysBetween(from?: string, to?: string) {
+  if (!from) return 0;
+  const a = bsToAd(from).getTime();
+  const b = bsToAd(to || from).getTime();
+  return b < a ? 0 : Math.round((b - a) / 86400000) + 1;
+}

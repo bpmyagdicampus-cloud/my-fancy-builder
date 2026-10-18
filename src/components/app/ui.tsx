@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { BS_MONTHS, daysInBsMonth, parseBs, bsKey, todayBs, fmtBs } from "@/lib/bs";
-import { updateData, uid, useTeacher, type Data } from "@/lib/store";
+import { updateData, uid, useTeacher, type ListKey } from "@/lib/store";
 
 export function Page({ title, sub, actions, children }: { title: string; sub?: string; actions?: ReactNode; children: ReactNode }) {
   return (
@@ -126,7 +126,7 @@ function RowsEditor({ cols, value, onChange }: { cols: [string, string][]; value
 }
 
 export function Collection({ k, title, fields, summary, filter, defaults, sort }: {
-  k: keyof Data; title: string; fields: Field[]; summary: (r: any) => ReactNode;
+  k: ListKey; title: string; fields: Field[]; summary: (r: any) => ReactNode;
   filter?: (r: any) => boolean; defaults?: Rec; sort?: (a: any, b: any) => number;
 }) {
   const { data } = useTeacher();
@@ -190,7 +190,27 @@ export function Signatures({ roles }: { roles: [string, (string | undefined)?][]
   );
 }
 
-export const PrintBtn = () => <button className="btn no-print" onClick={() => window.print()}>Print</button>;
+const ORIENT_KEY = "shikshak-print-orient";
+export function PrintBtn() {
+  const [o, setO] = useState<"portrait" | "landscape">("portrait");
+  useEffect(() => { try { const v = localStorage.getItem(ORIENT_KEY); if (v === "landscape" || v === "portrait") setO(v); } catch { /* ignore */ } }, []);
+  const choose = (v: "portrait" | "landscape") => { setO(v); try { localStorage.setItem(ORIENT_KEY, v); } catch { /* ignore */ } };
+  const print = () => {
+    let s = document.getElementById("print-page-style") as HTMLStyleElement | null;
+    if (!s) { s = document.createElement("style"); s.id = "print-page-style"; document.head.appendChild(s); }
+    s.textContent = `@page { size: A4 ${o}; margin: 12mm; }`;
+    window.print();
+  };
+  return (
+    <div className="no-print flex items-center gap-2">
+      <select className="field w-44" value={o} onChange={(e) => choose(e.target.value as "portrait" | "landscape")} aria-label="Page orientation">
+        <option value="portrait">Portrait · ठाडो</option>
+        <option value="landscape">Landscape · तेर्सो</option>
+      </select>
+      <button className="btn" onClick={print}>Print</button>
+    </div>
+  );
+}
 export const Dt = ({ d }: { d?: string }) => <>{fmtBs(d)}</>;
 export const NeedProfile = () => (
   <main className="mx-auto max-w-xl px-4 py-16 text-center">

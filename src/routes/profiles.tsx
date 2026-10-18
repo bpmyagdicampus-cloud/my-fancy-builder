@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Page, FormFields, type Field } from "@/components/app/ui";
-import { mutate, uid, useDB, exportProfile, importProfile, emptyData } from "@/lib/store";
+import { mutate, uid, useDB, exportProfile, importProfile, emptyData, markBackup } from "@/lib/store";
 
 export const Route = createFileRoute("/profiles")({
   head: () => ({ meta: [
@@ -32,6 +32,7 @@ function Profiles() {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([exportProfile(id)], { type: "application/json" }));
     a.download = `diary-${name}.json`; a.click();
+    markBackup();
   };
   const upload = async (file?: File) => {
     if (!file) return;
@@ -47,7 +48,7 @@ function Profiles() {
             <div className="mt-3 flex flex-wrap gap-2">
               <button className="btn" onClick={() => { mutate((x) => { x.current = p.id; }); nav({ to: "/" }); }}>Open</button>
               <button className="btn-soft" onClick={() => download(p.id, p.name)}>Backup</button>
-              <button className="btn-danger" onClick={() => confirm(`Delete ${p.name} and all their data?`) && mutate((x) => { x.profiles = x.profiles.filter((y) => y.id !== p.id); delete x.data[p.id]; if (x.current === p.id) x.current = null; })}>Delete</button>
+              <button className="btn-danger" onClick={() => confirm(`Delete ${p.name} and all their data?\n\nThis cannot be undone. Download a Backup first if unsure.`) && mutate((x) => { x.profiles = x.profiles.filter((y) => y.id !== p.id); delete x.data[p.id]; if (x.current === p.id) x.current = null; })}>Delete</button>
             </div>
           </div>
         ))}

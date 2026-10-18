@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Page, Tabs, Collection, ClassSelect, BsDate, Dt, NeedProfile } from "@/components/app/ui";
 import { updateData, uid, useTeacher, studentsOf, type Assess } from "@/lib/store";
-import { todayBs } from "@/lib/bs";
-import { ACT_CATS, ASSESS_KINDS, RUBRIC } from "@/lib/constants";
+import { todayBs, daysBetween } from "@/lib/bs";
+import { ACT_CATS, ASSESS_KINDS, LEAVE_TYPES, RUBRIC } from "@/lib/constants";
 
 export const Route = createFileRoute("/records")({
   head: () => ({ meta: [
@@ -17,15 +17,18 @@ export const Route = createFileRoute("/records")({
 
 function Records() {
   const { profile } = useTeacher();
-  const [tab, setTab] = useState<"assess" | "acts" | "rem">("assess");
+  const [tab, setTab] = useState<"assess" | "acts" | "rem" | "leave">("assess");
   if (!profile) return <NeedProfile />;
   return (
     <Page title="Records">
-      <Tabs value={tab} onChange={setTab} items={[["assess", "Student assessment & exams"], ["acts", "Research & other activities"], ["rem", "Reminders"]]} />
+      <Tabs value={tab} onChange={setTab} items={[["assess", "Student assessment & exams"], ["acts", "Research & other activities"], ["rem", "Reminders"], ["leave", "Leave · बिदा"]]} />
       {tab === "assess" && <Assessments />}
       {tab === "acts" && <Collection k="acts" title="Activities beyond teaching"
         fields={[{ k: "date", l: "Date", t: "date" }, { k: "category", l: "Category", t: "sel", opts: ACT_CATS }, { k: "title", l: "Title", wide: true }, { k: "details", l: "Details / outcome", t: "area" }]}
         summary={(a) => <><b>{a.category}</b> — {a.title}<div className="text-xs text-muted-foreground"><Dt d={a.date} /></div></>} />}
+      {tab === "leave" && <Collection k="leaves" title="Teacher's leave record (not shown in academic calendar; counted in monthly report)" defaults={{ to: "" }}
+        fields={[{ k: "kind", l: "Leave type", t: "sel", opts: LEAVE_TYPES }, { k: "from", l: "From", t: "date" }, { k: "to", l: "To (leave blank for one day)", t: "date" }, { k: "reason", l: "Reason / remark", t: "area" }]}
+        summary={(l) => <><b>{l.kind}</b> — <Dt d={l.from} />{l.to && l.to !== l.from && <> → <Dt d={l.to} /></>}<div className="text-xs text-muted-foreground">{daysBetween(l.from, l.to)} day(s){l.reason && ` · ${l.reason}`}</div></>} />}
       {tab === "rem" && <Collection k="reminders" title="Reminders & future tasks" sort={(a, b) => a.date.localeCompare(b.date)}
         fields={[{ k: "date", l: "Date", t: "date" }, { k: "time", l: "Time", t: "time" }, { k: "title", l: "Task", wide: true }, { k: "note", l: "Note", t: "area" }, { k: "status", l: "Status", t: "sel", opts: ["Pending", "Done"] }]}
         summary={(r) => <><b><Dt d={r.date} /> {r.time}</b> — {r.title} <span className={r.status === "Done" ? "chip" : "chip-on"}>{r.status}</span></>} />}

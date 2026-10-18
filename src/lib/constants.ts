@@ -1,4 +1,4 @@
-export const CAL_TYPES = ["Regular classes", "Internal exam", "Result and feedback", "Final exam", "Dashain–Tihar holiday", "Winter holiday", "Summer holiday", "Public holiday", "Personal leave", "Event"];
+export const CAL_TYPES = ["Regular classes", "Internal exam", "Result and feedback", "Final exam", "Dashain–Tihar holiday", "Winter holiday", "Summer holiday", "Public holiday", "Event"];
 export const HOLIDAY_TYPES = ["Dashain–Tihar holiday", "Winter holiday", "Summer holiday", "Public holiday"];
 export const ASSESS_KINDS = ["Assignment", "Project work", "Presentation", "Homework", "Quiz", "Oral question", "Class test", "Unit test", "Unit assessment (rubric)", "Internal exam", "Final exam"];
 export const RESEARCH_CATS = ["Mini research", "Journal article", "Research committee work", "Thesis supervision", "Project work supervision"];
@@ -16,3 +16,6 @@ export const RUBRIC = [
   ["Understanding of concepts", 25], ["Application / problem solving", 25], ["Presentation & communication", 20],
   ["Participation & teamwork", 15], ["Timeliness & originality", 15],
 ] as const;
+
+/** Teacher leave types (recorded in Records → Leave, not in the academic calendar). */
+export const LEAVE_TYPES = ["Personal leave", "Sick leave", "Other leave"];

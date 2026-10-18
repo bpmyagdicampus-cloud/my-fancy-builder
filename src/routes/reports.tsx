@@ -5,6 +5,7 @@ import { useTeacher, studentsOf } from "@/lib/store";
 import { BS_MONTHS, bsKey, daysInBsMonth, fmtBs, inRange, todayBs, weekday } from "@/lib/bs";
 import { lhStats, pct, totalLhDone } from "@/lib/progress";
 import { HOLIDAY_TYPES, RESEARCH_CATS } from "@/lib/constants";
+import { WEEKDAY_FULL, weeklyOffOf } from "@/lib/migrate";
 
 export const Route = createFileRoute("/reports")({
   head: () => ({ meta: [
@@ -39,7 +40,8 @@ function Monthly() {
   const [y = 2083, m = 1] = month.split("-").map(Number);
   const days = Array.from({ length: daysInBsMonth(y, m - 1) }, (_, i) => bsKey(y, m - 1, i + 1));
   const cls = data.classes;
-  const leave = days.filter((d) => data.cal.some((e) => e.type === "Personal leave" && inRange(d, e.from, e.to))).length;
+  const off = weeklyOffOf(data);
+  const leave = days.filter((d) => data.leaves.some((l) => inRange(d, l.from, l.to))).length;
   const acts = data.acts.filter((a) => a.date.startsWith(month));
   const research = acts.filter((a) => RESEARCH_CATS.includes(a.category));
   const other = acts.filter((a) => !RESEARCH_CATS.includes(a.category));
@@ -57,15 +59,16 @@ function Monthly() {
           {days.map((d) => {
             const ev = data.cal.filter((e) => inRange(d, e.from, e.to) && e.type !== "Regular classes");
             const wd = weekday(d);
+            const lv = data.leaves.filter((l) => inRange(d, l.from, l.to));
             return (
-              <tr key={d} className={wd === "Sat" || ev.some((e) => HOLIDAY_TYPES.includes(e.type)) ? "bg-muted" : ""}>
+              <tr key={d} className={off.includes(wd) || ev.some((e) => HOLIDAY_TYPES.includes(e.type)) ? "bg-muted" : ""}>
                 <td className="whitespace-nowrap">{BS_MONTHS[m - 1]} {Number(d.slice(8))}</td><td>{wd}</td>
                 {cls.map((c) => {
                   const es = data.diary.filter((e) => e.classId === c.id && e.date === d);
                   return [<td key={c.id + "n"}>{es.length ? es.reduce((a, e) => a + e.total - e.absent.length, 0) : ""}</td>,
                     <td key={c.id + "a"}>{es.length ? `${es.reduce((a, e) => a + e.lh, 0)} ${[...new Set(es.flatMap((e) => e.codes))].join(", ")}` : ""}</td>];
                 })}
-                <td>{[wd === "Sat" ? "Saturday" : "", ...ev.map((e) => e.title || e.type), ...data.diary.filter((e) => e.date === d && e.remarks).map((e) => e.remarks)].filter(Boolean).join("; ")}</td>
+                <td>{[off.includes(wd) ? WEEKDAY_FULL[wd] : "", ...ev.map((e) => e.title || e.type), ...lv.map((l) => (l.reason ? `${l.kind}: ${l.reason}` : l.kind)), ...data.diary.filter((e) => e.date === d && e.remarks).map((e) => e.remarks)].filter(Boolean).join("; ")}</td>
               </tr>
             );
           })}

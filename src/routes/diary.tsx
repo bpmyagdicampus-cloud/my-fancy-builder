@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Page, BsDate, ClassSelect, NeedProfile, Dt } from "@/components/app/ui";
 import { updateData, uid, useTeacher, studentsOf, type Diary } from "@/lib/store";
-import { todayBs } from "@/lib/bs";
-import { CODES } from "@/lib/constants";
+import { todayBs, weekday, inRange, fmtBs } from "@/lib/bs";
+import { CODES, HOLIDAY_TYPES } from "@/lib/constants";
+import { weeklyOffOf } from "@/lib/migrate";
 
 export const Route = createFileRoute("/diary")({
   head: () => ({ meta: [
@@ -29,6 +30,11 @@ function DiaryPage() {
   const toggle = <T,>(arr: T[], v: T) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
   const save = () => {
     if (!ed?.classId) return alert("Select a class");
+    const isOff = weeklyOffOf(data).includes(weekday(ed.date));
+    const isHoliday = data.cal.some((e) => HOLIDAY_TYPES.includes(e.type) && inRange(ed.date, e.from, e.to));
+    const onLeave = data.leaves.some((l) => inRange(ed.date, l.from, l.to));
+    if ((isOff || isHoliday || onLeave) && !confirm(`${fmtBs(ed.date)} is marked as ${isOff ? "a weekly holiday" : isHoliday ? "a holiday" : "your leave"}. Save this entry anyway?`)) return;
+    if (data.diary.some((x) => x.id !== ed.id && x.classId === ed.classId && x.date === ed.date) && !confirm("An entry for this class on this date already exists. Save another one?")) return;
     updateData((d) => { const i = d.diary.findIndex((x) => x.id === ed.id); if (i >= 0) d.diary[i] = ed; else d.diary.push({ ...ed, id: uid() }); });
     setEd(null);
   };
