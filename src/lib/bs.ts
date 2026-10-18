@@ -1,4 +1,9 @@
-import NepaliDate from "nepali-date-converter";
+import * as ND from "nepali-date-converter";
+
+// The package ships CJS/ESM builds whose default export resolves differently in SSR vs browser.
+const anyND = ND as any;
+const NepaliDate: typeof import("nepali-date-converter").default =
+  anyND.default?.default ?? anyND.default ?? anyND;
 
 export const BS_MONTHS = [
   "Baishakh", "Jestha", "Ashadh", "Shrawan", "Bhadra", "Ashwin",
