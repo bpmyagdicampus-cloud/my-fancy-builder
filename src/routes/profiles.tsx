@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Page, FormFields, type Field } from "@/components/app/ui";
 import { useCloud } from "@/lib/cloud";
-import { mutate, uid, useDB, exportProfile, importProfile, emptyData, markBackup } from "@/lib/store";
+import { mutate, uid, useDB, exportProfile, importProfile, freshData, markBackup } from "@/lib/store";
 
 export const Route = createFileRoute("/profiles")({
   head: () => ({ meta: [
@@ -28,7 +28,7 @@ function Profiles() {
   const [f, setF] = useState<Record<string, string> | null>(null);
   const create = () => {
     if (!f?.["name"]) return alert("Enter teacher's name");
-    mutate((x) => { const id = uid(); x.profiles.push({ id, name: "", designation: "", dept: "", campus: "", address: "", hod: "", chief: "", ...f }); x.data[id] = emptyData(); x.current = id; });
+    mutate((x) => { const id = uid(); x.profiles.push({ id, name: "", designation: "", dept: "", campus: "", address: "", hod: "", chief: "", ...f }); x.data[id] = freshData(); x.current = id; });
     nav({ to: "/" });
   };
   const download = (id: string, name: string) => {

@@ -1,11 +1,22 @@
 import { useSyncExternalStore } from "react";
 import { DEFAULT_WEEKLY_OFF, normalizeData } from "./migrate";
+import { uid } from "./id";
+export { uid };
 
 export type Profile = {
   id: string; name: string; designation: string; dept: string;
   campus: string; address: string; hod: string; chief: string;
 };
-export type Cls = { id: string; name: string; subject: string; code: string; year: string; totalLh: number; students: string };
+export type Cls = {
+  id: string; name: string; subject: string; code: string; year: string; totalLh: number; students: string;
+  /** subject was replaced by "Upgrade subject": kept for history, hidden from new entries */
+  closed?: boolean;
+  /** carried into a new academic year but the subject has not been upgraded/confirmed yet */
+  pending?: boolean;
+};
+export type Year = { id: string; name: string };
+/** Master record of a student. The id never changes, even when the name or class does. */
+export type Student = { id: string; classId: string; name: string; roll: number; active: boolean; history: string[] };
 export type Unit = { id: string; classId: string; unit: string; topics: string; lh: number; from: string; to: string; methods: string; materials: string; assessment: string };
 export type CalEvent = { id: string; type: string; title: string; from: string; to: string };
 export type Lesson = { id: string; classId: string; date: string; from: string; to: string; title: string; level: string; objectives: string; steps: { step: string; activity: string; theory: string }[]; resources: string; assessment: string };
@@ -16,21 +27,29 @@ export type Act = { id: string; date: string; category: string; title: string; d
 export type Reminder = { id: string; date: string; time: string; title: string; note: string; status: string };
 /** Teacher's own leave. Kept in Records, NOT in the academic calendar; counted in the monthly report. */
 export type Leave = { id: string; kind: string; from: string; to: string; reason: string };
-export type Settings = { weeklyOff: string[] };
+export type Settings = { weeklyOff: string[]; yearId: string };
 
 export type Data = {
   classes: Cls[]; units: Unit[]; cal: CalEvent[]; lessons: Lesson[]; plans: Plan[];
   diary: Diary[]; assess: Assess[]; acts: Act[]; reminders: Reminder[];
   leaves: Leave[]; settings: Settings;
+  students: Student[]; years: Year[];
+  /** other academic years' records, stored while a different year is open */
+  archive: Record<string, Partial<Pick<Data, WorkKey>>>;
 };
+/** The lists that belong to one academic year. */
+export type WorkKey = "classes" | "units" | "cal" | "lessons" | "plans" | "diary" | "assess" | "acts" | "reminders" | "leaves" | "students";
 /** Keys of Data that hold a list of records (used by the generic Collection editor). */
-export type ListKey = Exclude<keyof Data, "settings">;
+export type ListKey = Exclude<keyof Data, "settings" | "years" | "archive">;
 type DB = { profiles: Profile[]; current: string | null; data: Record<string, Data> };
 
 export const emptyData = (): Data => ({
   classes: [], units: [], cal: [], lessons: [], plans: [], diary: [], assess: [], acts: [], reminders: [],
-  leaves: [], settings: { weeklyOff: [...DEFAULT_WEEKLY_OFF] },
+  leaves: [], settings: { weeklyOff: [...DEFAULT_WEEKLY_OFF], yearId: "" },
+  students: [], years: [], archive: {},
 });
+/** Empty data for a brand-new profile, including its first academic year. */
+export const freshData = (): Data => normalizeData(emptyData());
 const EMPTY: DB = { profiles: [], current: null, data: {} };
 const KEY = "shikshak-diary-v1";
 const PRE_UPDATE_KEY = "shikshak-diary-v1-before-update"; // untouched copy of the data made once, before the first migration
@@ -140,15 +159,6 @@ export function updateData(fn: (d: Data) => void) {
   });
 }
 
-export const uid = () => {
-  const c = globalThis.crypto;
-  if (c?.getRandomValues) {
-    const a = new Uint32Array(2);
-    c.getRandomValues(a);
-    return (a[0]!.toString(36) + a[1]!.toString(36)).padEnd(8, "0").slice(0, 8);
-  }
-  return Math.random().toString(36).slice(2, 10);
-};
 export const studentsOf = (c?: Cls) => (c?.students || "").split("\n").map((s) => s.trim()).filter(Boolean);
 
 export function markBackup() { try { localStorage.setItem(BACKUP_KEY, new Date().toISOString()); } catch { /* ignore */ } }

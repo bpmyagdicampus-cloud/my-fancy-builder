@@ -19,6 +19,8 @@ import { Route as ProfilesRouteImport } from './routes/profiles'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as SetupRouteImport } from './routes/setup'
+import { Route as StudentsRouteImport } from './routes/students'
+import { Route as YearsRouteImport } from './routes/years'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -70,6 +72,16 @@ const SetupRoute = SetupRouteImport.update({
   path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentsRoute = StudentsRouteImport.update({
+  id: '/students',
+  path: '/students',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const YearsRoute = YearsRouteImport.update({
+  id: '/years',
+  path: '/years',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +94,8 @@ export interface FileRoutesByFullPath {
   '/records': typeof RecordsRoute
   '/reports': typeof ReportsRoute
   '/setup': typeof SetupRoute
+  '/students': typeof StudentsRoute
+  '/years': typeof YearsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +108,8 @@ export interface FileRoutesByTo {
   '/records': typeof RecordsRoute
   '/reports': typeof ReportsRoute
   '/setup': typeof SetupRoute
+  '/students': typeof StudentsRoute
+  '/years': typeof YearsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,14 +123,16 @@ export interface FileRoutesById {
   '/records': typeof RecordsRoute
   '/reports': typeof ReportsRoute
   '/setup': typeof SetupRoute
+  '/students': typeof StudentsRoute
+  '/years': typeof YearsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/account' | '/admin' | '/diary' | '/login' | '/plans' | '/profiles' | '/records' | '/reports' | '/setup'
+    '/' | '/account' | '/admin' | '/diary' | '/login' | '/plans' | '/profiles' | '/records' | '/reports' | '/setup' | '/students' | '/years'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/account' | '/admin' | '/diary' | '/login' | '/plans' | '/profiles' | '/records' | '/reports' | '/setup'
+    '/' | '/account' | '/admin' | '/diary' | '/login' | '/plans' | '/profiles' | '/records' | '/reports' | '/setup' | '/students' | '/years'
   id:
     | '__root__'
     | '/'
@@ -127,6 +145,8 @@ export interface FileRouteTypes {
     | '/records'
     | '/reports'
     | '/setup'
+    | '/students'
+    | '/years'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -140,6 +160,8 @@ export interface RootRouteChildren {
   RecordsRoute: typeof RecordsRoute
   ReportsRoute: typeof ReportsRoute
   SetupRoute: typeof SetupRoute
+  StudentsRoute: typeof StudentsRoute
+  YearsRoute: typeof YearsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -214,6 +236,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SetupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/students': {
+      id: '/students'
+      path: '/students'
+      fullPath: '/students'
+      preLoaderRoute: typeof StudentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/years': {
+      id: '/years'
+      path: '/years'
+      fullPath: '/years'
+      preLoaderRoute: typeof YearsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -228,6 +264,8 @@ const rootRouteChildren: RootRouteChildren = {
   RecordsRoute: RecordsRoute,
   ReportsRoute: ReportsRoute,
   SetupRoute: SetupRoute,
+  StudentsRoute: StudentsRoute,
+  YearsRoute: YearsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

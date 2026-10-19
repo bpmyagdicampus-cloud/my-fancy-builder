@@ -49,7 +49,7 @@ function Home() {
 
       <h2 className="mb-2 text-lg font-bold">My classes — course completion</h2>
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {data.classes.map((c) => {
+        {data.classes.filter((c) => !c.closed).map((c) => {
           const done = totalLhDone(data.diary, c.id);
           const p = pct(done, c.totalLh);
           return (
@@ -61,7 +61,7 @@ function Home() {
             </div>
           );
         })}
-        {!data.classes.length && <Link to="/setup" className="panel text-sm text-muted-foreground">No classes yet — add them in Setup →</Link>}
+        {!data.classes.filter((c) => !c.closed).length && <Link to="/setup" className="panel text-sm text-muted-foreground">No classes yet — add them in Setup →</Link>}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

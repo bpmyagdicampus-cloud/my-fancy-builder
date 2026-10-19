@@ -60,7 +60,7 @@ function Assessments() {
       {ed && (
         <div className="mb-4 space-y-3 rounded-lg border border-primary/30 bg-secondary/40 p-3">
           <div className="grid gap-3 sm:grid-cols-3">
-            <div><label className="lbl">Class</label><ClassSelect value={ed.classId} onChange={(v) => setEd({ ...ed, classId: v })} /></div>
+            <div><label className="lbl">Class</label><ClassSelect active value={ed.classId} onChange={(v) => setEd({ ...ed, classId: v })} /></div>
             <div><label className="lbl">Date</label><BsDate value={ed.date} onChange={(v) => setEd({ ...ed, date: v })} /></div>
             <div><label className="lbl">Type</label><select className="field" value={ed.kind} onChange={(e) => setEd({ ...ed, kind: e.target.value, max: e.target.value === "Unit assessment (rubric)" ? 100 : ed.max })}>{ASSESS_KINDS.map((k) => <option key={k}>{k}</option>)}</select></div>
             <div className="sm:col-span-2"><label className="lbl">Title / topic</label><input className="field" value={ed.title} onChange={(e) => setEd({ ...ed, title: e.target.value })} /></div>
