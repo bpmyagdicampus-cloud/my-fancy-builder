@@ -1,5 +1,5 @@
 # Account access
-- [ ] Resolve publishing failure: restore missing account recovery exports and correct incompatible selector, import result and optional-value types; verify tests and preview.
+- [x] Resolve publishing failure: restored missing recovery exports, corrected incompatible calls and optional types, removed links to the absent SQC page; build OK, 17 tests pass, repaired pages return 200 without runtime errors.
 - [x] Enable Cloud and email authentication.
 - [x] Create account-owned profiles and diary data with admin/teacher RLS.
 - [ ] Connect existing screens to Cloud, add login/logout and admin teacher selection.
