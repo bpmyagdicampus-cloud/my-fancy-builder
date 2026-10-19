@@ -28,7 +28,6 @@ const versions: Record<string, number> = {};
 const lastProf: Record<string, string> = {};
 const cloudIds = new Set<string>();
 const pk = (id: string) => `shikshak-cloud-pending-${id}`;
-const unsavedPrefix = (id: string) => `shikshak-cloud-unsaved-${id}-`;
 const errMsg = (e: unknown) => (e && typeof e === "object" && "message" in e ? String((e as any).message) : String(e));
 
 const toMe = (p: any): MyProfile => ({
@@ -85,20 +84,7 @@ export async function signOut(): Promise<boolean> {
   while (saving) await new Promise((r) => setTimeout(r, 100));
   if (dirty || state.save === "error" || state.save === "conflict") {
     const ok = await flush();
-    if (!ok) {
-      if (!confirm("Some changes are NOT saved to the cloud yet. Sign out anyway? A recovery copy will be kept on this device.")) return false;
-      const id = state.activeId;
-      if (id) {
-        try {
-          const text = exportProfile(id);
-          localStorage.setItem(`${unsavedPrefix(id)}${Date.now()}`, text);
-          downloadText(`diary-unsaved-copy-${Date.now()}.json`, text);
-        } catch {
-          set({ saveMsg: "Could not preserve your unsaved copy. Download a backup before signing out." });
-          return false;
-        }
-      }
-    }
+    if (!ok && !confirm("Some changes are NOT saved to the cloud yet. Sign out anyway? Those changes will be lost.")) return false;
   }
   for (const id of cloudIds) { try { localStorage.removeItem(pk(id)); } catch { /* ignore */ } }
   cloudRemove([...cloudIds]); cloudIds.clear(); dirty = false;
@@ -201,33 +187,6 @@ function downloadText(name: string, text: string) {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
   a.download = name; a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-export function listUnsaved(userId: string | null): { key: string; at: number }[] {
-  if (!userId || userId !== state.userId || typeof window === "undefined") return [];
-  try {
-    const prefix = unsavedPrefix(userId);
-    const copies: { key: string; at: number }[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key?.startsWith(prefix)) continue;
-      const at = Number(key.slice(prefix.length));
-      if (Number.isFinite(at)) copies.push({ key, at });
-    }
-    return copies.sort((a, b) => b.at - a.at);
-  } catch { return []; }
-}
-
-export function downloadUnsaved(key: string) {
-  if (!listUnsaved(state.userId).some((copy) => copy.key === key)) return;
-  const text = localStorage.getItem(key);
-  if (text) downloadText(`diary-unsaved-copy-${key.split("-").at(-1)}.json`, text);
-}
-
-export function deleteUnsaved(key: string) {
-  if (!listUnsaved(state.userId).some((copy) => copy.key === key)) return;
-  localStorage.removeItem(key);
 }
 
 /** Resolve a save conflict: keep this device's copy (overwrites cloud) or take the cloud copy (this device's copy is downloaded first). */
@@ -260,8 +219,7 @@ export async function updateMine(patch: Partial<Pick<MyProfile, "avatar_path" | 
 }
 export async function uploadImage(kind: "avatar" | "bg", blob: Blob): Promise<string | null> {
   const uid = state.userId; if (!uid) return "Not signed in";
-  const bg = state.me?.bg;
-  const old = kind === "avatar" ? state.me?.avatar_path : bg?.startsWith("image:") ? bg.slice(6) : null;
+  const old = kind === "avatar" ? state.me?.avatar_path : (state.me?.bg ?? "").startsWith("image:") ? state.me!.bg!.slice(6) : null;
   const path = `${uid}/${kind}-${Date.now()}.jpg`;
   const up = await sb.storage.from("avatars").upload(path, blob, { contentType: "image/jpeg", upsert: true });
   if (up.error) return up.error.message;

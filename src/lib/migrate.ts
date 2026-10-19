@@ -1,6 +1,4 @@
 import type { CalEvent, Data, Leave } from "./store";
-import { uid } from "./id";
-import { ensureRegistry, syncText } from "./students";
 
 /** Weekly off days used when a profile has no setting yet (Saturday + Sunday). */
 export const DEFAULT_WEEKLY_OFF = ["Sat", "Sun"];
@@ -37,31 +35,8 @@ export function normalizeData(raw: unknown): Data {
   d.leaves = leaves;
 
   const wo = d.settings?.weeklyOff;
-  d.settings = { ...(d.settings && typeof d.settings === "object" ? d.settings : {}), weeklyOff: Array.isArray(wo) ? wo : [...DEFAULT_WEEKLY_OFF], yearId: typeof d.settings?.yearId === "string" ? d.settings.yearId : "" };
-
-  // ---- academic years ----
-  if (!Array.isArray(d.years)) d.years = [];
-  if (!d.archive || typeof d.archive !== "object" || Array.isArray(d.archive)) d.archive = {};
-  if (d.years.length === 0) d.years = [{ id: uid(), name: guessYearName(d) }];
-  if (!d.years.some((y: { id: string }) => y.id === d.settings.yearId)) d.settings.yearId = d.years[d.years.length - 1].id;
-
-  // ---- student registry (names stay exactly as they were) ----
-  if (!Array.isArray(d.students)) d.students = [];
-  ensureRegistry(d as Data);
-  syncText(d as Data);
+  d.settings = { ...(d.settings && typeof d.settings === "object" ? d.settings : {}), weeklyOff: Array.isArray(wo) ? wo : [...DEFAULT_WEEKLY_OFF] };
   return d as Data;
-}
-
-/** "2083/84" for data whose earliest date is in the 2083 academic year (Shrawan–Chaitra counts as that year; Baisakh–Ashadh as the year before). */
-export function guessYearName(d: any): string {
-  const dates: string[] = [];
-  for (const k of ["diary", "lessons", "plans"]) for (const x of d[k] ?? []) if (typeof x?.date === "string") dates.push(x.date);
-  for (const k of ["units", "cal", "leaves"]) for (const x of d[k] ?? []) if (typeof x?.from === "string") dates.push(x.from);
-  const ok = dates.filter((s) => /^\d{4}-\d{2}-\d{2}$/.test(s)).sort();
-  let y: number;
-  if (ok.length) { const [ys, ms] = ok[0]!.split("-"); y = +ys! - (+ms! <= 3 ? 1 : 0); }
-  else { const n = new Date(); y = n.getFullYear() + 56 + (n.getMonth() >= 8 ? 1 : 0) - (n.getMonth() <= 3 ? 1 : 0); }
-  return `${y}/${String((y + 1) % 100).padStart(2, "0")}`;
 }
 
 export const weeklyOffOf = (data?: { settings?: { weeklyOff?: string[] } }) =>

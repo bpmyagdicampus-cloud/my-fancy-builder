@@ -6,8 +6,6 @@ import { fmtBs } from "@/lib/bs";
 
 export const Route = createFileRoute("/plans")({
   head: () => ({ meta: [
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary_large_image" },
     { title: "Teaching Plans — Shikshak Diary" },
     { name: "description", content: "Annual unit-wise plan, monthly and daily teaching plans, and period-wise lesson plans." },
     { property: "og:title", content: "Teaching Plans — Shikshak Diary" },

@@ -7,8 +7,6 @@ import { adminCreateUser, adminListUsers, adminResetPassword, adminSetDisabled, 
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary_large_image" },
     { title: "Admin — Shikshak Diary" },
     { name: "description", content: "Create and manage teacher and student accounts." },
     { property: "og:title", content: "Admin — Shikshak Diary" },
@@ -25,7 +23,6 @@ const genPw = () => {
 const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const roleOf = (r: string[]) => (r.includes("admin") ? "admin" : r.includes("teacher") ? "teacher" : r.includes("student") ? "student" : "none");
 const EMPTY = { login: "", name: "", role: "teacher", designation: "", dept: "", password: "" };
-type Result<T = Record<string, unknown>> = ({ ok: true } & T) | { ok: false; error: string };
 
 function Admin() {
   const c = useCloud();
@@ -36,24 +33,20 @@ function Admin() {
   const [busy, setBusy] = useState(false);
   const [made, setMade] = useState<{ text: string } | null>(null);
 
-  // Existing server functions return their payload directly and throw on failure.
-  const call = async <T,>(fn: (a: any) => Promise<T>, data: unknown): Promise<Result<T>> => {
-    try { return { ...await fn({ data }), ok: true }; } catch (e) { return { ok: false, error: `The request failed: ${msg(e)}` }; }
-  };
   const load = async () => { try { setUsers(await adminListUsers({ data: {} })); setErr(""); } catch (e) { setErr(msg(e)); } };
   useEffect(() => { if (c.status === "ready" && c.roles.includes("admin")) void load(); }, [c.status, c.roles]);
 
   const create = async () => {
     setBusy(true); setErr("");
-    const r = await call(adminCreateUser as any, f);
-    if (r.ok) {
+    try {
+      await adminCreateUser({ data: f });
       setMade({ text: `शिक्षक डायरी\nLink: ${location.origin}/login\nID: ${f.login.trim().toLowerCase()}\nPassword: ${f.password}` });
       setF({ ...EMPTY, password: genPw() });
       await load();
-    } else setErr(r.error);
+    } catch (e) { setErr(msg(e)); }
     setBusy(false);
   };
-  const run = async (fn: () => Promise<Result>) => { const r = await fn(); if (!r.ok) alert(r.error); else await load(); return r; };
+  const run = async (fn: () => Promise<unknown>) => { try { await fn(); await load(); } catch (e) { alert(msg(e)); } };
   const copy = (t: string) => navigator.clipboard?.writeText(t).then(() => alert("Copied"), () => alert(t));
 
   return (
@@ -63,7 +56,7 @@ function Admin() {
       <section className="panel mb-4">
         <h2 className="mb-3 text-lg font-bold">New account</h2>
         <div className="grid gap-3 sm:grid-cols-3">
-          <div><label className="lbl">Login ID (a-z, 0-9) or real e-mail</label><input className="field" value={f.login} onChange={(e) => setF({ ...f, login: e.target.value })} /></div>
+          <div><label className="lbl">Login ID (a-z, 0-9) or e-mail</label><input className="field" value={f.login} onChange={(e) => setF({ ...f, login: e.target.value })} /></div>
           <div><label className="lbl">Full name</label><input className="field" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
           <div><label className="lbl">Role</label>
             <select className="field" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })}>
@@ -99,7 +92,7 @@ function Admin() {
                 <td className="p-2">{u.login}{u.disabled && <span className="chip ml-1">disabled</span>}</td>
                 <td className="p-2">
                   <select className="field !w-auto" value={roleOf(u.roles)} disabled={u.id === c.userId}
-                    onChange={(e) => confirm(`Change role of ${u.name || u.login} to ${e.target.value}?`) && run(() => call(adminSetRole as any, { id: u.id, role: e.target.value }))}>
+                    onChange={(e) => confirm(`Change role of ${u.name || u.login} to ${e.target.value}?`) && run(() => adminSetRole({ data: { id: u.id, role: e.target.value } }))}>
                     {roleOf(u.roles) === "none" && <option value="none">none</option>}
                     <option value="teacher">teacher</option><option value="student">student</option><option value="admin">admin</option>
                   </select>
@@ -107,8 +100,8 @@ function Admin() {
                 <td className="p-2 text-xs">{u.lastSignIn ? new Date(u.lastSignIn).toLocaleString() : "never"}</td>
                 <td className="flex flex-wrap gap-1 p-2">
                   {(u.roles.includes("teacher") || u.roles.includes("admin")) && <button className="btn-soft" onClick={async () => { try { await openTeacher(u.id); nav({ to: "/" }); } catch (e) { alert(msg(e)); } }}>Open diary</button>}
-                  <button className="btn-soft" onClick={() => { const pw = prompt(`New password for ${u.name || u.login} (min ${MIN_PASSWORD}):`, genPw()); if (pw) void run(async () => { const r = await call(adminResetPassword as any, { id: u.id, password: pw }); if (r.ok) prompt("Password changed. Copy it now:", pw); return r; }); }}>Reset password</button>
-                  {u.id !== c.userId && <button className="btn-danger" onClick={() => confirm(`${u.disabled ? "Enable" : "Disable"} ${u.name || u.login}?`) && run(() => call(adminSetDisabled as any, { id: u.id, disabled: !u.disabled }))}>{u.disabled ? "Enable" : "Disable"}</button>}
+                  <button className="btn-soft" onClick={() => { const pw = prompt(`New password for ${u.name || u.login} (min ${MIN_PASSWORD}):`, genPw()); if (pw) void run(async () => { await adminResetPassword({ data: { id: u.id, password: pw } }); prompt("Password changed. Copy it now:", pw); }); }}>Reset password</button>
+                  {u.id !== c.userId && <button className="btn-danger" onClick={() => confirm(`${u.disabled ? "Enable" : "Disable"} ${u.name || u.login}?`) && run(() => adminSetDisabled({ data: { id: u.id, disabled: !u.disabled } }))}>{u.disabled ? "Enable" : "Disable"}</button>}
                 </td>
               </tr>
             ))}

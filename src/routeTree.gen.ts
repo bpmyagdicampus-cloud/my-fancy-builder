@@ -19,8 +19,7 @@ import { Route as ProfilesRouteImport } from './routes/profiles'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as SetupRouteImport } from './routes/setup'
-import { Route as StudentsRouteImport } from './routes/students'
-import { Route as YearsRouteImport } from './routes/years'
+import { Route as SQCRouteImport } from './routes/sqc'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -72,14 +71,9 @@ const SetupRoute = SetupRouteImport.update({
   path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StudentsRoute = StudentsRouteImport.update({
-  id: '/students',
-  path: '/students',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const YearsRoute = YearsRouteImport.update({
-  id: '/years',
-  path: '/years',
+const SQCRoute = SQCRouteImport.update({
+  id: '/sqc',
+  path: '/sqc',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -94,8 +88,7 @@ export interface FileRoutesByFullPath {
   '/records': typeof RecordsRoute
   '/reports': typeof ReportsRoute
   '/setup': typeof SetupRoute
-  '/students': typeof StudentsRoute
-  '/years': typeof YearsRoute
+  '/sqc': typeof SQCRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -108,8 +101,7 @@ export interface FileRoutesByTo {
   '/records': typeof RecordsRoute
   '/reports': typeof ReportsRoute
   '/setup': typeof SetupRoute
-  '/students': typeof StudentsRoute
-  '/years': typeof YearsRoute
+  '/sqc': typeof SQCRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -123,38 +115,15 @@ export interface FileRoutesById {
   '/records': typeof RecordsRoute
   '/reports': typeof ReportsRoute
   '/setup': typeof SetupRoute
-  '/students': typeof StudentsRoute
-  '/years': typeof YearsRoute
+  '/sqc': typeof SQCRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
-    | '/account'
-    | '/admin'
-    | '/diary'
-    | '/login'
-    | '/plans'
-    | '/profiles'
-    | '/records'
-    | '/reports'
-    | '/setup'
-    | '/students'
-    | '/years'
+    '/' | '/account' | '/admin' | '/diary' | '/login' | '/plans' | '/profiles' | '/records' | '/reports' | '/setup' | '/sqc'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
-    | '/account'
-    | '/admin'
-    | '/diary'
-    | '/login'
-    | '/plans'
-    | '/profiles'
-    | '/records'
-    | '/reports'
-    | '/setup'
-    | '/students'
-    | '/years'
+    '/' | '/account' | '/admin' | '/diary' | '/login' | '/plans' | '/profiles' | '/records' | '/reports' | '/setup' | '/sqc'
   id:
     | '__root__'
     | '/'
@@ -167,8 +136,7 @@ export interface FileRouteTypes {
     | '/records'
     | '/reports'
     | '/setup'
-    | '/students'
-    | '/years'
+    | '/sqc'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -182,8 +150,7 @@ export interface RootRouteChildren {
   RecordsRoute: typeof RecordsRoute
   ReportsRoute: typeof ReportsRoute
   SetupRoute: typeof SetupRoute
-  StudentsRoute: typeof StudentsRoute
-  YearsRoute: typeof YearsRoute
+  SQCRoute: typeof SQCRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -258,18 +225,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SetupRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/students': {
-      id: '/students'
-      path: '/students'
-      fullPath: '/students'
-      preLoaderRoute: typeof StudentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/years': {
-      id: '/years'
-      path: '/years'
-      fullPath: '/years'
-      preLoaderRoute: typeof YearsRouteImport
+    '/sqc': {
+      id: '/sqc'
+      path: '/sqc'
+      fullPath: '/sqc'
+      preLoaderRoute: typeof SQCRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -286,8 +246,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecordsRoute: RecordsRoute,
   ReportsRoute: ReportsRoute,
   SetupRoute: SetupRoute,
-  StudentsRoute: StudentsRoute,
-  YearsRoute: YearsRoute,
+  SQCRoute: SQCRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

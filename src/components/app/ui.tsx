@@ -63,12 +63,12 @@ export function BsMonth({ value, onChange }: { value: string; onChange: (v: stri
   );
 }
 
-export function ClassSelect({ value, onChange, all, active }: { value: string; onChange: (v: string) => void; all?: boolean; active?: boolean }) {
+export function ClassSelect({ value, onChange, all }: { value: string; onChange: (v: string) => void; all?: boolean }) {
   const { data } = useTeacher();
   return (
     <select className="field" value={value} onChange={(e) => onChange(e.target.value)}>
       {all ? <option value="">All classes</option> : <option value="">— Select class —</option>}
-      {data.classes.filter((c) => !active || !c.closed || c.id === value).map((c) => <option key={c.id} value={c.id}>{c.name} · {c.subject}</option>)}
+      {data.classes.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.subject}</option>)}
     </select>
   );
 }

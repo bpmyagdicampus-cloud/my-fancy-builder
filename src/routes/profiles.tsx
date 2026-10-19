@@ -2,12 +2,10 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Page, FormFields, type Field } from "@/components/app/ui";
 import { useCloud } from "@/lib/cloud";
-import { mutate, uid, useDB, exportProfile, importProfile, freshData, markBackup } from "@/lib/store";
+import { mutate, uid, useDB, exportProfile, importProfile, emptyData, markBackup } from "@/lib/store";
 
 export const Route = createFileRoute("/profiles")({
   head: () => ({ meta: [
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary_large_image" },
     { title: "Teacher Profiles — Shikshak Diary" },
     { name: "description", content: "Choose, add or back up teacher profiles." },
     { property: "og:title", content: "Teacher Profiles — Shikshak Diary" },
@@ -30,7 +28,7 @@ function Profiles() {
   const [f, setF] = useState<Record<string, string> | null>(null);
   const create = () => {
     if (!f?.["name"]) return alert("Enter teacher's name");
-    mutate((x) => { const id = uid(); x.profiles.push({ id, name: "", designation: "", dept: "", campus: "", address: "", hod: "", chief: "", ...f }); x.data[id] = freshData(); x.current = id; });
+    mutate((x) => { const id = uid(); x.profiles.push({ id, name: "", designation: "", dept: "", campus: "", address: "", hod: "", chief: "", ...f }); x.data[id] = emptyData(); x.current = id; });
     nav({ to: "/" });
   };
   const download = (id: string, name: string) => {
@@ -41,7 +39,7 @@ function Profiles() {
   };
   const upload = async (file?: File) => {
     if (!file) return;
-    try { importProfile(await file.text(), !signedIn); nav({ to: signedIn ? "/account" : "/" }); } catch (e) { alert((e as Error).message); }
+    try { importProfile(await file.text()); nav({ to: "/" }); } catch (e) { alert((e as Error).message); }
   };
   return (
     <Page title="Teacher profiles" sub={signedIn ? "Your diary is saved in the cloud. Profiles below that are marked \"old\" are copies kept only on this device." : "Each teacher keeps a separate diary on this device. Back up regularly."}>

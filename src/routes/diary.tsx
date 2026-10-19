@@ -8,8 +8,6 @@ import { weeklyOffOf } from "@/lib/migrate";
 
 export const Route = createFileRoute("/diary")({
   head: () => ({ meta: [
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary_large_image" },
     { title: "Daily Diary — Shikshak Diary" },
     { name: "description", content: "Record daily classes: attendance, absence reasons, activities, methods, feedback and evaluation." },
     { property: "og:title", content: "Daily Diary — Shikshak Diary" },
@@ -50,7 +48,7 @@ function DiaryPage() {
       {ed && (
         <section className="panel mb-5 space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
-            <div><label className="lbl">Class</label><ClassSelect active value={ed.classId} onChange={pickClass} /></div>
+            <div><label className="lbl">Class</label><ClassSelect value={ed.classId} onChange={pickClass} /></div>
             <div><label className="lbl">Date (BS)</label><BsDate value={ed.date} onChange={(v) => set({ date: v })} /></div>
             <div><label className="lbl">Lecture hours taught</label><input type="number" className="field" value={ed.lh} onChange={(e) => set({ lh: +e.target.value })} /></div>
             <div><label className="lbl">Unit</label>
