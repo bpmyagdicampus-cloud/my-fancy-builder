@@ -13,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import { AppNav } from "../components/app/AppNav";
 import { AuthGate, Background } from "../components/app/auth";
 import { BottomNav, ShellFrame, Sidebar } from "../components/app/Shell";
+import { Guard } from "../components/app/Guard";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -123,15 +124,15 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Background />
+      <Guard name="background"><Background /></Guard>
       <ShellFrame>
-        <Sidebar />
+        <Guard name="sidebar"><Sidebar /></Guard>
         <div className="min-w-0 flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
-          <AppNav />
+          <Guard name="header"><AppNav /></Guard>
           <AuthGate><Outlet /></AuthGate>
         </div>
       </ShellFrame>
-      <BottomNav />
+      <Guard name="bottom-nav"><BottomNav /></Guard>
     </QueryClientProvider>
   );
 }
