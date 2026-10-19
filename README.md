@@ -24,3 +24,8 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+
+## Student Quality Control (SQC)
+
+The SQC module adds admin-appointed student representatives, daily period-wise teacher/class records, student attendance summaries, issue/request reporting, and daily/monthly/custom reports. Before using it with real accounts, follow the safe database setup and testing steps in [`docs/sqc/README.md`](docs/sqc/README.md). The additive SQL migration is [`docs/sqc/01_student_quality_control.sql`](docs/sqc/01_student_quality_control.sql).
