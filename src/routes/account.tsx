@@ -42,6 +42,7 @@ function Account() {
   const legacy = db.profiles.filter((p) => !c.cloudIds.includes(p.id));
   const own = c.userId ? db.data[c.userId] : undefined;
   const ownHasData = !!own && own.diary.length + own.units.length + own.assess.length + own.classes.length > 0;
+  const background = c.me.bg;
 
   return (
     <Page title="My account · मेरो खाता" sub={`${c.me.name} · ID: ${loginOf(c.email)} · ${c.roles.join(", ")}`}>
@@ -67,7 +68,7 @@ function Account() {
           <div className="flex flex-wrap gap-2">
             {BG_PRESETS.map((p) => (
               <button key={p.id} title={p.label} onClick={async () => setNote((await updateMine({ bg: p.id === "none" ? null : `preset:${p.id}` })) ?? "Background updated.")}
-                className={`h-14 w-24 rounded-md border text-xs font-medium ${c.me!.bg === `preset:${p.id}` || (p.id === "none" && !c.me!.bg) ? "ring-2 ring-primary" : ""}`} style={{ background: p.css || undefined }}>{p.label}</button>
+                className={`h-14 w-24 rounded-md border text-xs font-medium ${background === `preset:${p.id}` || (p.id === "none" && !background) ? "ring-2 ring-primary" : ""}`} style={{ background: p.css || undefined }}>{p.label}</button>
             ))}
             <label className="btn-soft cursor-pointer self-center">Own photo…<input type="file" accept="image/*" className="hidden" disabled={busy} onChange={(e) => pick("bg", e.target.files?.[0])} /></label>
           </div>
@@ -93,7 +94,7 @@ function Account() {
             <p className="mb-3 text-xs text-muted-foreground">Copies a diary that was saved only on this computer into your cloud account. The old copy stays here as a backup.{ownHasData && " Your cloud diary already has data: moving will REPLACE it."}</p>
             <div className="flex flex-wrap gap-2">
               {legacy.map((p) => (
-                <button key={p.id} className="btn-soft" onClick={() => { if (confirm(`Copy "${p.name}" to your cloud account${ownHasData ? " and REPLACE the existing cloud diary" : ""}?`)) setNote(importLocalToCloud(p.id).msg); }}>{p.name}</button>
+                <button key={p.id} className="btn-soft" onClick={() => { if (confirm(`Copy "${p.name}" to your cloud account${ownHasData ? " and REPLACE the existing cloud diary" : ""}?`)) setNote(importLocalToCloud(p.id) ?? "Copied to your cloud account."); }}>{p.name}</button>
               ))}
             </div>
           </section>

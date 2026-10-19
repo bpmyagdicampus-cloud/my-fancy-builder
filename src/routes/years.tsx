@@ -57,7 +57,7 @@ function Years() {
         {past && <p className="mt-2 text-xs text-muted-foreground">An old year is open. Edits go into that year. Open the latest year to continue daily work.</p>}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="text-sm">Rename open year:</span>
-          <input id="yrname" className="field !w-40" defaultValue={cur?.name} key={cur?.id + cur?.name} />
+          <input id="yrname" className="field !w-40" defaultValue={cur?.name} key={`${cur?.id ?? ""}:${cur?.name ?? ""}`} />
           <button className="btn-soft" onClick={() => cur && run((d) => renameYear(d, cur.id, (document.getElementById("yrname") as HTMLInputElement).value), "Renamed.")}>Save</button>
           <button className="btn ml-auto" onClick={openWizard}>+ Start new academic year</button>
         </div>
@@ -73,7 +73,8 @@ function Years() {
               <thead><tr className="border-b border-border text-left text-xs text-muted-foreground"><th className="p-2">Carry class</th><th className="p-2">Class</th><th className="p-2">Name in new year (e.g. BBS I → BBS II)</th><th className="p-2">With its students</th></tr></thead>
               <tbody>
                 {wiz.rows.map((r, i) => {
-                  const c = data.classes.find((x) => x.id === r.classId)!;
+                  const c = data.classes.find((x) => x.id === r.classId);
+                  if (!c) return null;
                   return (
                     <tr key={r.classId} className="border-b border-border">
                       <td className="p-2"><input type="checkbox" checked={r.carry} onChange={(e) => setRow(i, { carry: e.target.checked })} /></td>

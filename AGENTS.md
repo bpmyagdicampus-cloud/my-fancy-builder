@@ -11,7 +11,7 @@
 
 # Project rules
 
-- All app data lives in browser localStorage via `src/lib/store.ts`, keyed per teacher profile — the user chose device-only storage, so no backend is used.
+- Account-owned diary data syncs through `src/lib/cloud.ts`; `src/lib/store.ts` provides the local working copy and legacy profile backups so existing editors share one persistence interface.
 - Dates are stored as Bikram Sambat strings "YYYY-MM-DD" (`src/lib/bs.ts`) so they sort and filter as plain strings.
 - `nepali-date-converter` is imported via namespace with default fallback — its default export differs between SSR and browser.
 - Reports use the `.rtable`, `.no-print` and `.print-only` classes from `src/styles.css` for printing via `window.print()`.

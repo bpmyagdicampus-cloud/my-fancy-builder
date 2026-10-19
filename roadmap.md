@@ -1,5 +1,5 @@
 # Account access
-- [ ] Resolve publishing failure: current checkout reports build OK and has no /students route; need failing publish output or matching project version.
+- [ ] Resolve publishing failure: restore missing account recovery exports and correct incompatible selector, import result and optional-value types; verify tests and preview.
 - [x] Enable Cloud and email authentication.
 - [x] Create account-owned profiles and diary data with admin/teacher RLS.
 - [ ] Connect existing screens to Cloud, add login/logout and admin teacher selection.
