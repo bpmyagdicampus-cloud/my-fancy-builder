@@ -64,39 +64,40 @@
 }
 
 :root {
+  /* professional navy · teal · white */
   --radius: 0.6rem;
-  --background: oklch(0.975 0.008 85);
-  --foreground: oklch(0.24 0.03 250);
-  --card: oklch(0.995 0.004 85);
-  --card-foreground: oklch(0.24 0.03 250);
-  --popover: oklch(0.995 0.004 85);
-  --popover-foreground: oklch(0.24 0.03 250);
-  --primary: oklch(0.38 0.08 200);
-  --primary-foreground: oklch(0.98 0.01 85);
-  --secondary: oklch(0.94 0.02 200);
-  --secondary-foreground: oklch(0.3 0.07 200);
-  --muted: oklch(0.945 0.01 85);
-  --muted-foreground: oklch(0.5 0.025 250);
-  --accent: oklch(0.93 0.07 70);
-  --accent-foreground: oklch(0.42 0.12 50);
-  --destructive: oklch(0.55 0.2 27);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.89 0.015 85);
-  --input: oklch(0.89 0.015 85);
-  --ring: oklch(0.55 0.09 200);
-  --chart-1: oklch(0.55 0.1 200);
-  --chart-2: oklch(0.7 0.15 70);
-  --chart-3: oklch(0.55 0.14 150);
+  --background: oklch(0.982 0.004 240);
+  --foreground: oklch(0.25 0.06 255);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.25 0.06 255);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.25 0.06 255);
+  --primary: oklch(0.32 0.09 255);
+  --primary-foreground: oklch(0.99 0.003 240);
+  --secondary: oklch(0.95 0.03 195);
+  --secondary-foreground: oklch(0.3 0.08 225);
+  --muted: oklch(0.962 0.008 240);
+  --muted-foreground: oklch(0.46 0.03 255);
+  --accent: oklch(0.91 0.06 190);
+  --accent-foreground: oklch(0.28 0.08 215);
+  --destructive: oklch(0.52 0.2 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.9 0.01 240);
+  --input: oklch(0.86 0.012 240);
+  --ring: oklch(0.58 0.11 195);
+  --chart-1: oklch(0.55 0.11 195);
+  --chart-2: oklch(0.4 0.09 255);
+  --chart-3: oklch(0.65 0.12 165);
   --chart-4: oklch(0.6 0.18 27);
   --chart-5: oklch(0.5 0.05 250);
-  --sidebar: oklch(0.97 0.01 85);
-  --sidebar-foreground: oklch(0.24 0.03 250);
-  --sidebar-primary: oklch(0.38 0.08 200);
-  --sidebar-primary-foreground: oklch(0.98 0.01 85);
-  --sidebar-accent: oklch(0.94 0.02 200);
-  --sidebar-accent-foreground: oklch(0.3 0.07 200);
-  --sidebar-border: oklch(0.89 0.015 85);
-  --sidebar-ring: oklch(0.55 0.09 200);
+  --sidebar: oklch(0.27 0.075 255);
+  --sidebar-foreground: oklch(0.96 0.01 240);
+  --sidebar-primary: oklch(0.7 0.11 190);
+  --sidebar-primary-foreground: oklch(0.2 0.05 255);
+  --sidebar-accent: oklch(0.35 0.08 235);
+  --sidebar-accent-foreground: oklch(0.99 0.003 240);
+  --sidebar-border: oklch(0.36 0.06 255);
+  --sidebar-ring: oklch(0.7 0.11 190);
 }
 
 @layer base {
@@ -104,29 +105,43 @@
     border-color: var(--color-border);
   }
 
+  html { -webkit-text-size-adjust: 100%; }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-size: 16px;
+    line-height: 1.5;
+    overflow-x: clip; /* never scroll the whole page sideways; wide tables scroll inside themselves */
   }
 }
 
 @layer components {
-  .btn { @apply inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50; }
-  .btn-soft { @apply inline-flex items-center justify-center gap-1.5 rounded-md bg-secondary px-3.5 py-2 text-sm font-semibold text-secondary-foreground transition hover:bg-secondary/70; }
-  .btn-danger { @apply inline-flex items-center justify-center gap-1.5 rounded-md border border-destructive px-3 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/10; }
-  .field { @apply w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm outline-none focus:ring-2 focus:ring-ring; }
-  .lbl { @apply mb-1 block text-xs font-medium text-muted-foreground; }
+  .btn { @apply inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50; }
+  .btn-soft { @apply inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md bg-secondary px-3.5 py-2 text-sm font-semibold text-secondary-foreground transition hover:bg-secondary/70; }
+  .btn-danger { @apply inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-destructive px-3 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/10; }
+  .field { @apply min-h-10 w-full rounded-md border border-input bg-card px-2.5 py-2 text-sm outline-none focus:ring-2 focus:ring-ring; }
+  .lbl { @apply mb-1 block text-[0.8rem] font-medium text-muted-foreground; }
   .panel { @apply rounded-xl border border-border bg-card p-4 shadow-sm; }
   .chip { @apply rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium; }
   .chip-on { @apply rounded-full border border-primary bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground; }
   .rtable { @apply w-full border-collapse text-xs; }
   .rtable th, .rtable td { @apply border border-foreground/30 px-1.5 py-1 text-left align-top; }
   .rtable th { @apply bg-muted font-semibold; }
-  .tab { @apply rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted; }
-  .tab-on { @apply rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-foreground; }
+  .tab { @apply min-h-9 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted; }
+  .tab-on { @apply min-h-9 rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-foreground; }
+  .nav-item { @apply flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/85 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground; }
+  .nav-item-on { @apply bg-sidebar-accent text-sidebar-accent-foreground; box-shadow: inset 3px 0 0 var(--sidebar-primary); }
+}
+
+/* phones: larger touch targets, no iOS zoom on inputs, tables scroll inside their own box */
+@media (pointer: coarse) { .btn, .btn-soft, .btn-danger, .tab, .tab-on, .field { min-height: 44px; } }
+@media (max-width: 767px) {
+  .field { font-size: 16px; }
+  .rtable { display: block; max-width: 100%; overflow-x: auto; }
 }
 
 @media print {
+  .rtable { display: table !important; overflow: visible !important; }
   .no-print { display: none !important; }
   body { background: white; color: black; }
   .panel { border: 0; box-shadow: none; padding: 0; }

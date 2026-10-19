@@ -4,10 +4,10 @@ import { updateData, uid, useTeacher, type ListKey } from "@/lib/store";
 
 export function Page({ title, sub, actions, children }: { title: string; sub?: string; actions?: ReactNode; children: ReactNode }) {
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6">
-      <div className="no-print mb-5 flex flex-wrap items-end gap-3">
+    <main className="mx-auto max-w-6xl px-3 py-4 sm:px-4 sm:py-6">
+      <div className="no-print mb-4 flex flex-wrap items-end gap-3 sm:mb-5">
         <div className="flex-1">
-          <h1 className="font-display text-3xl text-primary">{title}</h1>
+          <h1 className="font-display text-2xl text-primary sm:text-3xl">{title}</h1>
           {sub && <p className="text-sm text-muted-foreground">{sub}</p>}
         </div>
         {actions}
@@ -63,12 +63,16 @@ export function BsMonth({ value, onChange }: { value: string; onChange: (v: stri
   );
 }
 
-export function ClassSelect({ value, onChange, all }: { value: string; onChange: (v: string) => void; all?: boolean }) {
+/** `active`: for NEW entries — classes whose subject was upgraded (closed) are hidden unless already chosen. */
+export function ClassSelect({ value, onChange, all, active }: { value: string; onChange: (v: string) => void; all?: boolean; active?: boolean }) {
   const { data } = useTeacher();
+  const open = data.classes.filter((c) => !c.closed);
+  const closed = data.classes.filter((c) => c.closed && (!active || c.id === value));
   return (
     <select className="field" value={value} onChange={(e) => onChange(e.target.value)}>
       {all ? <option value="">All classes</option> : <option value="">— Select class —</option>}
-      {data.classes.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.subject}</option>)}
+      {open.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.subject}</option>)}
+      {closed.length > 0 && <optgroup label="Closed (old subject)">{closed.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.subject}</option>)}</optgroup>}
     </select>
   );
 }
@@ -96,7 +100,7 @@ export function FormFields({ fields, value, onChange }: { fields: Field[]; value
           <label className="lbl">{f.l}</label>
           {f.t === "area" ? <textarea className="field min-h-20" value={value[f.k] ?? ""} onChange={(e) => set(f.k, e.target.value)} />
           : f.t === "date" ? <BsDate value={value[f.k]} onChange={(v) => set(f.k, v)} />
-          : f.t === "cls" ? <ClassSelect value={value[f.k] ?? ""} onChange={(v) => set(f.k, v)} />
+          : f.t === "cls" ? <ClassSelect active value={value[f.k] ?? ""} onChange={(v) => set(f.k, v)} />
           : f.t === "sel" ? (
             <select className="field" value={value[f.k] ?? ""} onChange={(e) => set(f.k, e.target.value)}>
               {f.opts?.map((o) => <option key={o}>{o}</option>)}

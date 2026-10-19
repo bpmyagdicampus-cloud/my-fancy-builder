@@ -1,14 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Page, NeedProfile } from "@/components/app/ui";
+import { useCloud } from "@/lib/cloud";
 import { updateData, useTeacher, type Data } from "@/lib/store";
 import { classStudents } from "@/lib/students";
 import { currentYear, isPast, keepSubject, latestYear, nextYearName, renameYear, startYear, switchYear, upgradeSubject, type CarryRow } from "@/lib/years";
 
 export const Route = createFileRoute("/years")({
   head: () => ({ meta: [
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary_large_image" },
     { title: "Academic years — Shikshak Diary" },
     { name: "description", content: "Open past academic years, start a new year and upgrade class subjects." },
     { property: "og:title", content: "Academic years — Shikshak Diary" },
@@ -25,7 +24,12 @@ function Years() {
   const [wiz, setWiz] = useState<Wiz | null>(null);
   const [up, setUp] = useState<Up | null>(null);
   const [note, setNote] = useState("");
+  const cl = useCloud();
   if (!profile) return <NeedProfile />;
+  // The administrator decides which academic year is active (when that feature is installed).
+  const active = cl.yearsReady ? cl.activeYear : null;
+  const hasActive = !!active && data.years.some((x) => x.name.toLowerCase() === active.name.toLowerCase());
+  const mayStart = !active || !hasActive;
   const cur = currentYear(data);
   const latest = latestYear(data);
   const past = isPast(data);
@@ -37,7 +41,7 @@ function Years() {
     return !err;
   };
   const openWizard = () => setWiz({
-    name: nextYearName(latest?.name ?? cur?.name ?? ""),
+    name: active ? active.name : nextYearName(latest?.name ?? cur?.name ?? ""),
     rows: data.classes.filter((c) => !c.closed).map((c) => ({ classId: c.id, carry: true, newName: c.name.trim(), students: true })),
     units: true, calendar: false, lessons: false,
   });
@@ -47,6 +51,14 @@ function Years() {
     <Page title="Academic years · शैक्षिक वर्ष" sub="Each year keeps its own diary, plans, records and students. Nothing is deleted when you start a new year.">
       {note && <p className="mb-3 rounded-md border border-primary p-2 text-sm">{note}</p>}
 
+      {active && (
+        <p className="mb-3 rounded-md border border-primary p-2 text-sm">
+          Active academic year (set by the administrator): <b>{active.name}</b>.{" "}
+          {hasActive
+            ? (cur?.name.toLowerCase() === active.name.toLowerCase() ? "It is open in your diary." : <button className="underline" onClick={() => { const t = data.years.find((x) => x.name.toLowerCase() === active.name.toLowerCase()); if (t) run((d) => switchYear(d, t.id), `Opened ${t.name}.`); }}>Open it</button>)
+            : "Start it below to carry your classes forward."}
+        </p>
+      )}
       <section className="panel mb-4">
         <h2 className="mb-2 text-lg font-bold">Years</h2>
         <div className="flex flex-wrap items-center gap-2">
@@ -59,9 +71,9 @@ function Years() {
         {past && <p className="mt-2 text-xs text-muted-foreground">An old year is open. Edits go into that year. Open the latest year to continue daily work.</p>}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="text-sm">Rename open year:</span>
-          <input id="yrname" className="field !w-40" defaultValue={cur?.name} key={`${cur?.id ?? ""}:${cur?.name ?? ""}`} />
+          <input id="yrname" className="field !w-40" defaultValue={cur?.name} key={`${cur?.id}-${cur?.name}`} />
           <button className="btn-soft" onClick={() => cur && run((d) => renameYear(d, cur.id, (document.getElementById("yrname") as HTMLInputElement).value), "Renamed.")}>Save</button>
-          <button className="btn ml-auto" onClick={openWizard}>+ Start new academic year</button>
+          {mayStart ? <button className="btn ml-auto" onClick={openWizard}>+ Start {active ? active.name : "new academic year"}</button> : <span className="ml-auto text-xs text-muted-foreground">Only the administrator can activate the next year.</span>}
         </div>
       </section>
 
@@ -69,14 +81,13 @@ function Years() {
         <section className="panel mb-4 border-primary">
           <h2 className="mb-1 text-lg font-bold">Start new academic year</h2>
           <p className="mb-3 text-xs text-muted-foreground">The open year ({cur?.name}) is saved as it is and can be reopened any time. Diary, attendance, marks, activities, reminders and leave are never carried over. Everything carried over can be edited afterwards.</p>
-          <div className="mb-3 max-w-xs"><label className="lbl">New year name</label><input className="field" value={wiz.name} onChange={(e) => setWiz({ ...wiz, name: e.target.value })} /></div>
+          <div className="mb-3 max-w-xs"><label className="lbl">New year name</label><input className="field" value={wiz.name} disabled={!!active} onChange={(e) => setWiz({ ...wiz, name: e.target.value })} />{active && <p className="mt-1 text-xs text-muted-foreground">Set by the administrator.</p>}</div>
           <div className="mb-3 overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b border-border text-left text-xs text-muted-foreground"><th className="p-2">Carry class</th><th className="p-2">Class</th><th className="p-2">Name in new year (e.g. BBS I → BBS II)</th><th className="p-2">With its students</th></tr></thead>
               <tbody>
                 {wiz.rows.map((r, i) => {
-                  const c = data.classes.find((x) => x.id === r.classId);
-                  if (!c) return null;
+                  const c = data.classes.find((x) => x.id === r.classId)!;
                   return (
                     <tr key={r.classId} className="border-b border-border">
                       <td className="p-2"><input type="checkbox" checked={r.carry} onChange={(e) => setRow(i, { carry: e.target.checked })} /></td>

@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import { AppNav } from "../components/app/AppNav";
 import { AuthGate, Background } from "../components/app/auth";
+import { BottomNav, ShellFrame, Sidebar } from "../components/app/Shell";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -79,7 +80,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Shikshak Diary — Teacher's Daily Record" },
       { name: "description", content: "Teacher diary: classes, lesson plans, attendance, assessments and monthly reports." },
       { property: "og:type", content: "website" },
@@ -123,8 +124,14 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Background />
-      <AppNav />
-      <AuthGate><Outlet /></AuthGate>
+      <ShellFrame>
+        <Sidebar />
+        <div className="min-w-0 flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
+          <AppNav />
+          <AuthGate><Outlet /></AuthGate>
+        </div>
+      </ShellFrame>
+      <BottomNav />
     </QueryClientProvider>
   );
 }

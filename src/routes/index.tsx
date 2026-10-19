@@ -35,7 +35,7 @@ function Home() {
   const actCounts = ACT_CATS.map((c) => [c, data.acts.filter((a) => a.category === c).length] as const).filter(([, n]) => n > 0);
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6">
+    <main className="mx-auto max-w-6xl px-3 py-4 sm:px-4 sm:py-6">
       <section className="panel mb-5 bg-gradient-to-br from-secondary to-card">
         <div className="text-sm font-semibold uppercase tracking-wide text-accent-foreground">{profile.campus || "Set campus name in Setup"}</div>
         <h1 className="font-display text-3xl text-primary">{profile.name}</h1>
@@ -44,12 +44,13 @@ function Home() {
         <div className="mt-3 flex flex-wrap gap-2">
           <Link to="/diary" className="btn">+ Today's diary</Link>
           <Link to="/reports" className="btn-soft">Monthly report</Link>
+          <Link to="/sqc" className="btn-soft">SQC</Link>
         </div>
       </section>
 
       <h2 className="mb-2 text-lg font-bold">My classes — course completion</h2>
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {data.classes.map((c) => {
+        {data.classes.filter((c) => !c.closed).map((c) => {
           const done = totalLhDone(data.diary, c.id);
           const p = pct(done, c.totalLh);
           return (
@@ -61,7 +62,7 @@ function Home() {
             </div>
           );
         })}
-        {!data.classes.length && <Link to="/setup" className="panel text-sm text-muted-foreground">No classes yet — add them in Setup →</Link>}
+        {!data.classes.filter((c) => !c.closed).length && <Link to="/setup" className="panel text-sm text-muted-foreground">No classes yet — add them in Setup →</Link>}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

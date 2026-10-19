@@ -30,9 +30,10 @@ const NETERR = { data: null, error: { message: "TypeError: Failed to fetch" } };
 function q(table) {
   const st = { filters: {}, op: "select", patch: null }; const api = {
     select() { if (st.op !== "update") st.op = "select"; return api; }, update(p) { st.op = "update"; st.patch = p; return api; }, insert(p) { st.op = "insert"; st.patch = p; return api; },
-    eq(k, v) { st.filters[k] = v; return api; }, maybeSingle() { st.single = true; return api; }, then(res, rej) { return Promise.resolve(run()).then(res, rej); } };
+    eq(k, v) { st.filters[k] = v; return api; }, order() { return api; }, maybeSingle() { st.single = true; return api; }, then(res, rej) { return Promise.resolve(run()).then(res, rej); } };
   function run() {
     if (!net) return NETERR;
+    if (table === "academic_years") return { data: null, error: { message: 'relation "academic_years" does not exist' } };
     if (table === "user_roles") return { data: tables.user_roles.filter((r) => r.user_id === st.filters.user_id), error: null };
     const key = table === "profiles" ? "id" : "teacher_id"; const row = tables[table][st.filters[key]];
     if (st.op === "select") return { data: st.single ? (row ?? null) : row ? [row] : [], error: null };
