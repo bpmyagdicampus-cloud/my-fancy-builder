@@ -129,10 +129,32 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/account' | '/admin' | '/diary' | '/login' | '/plans' | '/profiles' | '/records' | '/reports' | '/setup' | '/students' | '/years'
+    | '/'
+    | '/account'
+    | '/admin'
+    | '/diary'
+    | '/login'
+    | '/plans'
+    | '/profiles'
+    | '/records'
+    | '/reports'
+    | '/setup'
+    | '/students'
+    | '/years'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/account' | '/admin' | '/diary' | '/login' | '/plans' | '/profiles' | '/records' | '/reports' | '/setup' | '/students' | '/years'
+    | '/'
+    | '/account'
+    | '/admin'
+    | '/diary'
+    | '/login'
+    | '/plans'
+    | '/profiles'
+    | '/records'
+    | '/reports'
+    | '/setup'
+    | '/students'
+    | '/years'
   id:
     | '__root__'
     | '/'

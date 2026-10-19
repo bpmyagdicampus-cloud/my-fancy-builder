@@ -32,14 +32,13 @@ export function AppNav() {
           {showLinks && LINKS.map(([to, l]) => (
             <Link key={to} to={to} className="tab" activeProps={{ className: "tab-on" }} activeOptions={{ exact: to === "/" }}>{l}</Link>
           ))}
-          {signedIn && (c.roles.includes("admin") || c.roles.includes("student")) && <Link to="/sqc" className="tab" activeProps={{ className: "tab-on" }}>Student Quality Control (SQC)</Link>}
           {signedIn && c.roles.includes("admin") && <Link to="/admin" className="tab" activeProps={{ className: "tab-on" }}>Admin</Link>}
         </nav>
         {staff && c.save !== "idle" && <span className={`chip ${c.save === "error" || c.save === "conflict" ? "!border-destructive !text-destructive" : ""}`}>{SAVE_LABEL[c.save]}</span>}
         {signedIn ? (
           <>
             <Link to="/account" className="flex items-center gap-2 rounded-full border border-border py-0.5 pl-0.5 pr-3 text-sm font-medium hover:bg-muted">
-              <Avatar name={c.me?.name} path={c.me?.avatar_path} size={28} />{c.me?.name || c.email}
+              <Avatar name={c.me?.name ?? ""} path={c.me?.avatar_path ?? null} size={28} />{c.me?.name || c.email}
             </Link>
             {staff && <Link to="/setup" className="btn">⚙ Setup</Link>}
             <button className="btn-soft" onClick={async () => { if (await signOut()) nav({ to: "/login" }); }}>Sign out</button>

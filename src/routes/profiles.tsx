@@ -6,6 +6,8 @@ import { mutate, uid, useDB, exportProfile, importProfile, freshData, markBackup
 
 export const Route = createFileRoute("/profiles")({
   head: () => ({ meta: [
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
     { title: "Teacher Profiles — Shikshak Diary" },
     { name: "description", content: "Choose, add or back up teacher profiles." },
     { property: "og:title", content: "Teacher Profiles — Shikshak Diary" },

@@ -56,12 +56,11 @@ export function AuthGate({ children }: { children: ReactNode }) {
       </Center>
     );
   }
-  if (!isStaff(c.roles) && path !== "/account" && path !== "/sqc") {
+  if (!isStaff(c.roles) && path !== "/account") {
     return (
       <Center>
         <h1 className="font-display text-2xl text-primary">स्वागत छ, {c.me.name}</h1>
-        <p className="text-sm text-muted-foreground">SQC मा नियुक्त गरिएको भए दैनिक कक्षा अभिलेख राख्न र प्रतिवेदन प्रशासनमा पेश गर्न सक्नुहुन्छ। आफ्नो फोटो, पासवर्ड र पृष्ठभूमि पनि परिवर्तन गर्न सक्नुहुन्छ।</p>
-        <div className="flex flex-wrap justify-center gap-2"><a href="/sqc" className="btn">Student Quality Control (SQC)</a><a href="/account" className="btn-soft">My account</a></div>
+        <div className="flex flex-wrap justify-center gap-2"><a href="/account" className="btn-soft">My account</a></div>
       </Center>
     );
   }

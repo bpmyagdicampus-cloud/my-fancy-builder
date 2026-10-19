@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 import { Page } from "@/components/app/ui";
 import { openTeacher, useCloud } from "@/lib/cloud";
 import { MIN_PASSWORD } from "@/lib/login";
-import { adminCreateUser, adminListUsers, adminResetPassword, adminSetDisabled, adminSetRole, type AdminUser, type Result } from "@/lib/admin.functions";
+import { adminCreateUser, adminListUsers, adminResetPassword, adminSetDisabled, adminSetRole, type AdminUser } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
     { title: "Admin — Shikshak Diary" },
     { name: "description", content: "Create and manage teacher and student accounts." },
     { property: "og:title", content: "Admin — Shikshak Diary" },
@@ -23,6 +25,7 @@ const genPw = () => {
 const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const roleOf = (r: string[]) => (r.includes("admin") ? "admin" : r.includes("teacher") ? "teacher" : r.includes("student") ? "student" : "none");
 const EMPTY = { login: "", name: "", role: "teacher", designation: "", dept: "", password: "" };
+type Result<T = Record<string, unknown>> = ({ ok: true } & T) | { ok: false; error: string };
 
 function Admin() {
   const c = useCloud();
@@ -33,11 +36,11 @@ function Admin() {
   const [busy, setBusy] = useState(false);
   const [made, setMade] = useState<{ text: string } | null>(null);
 
-  // server functions are called without a typed payload (see admin.functions.ts), hence the casts
-  const call = async <T,>(fn: (a: any) => Promise<Result<T>>, data: unknown): Promise<Result<T>> => {
-    try { return await fn({ data }); } catch (e) { return { ok: false, error: `The request did not reach the server: ${msg(e)}` }; }
+  // Existing server functions return their payload directly and throw on failure.
+  const call = async <T,>(fn: (a: any) => Promise<T>, data: unknown): Promise<Result<T>> => {
+    try { return { ...await fn({ data }), ok: true }; } catch (e) { return { ok: false, error: `The request failed: ${msg(e)}` }; }
   };
-  const load = async () => { const r = await call<{ users: AdminUser[] }>(adminListUsers as any, {}); if (r.ok) { setUsers(r.users); setErr(""); } else setErr(r.error); };
+  const load = async () => { try { setUsers(await adminListUsers({ data: {} })); setErr(""); } catch (e) { setErr(msg(e)); } };
   useEffect(() => { if (c.status === "ready" && c.roles.includes("admin")) void load(); }, [c.status, c.roles]);
 
   const create = async () => {

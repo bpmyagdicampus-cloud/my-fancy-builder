@@ -6,6 +6,8 @@ import { ACT_CATS } from "@/lib/constants";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
     { title: "Shikshak Diary — Home" },
     { name: "description", content: "Your classes, course completion, activities and upcoming events at a glance." },
     { property: "og:title", content: "Shikshak Diary — Teacher's Daily Record" },

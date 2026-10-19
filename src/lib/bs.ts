@@ -42,7 +42,7 @@ export function daysInBsMonth(y: number, m0: number) {
   return 30;
 }
 
-export const weekday = (s: string) => WEEKDAYS[bsToAd(s).getDay()];
+export const weekday = (s: string): string => WEEKDAYS[bsToAd(s).getDay()] ?? "";
 
 export function fmtBs(s?: string) {
   if (!s) return "—";

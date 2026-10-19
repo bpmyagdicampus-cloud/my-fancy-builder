@@ -8,6 +8,8 @@ import { PROFILE_FIELDS } from "./profiles";
 
 export const Route = createFileRoute("/setup")({
   head: () => ({ meta: [
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
     { title: "Setup — Shikshak Diary" },
     { name: "description", content: "Campus, teacher, classes, students and academic calendar setup." },
     { property: "og:title", content: "Setup — Shikshak Diary" },
