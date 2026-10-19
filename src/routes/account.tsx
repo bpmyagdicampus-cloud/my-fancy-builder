@@ -9,6 +9,8 @@ import { useDB } from "@/lib/store";
 
 export const Route = createFileRoute("/account")({
   head: () => ({ meta: [
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
     { title: "My account — Shikshak Diary" },
     { name: "description", content: "Change your photo, password and background." },
     { property: "og:title", content: "My account — Shikshak Diary" },

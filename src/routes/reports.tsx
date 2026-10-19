@@ -9,6 +9,8 @@ import { WEEKDAY_FULL, weeklyOffOf } from "@/lib/migrate";
 
 export const Route = createFileRoute("/reports")({
   head: () => ({ meta: [
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
     { title: "Reports — Shikshak Diary" },
     { name: "description", content: "Monthly performance report, daily report, student report and plan vs progress — all printable." },
     { property: "og:title", content: "Reports — Shikshak Diary" },

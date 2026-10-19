@@ -7,6 +7,8 @@ import { adminCreateUser, adminListUsers, adminResetPassword, adminSetDisabled, 
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
     { title: "Admin — Shikshak Diary" },
     { name: "description", content: "Create and manage teacher and student accounts." },
     { property: "og:title", content: "Admin — Shikshak Diary" },

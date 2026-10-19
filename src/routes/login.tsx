@@ -4,6 +4,8 @@ import { enterLocalMode, initAuth, signIn, useCloud } from "@/lib/cloud";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
     { title: "Sign in — Shikshak Diary" },
     { name: "description", content: "Sign in to Shikshak Diary." },
     { property: "og:title", content: "Sign in — Shikshak Diary" },

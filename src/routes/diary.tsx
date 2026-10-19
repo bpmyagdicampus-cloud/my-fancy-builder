@@ -8,6 +8,8 @@ import { weeklyOffOf } from "@/lib/migrate";
 
 export const Route = createFileRoute("/diary")({
   head: () => ({ meta: [
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
     { title: "Daily Diary — Shikshak Diary" },
     { name: "description", content: "Record daily classes: attendance, absence reasons, activities, methods, feedback and evaluation." },
     { property: "og:title", content: "Daily Diary — Shikshak Diary" },

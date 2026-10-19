@@ -7,6 +7,8 @@ import { currentYear, isPast, keepSubject, latestYear, nextYearName, renameYear,
 
 export const Route = createFileRoute("/years")({
   head: () => ({ meta: [
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
     { title: "Academic years — Shikshak Diary" },
     { name: "description", content: "Open past academic years, start a new year and upgrade class subjects." },
     { property: "og:title", content: "Academic years — Shikshak Diary" },

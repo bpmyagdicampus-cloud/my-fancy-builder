@@ -7,6 +7,8 @@ import { ACT_CATS, ASSESS_KINDS, LEAVE_TYPES, RUBRIC } from "@/lib/constants";
 
 export const Route = createFileRoute("/records")({
   head: () => ({ meta: [
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
     { title: "Records — Shikshak Diary" },
     { name: "description", content: "Student assessments and exams with comments, research and other activities, reminders." },
     { property: "og:title", content: "Records — Shikshak Diary" },
