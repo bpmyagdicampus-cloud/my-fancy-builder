@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { initAuth, isStaff, retryLoad, signOut, useCloud, useSignedUrl } from "@/lib/cloud";
+import { initAuth, isStaff, signOut, useCloud, useSignedUrl } from "@/lib/cloud";
 
 export const BG_PRESETS: { id: string; label: string; css: string }[] = [
   { id: "none", label: "Default", css: "" },
@@ -47,16 +47,6 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (c.status === "loading" || (c.status === "anon" && !c.localMode)) return <Center><p className="text-muted-foreground">Loading… / लोड हुँदैछ…</p></Center>;
   if (c.status === "anon") return <>{children}</>; // old "this device only" mode
 
-  if (c.loadError) {
-    return (
-      <Center>
-        <h1 className="font-display text-2xl text-primary">Could not load your diary</h1>
-        <p className="text-sm text-muted-foreground">{c.loadError}</p>
-        <p className="text-xs text-muted-foreground">Nothing was changed or deleted. Check the internet connection and try again.</p>
-        <div className="flex gap-2"><button className="btn" onClick={() => void retryLoad()}>Try again</button><button className="btn-soft" onClick={() => void signOut()}>Sign out</button></div>
-      </Center>
-    );
-  }
   if (!c.me || c.roles.length === 0) {
     return (
       <Center>
@@ -66,12 +56,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
       </Center>
     );
   }
-  if (!isStaff(c.roles) && path !== "/account") {
+  if (!isStaff(c.roles) && path !== "/account" && path !== "/sqc") {
     return (
       <Center>
         <h1 className="font-display text-2xl text-primary">स्वागत छ, {c.me.name}</h1>
-        <p className="text-sm text-muted-foreground">Student features (recording teacher attendance) arrive in the next update. For now you can change your photo, password and background.</p>
-        <a href="/account" className="btn">My account</a>
+        <p className="text-sm text-muted-foreground">SQC मा नियुक्त गरिएको भए दैनिक कक्षा अभिलेख राख्न र प्रतिवेदन प्रशासनमा पेश गर्न सक्नुहुन्छ। आफ्नो फोटो, पासवर्ड र पृष्ठभूमि पनि परिवर्तन गर्न सक्नुहुन्छ।</p>
+        <div className="flex flex-wrap justify-center gap-2"><a href="/sqc" className="btn">Student Quality Control (SQC)</a><a href="/account" className="btn-soft">My account</a></div>
       </Center>
     );
   }
