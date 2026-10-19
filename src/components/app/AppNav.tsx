@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { daysSinceBackup, getLoadError, useTeacher } from "@/lib/store";
-import { isStaff, openTeacher, resolveConflict, signOut, useCloud } from "@/lib/cloud";
+import { isStaff, listUnsaved, openTeacher, resolveConflict, retryNow, signOut, useCloud } from "@/lib/cloud";
 import { Avatar } from "@/components/app/auth";
 import { currentYear, isPast, latestYear } from "@/lib/years";
 
@@ -58,7 +58,7 @@ export function AppNav() {
       {viewingOther && (
         <div className="flex flex-wrap items-center justify-center gap-3 bg-accent px-4 py-1.5 text-xs font-medium text-accent-foreground">
           Admin view: you are editing {profile?.name ?? "another teacher"}'s diary.
-          <button className="underline" onClick={() => c.userId && void openTeacher(c.userId)}>Back to my own diary</button>
+          <button className="underline" onClick={() => c.userId && openTeacher(c.userId).catch((e) => alert(e instanceof Error ? e.message : String(e)))}>Back to my own diary</button>
         </div>
       )}
       {showLinks && profile && past && <div className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground">You are viewing an OLD academic year ({yr?.name}). Changes you make go into that year. <Link to="/years" className="underline">Open {latestYear(data)?.name}</Link></div>}
@@ -70,7 +70,8 @@ export function AppNav() {
           <button className="rounded bg-background px-2 py-1 font-semibold text-foreground" onClick={() => confirm("Use the cloud copy? This device's copy will be downloaded as a file first.") && void resolveConflict("use-cloud")}>Use cloud copy</button>
         </div>
       )}
-      {staff && c.save === "error" && <div className="bg-destructive px-4 py-1.5 text-center text-xs text-destructive-foreground">Could not save to the cloud ({c.saveMsg}). Your work is kept on this device and will be retried automatically.</div>}
+      {staff && c.save === "error" && <div className="flex flex-wrap items-center justify-center gap-3 bg-destructive px-4 py-1.5 text-xs text-destructive-foreground">Could not save to the cloud ({c.saveMsg}). Your work is kept on this device and is retried automatically.<button className="rounded bg-background px-2 py-0.5 font-semibold text-foreground" onClick={() => void retryNow()}>Try again now</button></div>}
+      {staff && listUnsaved(c.userId).length > 0 && <div className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground">A copy of earlier UNSAVED work is stored on this device. <Link to="/account" className="underline">Open My account</Link> to download or delete it.</div>}
       {needBackup && <div className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground">{age === null ? "No backup downloaded yet." : `Last backup was ${age} days ago.`} <Link to="/profiles" className="underline">Download a backup</Link> to keep your data safe.</div>}
     </header>
   );

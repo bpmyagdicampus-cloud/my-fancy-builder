@@ -39,7 +39,7 @@ function Profiles() {
   };
   const upload = async (file?: File) => {
     if (!file) return;
-    try { importProfile(await file.text()); nav({ to: "/" }); } catch (e) { alert((e as Error).message); }
+    try { importProfile(await file.text(), !signedIn); nav({ to: signedIn ? "/account" : "/" }); } catch (e) { alert((e as Error).message); }
   };
   return (
     <Page title="Teacher profiles" sub={signedIn ? "Your diary is saved in the cloud. Profiles below that are marked \"old\" are copies kept only on this device." : "Each teacher keeps a separate diary on this device. Back up regularly."}>

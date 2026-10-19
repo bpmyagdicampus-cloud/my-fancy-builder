@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Page } from "@/components/app/ui";
 import { openTeacher, useCloud } from "@/lib/cloud";
 import { MIN_PASSWORD } from "@/lib/login";
-import { adminCreateUser, adminListUsers, adminResetPassword, adminSetDisabled, adminSetRole, type AdminUser } from "@/lib/admin.functions";
+import { adminCreateUser, adminListUsers, adminResetPassword, adminSetDisabled, adminSetRole, type AdminUser, type Result } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [
@@ -33,20 +33,24 @@ function Admin() {
   const [busy, setBusy] = useState(false);
   const [made, setMade] = useState<{ text: string } | null>(null);
 
-  const load = async () => { try { setUsers(await adminListUsers({ data: {} })); setErr(""); } catch (e) { setErr(msg(e)); } };
+  // server functions are called without a typed payload (see admin.functions.ts), hence the casts
+  const call = async <T,>(fn: (a: any) => Promise<Result<T>>, data: unknown): Promise<Result<T>> => {
+    try { return await fn({ data }); } catch (e) { return { ok: false, error: `The request did not reach the server: ${msg(e)}` }; }
+  };
+  const load = async () => { const r = await call<{ users: AdminUser[] }>(adminListUsers as any, {}); if (r.ok) { setUsers(r.users); setErr(""); } else setErr(r.error); };
   useEffect(() => { if (c.status === "ready" && c.roles.includes("admin")) void load(); }, [c.status, c.roles]);
 
   const create = async () => {
     setBusy(true); setErr("");
-    try {
-      await adminCreateUser({ data: f });
+    const r = await call(adminCreateUser as any, f);
+    if (r.ok) {
       setMade({ text: `शिक्षक डायरी\nLink: ${location.origin}/login\nID: ${f.login.trim().toLowerCase()}\nPassword: ${f.password}` });
       setF({ ...EMPTY, password: genPw() });
       await load();
-    } catch (e) { setErr(msg(e)); }
+    } else setErr(r.error);
     setBusy(false);
   };
-  const run = async (fn: () => Promise<unknown>) => { try { await fn(); await load(); } catch (e) { alert(msg(e)); } };
+  const run = async (fn: () => Promise<Result>) => { const r = await fn(); if (!r.ok) alert(r.error); else await load(); return r; };
   const copy = (t: string) => navigator.clipboard?.writeText(t).then(() => alert("Copied"), () => alert(t));
 
   return (
@@ -56,7 +60,7 @@ function Admin() {
       <section className="panel mb-4">
         <h2 className="mb-3 text-lg font-bold">New account</h2>
         <div className="grid gap-3 sm:grid-cols-3">
-          <div><label className="lbl">Login ID (a-z, 0-9) or e-mail</label><input className="field" value={f.login} onChange={(e) => setF({ ...f, login: e.target.value })} /></div>
+          <div><label className="lbl">Login ID (a-z, 0-9) or real e-mail</label><input className="field" value={f.login} onChange={(e) => setF({ ...f, login: e.target.value })} /></div>
           <div><label className="lbl">Full name</label><input className="field" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
           <div><label className="lbl">Role</label>
             <select className="field" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })}>
@@ -92,7 +96,7 @@ function Admin() {
                 <td className="p-2">{u.login}{u.disabled && <span className="chip ml-1">disabled</span>}</td>
                 <td className="p-2">
                   <select className="field !w-auto" value={roleOf(u.roles)} disabled={u.id === c.userId}
-                    onChange={(e) => confirm(`Change role of ${u.name || u.login} to ${e.target.value}?`) && run(() => adminSetRole({ data: { id: u.id, role: e.target.value } }))}>
+                    onChange={(e) => confirm(`Change role of ${u.name || u.login} to ${e.target.value}?`) && run(() => call(adminSetRole as any, { id: u.id, role: e.target.value }))}>
                     {roleOf(u.roles) === "none" && <option value="none">none</option>}
                     <option value="teacher">teacher</option><option value="student">student</option><option value="admin">admin</option>
                   </select>
@@ -100,8 +104,8 @@ function Admin() {
                 <td className="p-2 text-xs">{u.lastSignIn ? new Date(u.lastSignIn).toLocaleString() : "never"}</td>
                 <td className="flex flex-wrap gap-1 p-2">
                   {(u.roles.includes("teacher") || u.roles.includes("admin")) && <button className="btn-soft" onClick={async () => { try { await openTeacher(u.id); nav({ to: "/" }); } catch (e) { alert(msg(e)); } }}>Open diary</button>}
-                  <button className="btn-soft" onClick={() => { const pw = prompt(`New password for ${u.name || u.login} (min ${MIN_PASSWORD}):`, genPw()); if (pw) void run(async () => { await adminResetPassword({ data: { id: u.id, password: pw } }); prompt("Password changed. Copy it now:", pw); }); }}>Reset password</button>
-                  {u.id !== c.userId && <button className="btn-danger" onClick={() => confirm(`${u.disabled ? "Enable" : "Disable"} ${u.name || u.login}?`) && run(() => adminSetDisabled({ data: { id: u.id, disabled: !u.disabled } }))}>{u.disabled ? "Enable" : "Disable"}</button>}
+                  <button className="btn-soft" onClick={() => { const pw = prompt(`New password for ${u.name || u.login} (min ${MIN_PASSWORD}):`, genPw()); if (pw) void run(async () => { const r = await call(adminResetPassword as any, { id: u.id, password: pw }); if (r.ok) prompt("Password changed. Copy it now:", pw); return r; }); }}>Reset password</button>
+                  {u.id !== c.userId && <button className="btn-danger" onClick={() => confirm(`${u.disabled ? "Enable" : "Disable"} ${u.name || u.login}?`) && run(() => call(adminSetDisabled as any, { id: u.id, disabled: !u.disabled }))}>{u.disabled ? "Enable" : "Disable"}</button>}
                 </td>
               </tr>
             ))}

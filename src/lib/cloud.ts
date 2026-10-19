@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { cloudApply, cloudRemove, emptyData, exportProfile, getDB, replaceData, setAfterMutate, type Profile } from "@/lib/store";
+import { cloudApply, cloudRemove, emptyData, exportProfile, getDB, mutate, replaceData, setAfterMutate, type Profile } from "@/lib/store";
 import { toEmail, type Role } from "@/lib/login";
 
 // The generated Supabase types do not know the new columns yet, so we talk to it untyped.
@@ -14,14 +14,17 @@ export type CloudState = {
   /** whose diary is open (own id, or a teacher's id when an admin is viewing) */
   activeId: string | null; cloudIds: string[];
   save: SaveState; saveMsg: string; localMode: boolean;
+  /** set when the diary could not be loaded from the cloud; the app stays locked instead of showing empty data */
+  loadError: string;
 };
 
 const LOCAL_KEY = "shikshak-local-mode";
-const INITIAL: CloudState = { status: "loading", userId: null, email: null, roles: [], me: null, activeId: null, cloudIds: [], save: "idle", saveMsg: "", localMode: false };
+const INITIAL: CloudState = { status: "loading", userId: null, email: null, roles: [], me: null, activeId: null, cloudIds: [], save: "idle", saveMsg: "", localMode: false, loadError: "" };
 let state: CloudState = INITIAL;
 const subs = new Set<() => void>();
 const set = (p: Partial<CloudState>) => { state = { ...state, ...p }; subs.forEach((f) => f()); };
 export const useCloud = () => useSyncExternalStore((f) => { subs.add(f); return () => subs.delete(f); }, () => state, () => INITIAL);
+export const getCloudState = () => state;
 export const isStaff = (r: Role[]) => r.includes("teacher") || r.includes("admin");
 
 const versions: Record<string, number> = {};
@@ -29,6 +32,16 @@ const lastProf: Record<string, string> = {};
 const cloudIds = new Set<string>();
 const pk = (id: string) => `shikshak-cloud-pending-${id}`;
 const errMsg = (e: unknown) => (e && typeof e === "object" && "message" in e ? String((e as any).message) : String(e));
+
+const isNetworkError = (e: unknown) => /fetch|network|offline|timeout|timed out/i.test(errMsg(e));
+// Small cache so the app can still open (from this device's copy) when the connection is down.
+type Cache = { roles: Role[]; me: MyProfile | null; version: number };
+const ck = (id: string) => `shikshak-cloud-cache-${id}`;
+const readCache = (id: string): Cache | null => { try { const t = localStorage.getItem(ck(id)); return t ? JSON.parse(t) : null; } catch { return null; } };
+const writeCache = (id: string, patch: Partial<Cache>) => { try { localStorage.setItem(ck(id), JSON.stringify({ ...readCache(id), ...patch })); } catch { /* ignore */ } };
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const counts = (d?: { diary: unknown[]; classes: unknown[]; units: unknown[]; assess: unknown[]; students: unknown[]; years: unknown[] }) =>
+  d ? `${d.classes.length} classes, ${d.students.length} students, ${d.units.length} units, ${d.diary.length} diary entries, ${d.assess.length} assessments, ${d.years.length} year(s)` : "no data";
 
 const toMe = (p: any): MyProfile => ({
   id: p.id, name: p.name ?? "", designation: p.designation ?? "", dept: p.dept ?? "", campus: p.campus ?? "", address: p.address ?? "",
@@ -50,28 +63,62 @@ export function initAuth() {
   setAfterMutate(schedule);
   sb.auth.onAuthStateChange((_e: string, session: any) => { setTimeout(() => void handleSession(session?.user ?? null), 0); });
   sb.auth.getSession().then(({ data }: any) => void handleSession(data?.session?.user ?? null)).catch(() => void handleSession(null));
-  window.addEventListener("online", () => { if (dirty) void flush(); });
+  window.addEventListener("online", () => { if (offlineMode && !dirty) void retryLoad(); else if (dirty) void flush(); });
   window.addEventListener("beforeunload", (e) => { if (dirty || saving) { e.preventDefault(); e.returnValue = ""; } });
 }
 
+let lastUser: any = null;
+let offlineMode = false;
+
 async function handleSession(user: any) {
   if (!user) {
-    if (state.status !== "anon") { cloudRemove([...cloudIds]); cloudIds.clear(); set({ status: "anon", userId: null, email: null, roles: [], me: null, activeId: null, cloudIds: [], save: "idle", saveMsg: "" }); }
+    if (state.status !== "anon") { cloudRemove([...cloudIds]); cloudIds.clear(); set({ status: "anon", userId: null, email: null, roles: [], me: null, activeId: null, cloudIds: [], save: "idle", saveMsg: "", loadError: "" }); }
     return;
   }
-  if (state.userId === user.id && state.status === "ready") return;
+  if (state.userId === user.id && state.status === "ready" && !state.loadError) return;
   if (booting === user.id) return;
+  lastUser = user;
   booting = user.id;
+  try { await bootstrap(user); } finally { booting = null; }
+}
+
+async function bootstrap(user: any) {
+  let roles: Role[] = [];
+  let me: MyProfile | null = null;
   try {
     const [r, p] = await Promise.all([sb.from("user_roles").select("role").eq("user_id", user.id), sb.from("profiles").select("*").eq("id", user.id).maybeSingle()]);
     if (r.error || p.error) throw new Error(errMsg(r.error || p.error));
-    const roles = (r.data ?? []).map((x: any) => x.role) as Role[];
-    const me = p.data ? toMe(p.data) : null;
+    roles = (r.data ?? []).map((x: any) => x.role) as Role[];
+    me = p.data ? toMe(p.data) : null;
+    offlineMode = false;
     if (me && isStaff(roles)) await loadTeacher(user.id);
-    set({ status: "ready", userId: user.id, email: user.email ?? null, roles, me, saveMsg: "" });
+    writeCache(user.id, { roles, me });
+    set({ status: "ready", userId: user.id, email: user.email ?? null, roles, me, loadError: "", saveMsg: "" });
   } catch (e) {
-    set({ status: "ready", userId: user.id, email: user.email ?? null, roles: [], me: null, saveMsg: errMsg(e) });
-  } finally { booting = null; }
+    const cache = readCache(user.id);
+    const local = getDB().data[user.id];
+    if (isNetworkError(e) && cache && local) {
+      // No connection: keep working from this device's copy; it is uploaded (with conflict checks) when the connection returns.
+      let pending: string | null = null;
+      try { pending = localStorage.getItem(pk(user.id)); } catch { /* ignore */ }
+      offlineMode = true;
+      versions[user.id] = pending !== null ? Number(pending) : cache.version;
+      cloudIds.add(user.id);
+      dirty = pending !== null;
+      set({ status: "ready", userId: user.id, email: user.email ?? null, roles: cache.roles, me: cache.me, activeId: user.id, cloudIds: [...cloudIds], loadError: "", save: "error", saveMsg: "Offline — working from this device's copy. Changes upload when the connection returns." });
+      if (dirty) timer = setTimeout(() => void flush(), 15000);
+      return;
+    }
+    set({ status: "ready", userId: user.id, email: user.email ?? null, roles, me, activeId: null, loadError: errMsg(e) });
+  }
+}
+
+/** Try loading the diary again after a load error or when the connection is back. */
+export async function retryLoad() {
+  if (!lastUser || booting) return;
+  booting = lastUser.id;
+  set({ loadError: "" });
+  try { await bootstrap(lastUser); } finally { booting = null; }
 }
 
 export async function signIn(login: string, password: string): Promise<string | null> {
@@ -80,15 +127,42 @@ export async function signIn(login: string, password: string): Promise<string | 
   return /invalid login/i.test(error.message) ? "ID वा पासवर्ड मिलेन। / Wrong ID or password." : error.message;
 }
 
+function downloadText(name: string, text: string) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+  a.download = name; a.click();
+}
+
+/** Keeps a recovery copy of work that could not be uploaded: a downloaded file AND a copy stored on this device. */
+function saveRecovery(id: string) {
+  let text = "";
+  try { text = exportProfile(id); } catch { return; }
+  downloadText(`diary-unsaved-${new Date().toISOString().slice(0, 10)}.json`, text);
+  try { localStorage.setItem(`shikshak-unsaved-${id}-${Date.now()}`, text); } catch { alert("Could not keep a copy on this device (storage is full). Please keep the file that was just downloaded."); }
+}
+export const listUnsaved = (id: string | null) => {
+  const out: { key: string; at: number }[] = [];
+  if (!id) return out;
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i) ?? ""; if (k.startsWith(`shikshak-unsaved-${id}-`)) out.push({ key: k, at: Number(k.split("-").pop()) }); } } catch { /* ignore */ }
+  return out.sort((a, b) => b.at - a.at);
+};
+export const downloadUnsaved = (key: string) => { try { const t = localStorage.getItem(key); if (t) downloadText("diary-unsaved-copy.json", t); } catch { /* ignore */ } };
+export const deleteUnsaved = (key: string) => { try { localStorage.removeItem(key); } catch { /* ignore */ } };
+
 export async function signOut(): Promise<boolean> {
-  while (saving) await new Promise((r) => setTimeout(r, 100));
-  if (dirty || state.save === "error" || state.save === "conflict") {
+  while (saving) await sleep(100);
+  const id = state.activeId;
+  if (id && (dirty || state.save === "error" || state.save === "conflict")) {
     const ok = await flush();
-    if (!ok && !confirm("Some changes are NOT saved to the cloud yet. Sign out anyway? Those changes will be lost.")) return false;
+    if (!ok) {
+      const go = confirm("Your latest changes could NOT be saved to the cloud.\n\nOK = download a backup file of your unsaved work, keep a recovery copy on this device, and sign out.\nCancel = stay signed in (nothing is lost).");
+      if (!go) return false;
+      saveRecovery(id);
+    }
   }
-  for (const id of cloudIds) { try { localStorage.removeItem(pk(id)); } catch { /* ignore */ } }
-  cloudRemove([...cloudIds]); cloudIds.clear(); dirty = false;
-  set({ status: "anon", userId: null, email: null, roles: [], me: null, activeId: null, cloudIds: [], save: "idle", saveMsg: "" });
+  for (const cid of cloudIds) { try { localStorage.removeItem(pk(cid)); localStorage.removeItem(ck(cid)); } catch { /* ignore */ } }
+  cloudRemove([...cloudIds]); cloudIds.clear(); dirty = false; offlineMode = false; lastUser = null;
+  set({ status: "anon", userId: null, email: null, roles: [], me: null, activeId: null, cloudIds: [], save: "idle", saveMsg: "", loadError: "" });
   await sb.auth.signOut();
   return true;
 }
@@ -104,9 +178,19 @@ async function loadTeacher(id: string) {
   ]);
   if (p.error || t.error) throw new Error(errMsg(p.error || t.error));
   if (!p.data) throw new Error("Profile not found");
-  if (!t.data) await sb.from("teacher_data").insert({ teacher_id: id }); // first time; ignore errors
+  let row: { content: unknown; version: number } | null = t.data;
+  if (!row) {
+    // First sign-in: create the diary record. Never carry on silently if this fails.
+    const ins = await sb.from("teacher_data").insert({ teacher_id: id });
+    if (ins.error) {
+      const again = await sb.from("teacher_data").select("content,version").eq("teacher_id", id).maybeSingle();
+      if (again.error || !again.data) throw new Error(`Could not create your diary record: ${errMsg(ins.error)}`);
+      row = again.data;
+    } else row = { content: {}, version: 0 };
+  }
   const prof = toProfile(p.data);
-  const cloudVersion: number = t.data?.version ?? 0;
+  const cloudVersion: number = row.version ?? 0;
+  writeCache(id, { version: cloudVersion });
   let pending: string | null = null;
   try { pending = localStorage.getItem(pk(id)); } catch { /* ignore */ }
   const hasLocal = !!getDB().data[id];
@@ -117,19 +201,22 @@ async function loadTeacher(id: string) {
 
   if (pending !== null && hasLocal) {
     // This device has changes that were never saved to the cloud: never overwrite them silently.
-    cloudApply(id, prof, t.data?.content ?? {}, true);
+    cloudApply(id, prof, row.content ?? {}, true);
     set({ activeId: id, cloudIds: [...cloudIds] });
     if (Number(pending) === cloudVersion) { dirty = true; void flush(); }
     else set({ save: "conflict", saveMsg: "This device has unsaved changes, but the cloud copy was changed from elsewhere." });
     return;
   }
-  cloudApply(id, prof, t.data?.content ?? {});
+  cloudApply(id, prof, row.content ?? {});
   set({ activeId: id, cloudIds: [...cloudIds], save: "idle", saveMsg: "" });
 }
 
 /** Admin: open another teacher's diary (or go back to own with openTeacher(ownId)). */
 export async function openTeacher(id: string) {
-  if (dirty || saving) await flush();
+  if (dirty || saving || state.save === "conflict") {
+    while (saving) await sleep(100);
+    if (!(await flush())) throw new Error("Your current diary has changes that are not saved yet. Wait for “Saved ✓” (or fix the warning at the top), then try again.");
+  }
   await loadTeacher(id);
 }
 
@@ -140,7 +227,10 @@ let saving = false;
 
 function schedule() {
   const id = state.activeId;
-  if (!id || state.status === "anon" || getDB().current !== id || state.save === "conflict") return;
+  if (!id || state.status === "anon") return;
+  // Safety net: while signed in, the open diary must be the cloud diary, otherwise edits would silently stay on this device only.
+  if (getDB().current !== id) { queueMicrotask(() => mutate((x) => { x.current = id; }, false, true)); return; }
+  if (state.save === "conflict") return;
   try { if (localStorage.getItem(pk(id)) === null) localStorage.setItem(pk(id), String(versions[id] ?? 0)); } catch { /* ignore */ }
   dirty = true;
   if (!saving) set({ save: "dirty" });
@@ -164,6 +254,8 @@ export async function flush(): Promise<boolean> {
     if (error) throw error;
     if (!data || data.length === 0) { dirty = true; set({ save: "conflict", saveMsg: "The cloud copy was changed from another device or browser." }); return false; }
     versions[id] = v + 1;
+    offlineMode = false;
+    writeCache(id, { version: v + 1 });
     if (prof) {
       const f = profFields(prof); const j = JSON.stringify(f);
       if (j !== lastProf[id]) { const r = await sb.from("profiles").update(f).eq("id", id); if (r.error) throw r.error; lastProf[id] = j; }
@@ -179,10 +271,11 @@ export async function flush(): Promise<boolean> {
   } finally { saving = false; }
 }
 
-function downloadText(name: string, text: string) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
-  a.download = name; a.click();
+/** "Try again now" button for a failed save. */
+export async function retryNow() {
+  if (!state.activeId) return;
+  dirty = true;
+  await flush();
 }
 
 /** Resolve a save conflict: keep this device's copy (overwrites cloud) or take the cloud copy (this device's copy is downloaded first). */
@@ -244,14 +337,21 @@ export function useSignedUrl(path?: string | null) {
   return u;
 }
 
-/** Copy an old on-device profile into the signed-in account (the old copy stays on the device as a backup). */
-export function importLocalToCloud(localId: string): string | null {
+/** Copy an old on-device profile into the signed-in account (the old copy stays on the device as a backup).
+ *  The cloud diary is REPLACED by that copy, so the current cloud copy is downloaded first. */
+export function importLocalToCloud(localId: string): { ok: boolean; msg: string } {
   const id = state.userId;
-  if (!id || state.activeId !== id) return "Open your own diary first.";
+  if (!id || state.activeId !== id) return { ok: false, msg: "Open your own diary first." };
+  if (dirty || saving || state.save === "error" || state.save === "conflict") return { ok: false, msg: "Wait until the top bar shows “Saved ✓”, then try again." };
   const db = getDB();
   const lp = db.profiles.find((p) => p.id === localId);
-  if (!lp) return "Profile not found.";
+  const ld = db.data[localId];
+  if (!lp || !ld) return { ok: false, msg: "Profile not found." };
+  const cur = db.data[id];
+  if (cur && cur.diary.length + cur.units.length + cur.assess.length + cur.classes.length > 0) {
+    try { downloadText(`diary-cloud-copy-before-import-${Date.now()}.json`, exportProfile(id)); } catch { /* ignore */ }
+  }
   const { designation, dept, campus, address, hod, chief } = lp;
-  replaceData(id, db.data[localId] ?? emptyData(), { designation, dept, campus, address, hod, chief });
-  return null;
+  replaceData(id, ld, { designation, dept, campus, address, hod, chief });
+  return { ok: true, msg: `Moved: ${counts(getDB().data[id])}. Saving to the cloud… (the old copy stays on this device; compare the numbers with your old diary).` };
 }

@@ -175,7 +175,8 @@ export function exportProfile(id: string) {
   const p = db.profiles.find((x) => x.id === id);
   return JSON.stringify({ profile: p, data: db.data[id] ?? emptyData() }, null, 2);
 }
-export function importProfile(json: string) {
+/** `select`: switch to the restored profile (leave false while signed in to the cloud, so the open cloud diary stays open). */
+export function importProfile(json: string, select = true) {
   const o = JSON.parse(json);
   if (!o || typeof o !== "object" || !o.profile?.name) throw new Error("Invalid backup file");
   if (o.data !== undefined && (typeof o.data !== "object" || o.data === null || Array.isArray(o.data))) throw new Error("Invalid backup file: data section is damaged");
@@ -183,6 +184,6 @@ export function importProfile(json: string) {
     const id = uid();
     x.profiles.push({ ...o.profile, id });
     x.data[id] = normalizeData(o.data);
-    x.current = id;
+    if (select) x.current = id;
   }, true);
 }
