@@ -38,6 +38,8 @@ export type Database = {
       profiles: {
         Row: {
           address: string
+          avatar_path: string | null
+          bg: string | null
           campus: string
           chief: string
           dept: string
@@ -45,9 +47,12 @@ export type Database = {
           hod: string
           id: string
           name: string
+          username: string | null
         }
         Insert: {
           address?: string
+          avatar_path?: string | null
+          bg?: string | null
           campus?: string
           chief?: string
           dept?: string
@@ -55,9 +60,12 @@ export type Database = {
           hod?: string
           id: string
           name?: string
+          username?: string | null
         }
         Update: {
           address?: string
+          avatar_path?: string | null
+          bg?: string | null
           campus?: string
           chief?: string
           dept?: string
@@ -65,6 +73,7 @@ export type Database = {
           hod?: string
           id?: string
           name?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -271,16 +280,19 @@ export type Database = {
           content: Json
           teacher_id: string
           updated_at: string
+          version: number
         }
         Insert: {
           content?: Json
           teacher_id: string
           updated_at?: string
+          version?: number
         }
         Update: {
           content?: Json
           teacher_id?: string
           updated_at?: string
+          version?: number
         }
         Relationships: [
           {
@@ -315,6 +327,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bootstrap_admin: { Args: { _email: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -334,7 +347,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "teacher"
+      app_role: "admin" | "teacher" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -462,7 +475,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "teacher"],
+      app_role: ["admin", "teacher", "student"],
     },
   },
 } as const
