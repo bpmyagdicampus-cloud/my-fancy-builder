@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_years: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string
@@ -55,6 +76,204 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      sqc_actions: {
+        Row: {
+          action_taken: string
+          created_at: string
+          created_by: string | null
+          id: string
+          report_id: string
+          resolved_on: string | null
+          response: string
+          responsible: string
+          status: string
+        }
+        Insert: {
+          action_taken?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          report_id: string
+          resolved_on?: string | null
+          response?: string
+          responsible?: string
+          status: string
+        }
+        Update: {
+          action_taken?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          report_id?: string
+          resolved_on?: string | null
+          response?: string
+          responsible?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sqc_actions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "sqc_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sqc_classes: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          section: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          section?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          section?: string
+        }
+        Relationships: []
+      }
+      sqc_members: {
+        Row: {
+          class_id: string
+          created_at: string
+          is_rep: boolean
+          user_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          is_rep?: boolean
+          user_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          is_rep?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sqc_members_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "sqc_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sqc_periods: {
+        Row: {
+          end_time: string
+          period_no: number
+          start_time: string
+        }
+        Insert: {
+          end_time: string
+          period_no: number
+          start_time: string
+        }
+        Update: {
+          end_time?: string
+          period_no?: number
+          start_time?: string
+        }
+        Relationships: []
+      }
+      sqc_reports: {
+        Row: {
+          arrival_time: string | null
+          class_id: string
+          departure_time: string | null
+          facilities: string
+          held: boolean
+          id: string
+          issues: string
+          not_held_reason: string
+          period_no: number
+          present_count: number | null
+          report_date: string
+          requests: string
+          status: string
+          subject: string
+          submitted_at: string
+          submitted_by: string | null
+          submitted_by_name: string
+          suggestions: string
+          teacher_id: string | null
+          teacher_name: string
+          total_count: number | null
+          updated_at: string
+          year_name: string
+        }
+        Insert: {
+          arrival_time?: string | null
+          class_id: string
+          departure_time?: string | null
+          facilities?: string
+          held: boolean
+          id?: string
+          issues?: string
+          not_held_reason?: string
+          period_no: number
+          present_count?: number | null
+          report_date: string
+          requests?: string
+          status?: string
+          subject?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          submitted_by_name?: string
+          suggestions?: string
+          teacher_id?: string | null
+          teacher_name?: string
+          total_count?: number | null
+          updated_at?: string
+          year_name?: string
+        }
+        Update: {
+          arrival_time?: string | null
+          class_id?: string
+          departure_time?: string | null
+          facilities?: string
+          held?: boolean
+          id?: string
+          issues?: string
+          not_held_reason?: string
+          period_no?: number
+          present_count?: number | null
+          report_date?: string
+          requests?: string
+          status?: string
+          subject?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          submitted_by_name?: string
+          suggestions?: string
+          teacher_id?: string | null
+          teacher_name?: string
+          total_count?: number | null
+          updated_at?: string
+          year_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sqc_reports_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "sqc_classes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teacher_data: {
         Row: {
@@ -115,6 +334,16 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      set_active_academic_year: { Args: { _id: string }; Returns: undefined }
+      sqc_is_member: { Args: { _class: string }; Returns: boolean }
+      sqc_is_rep: { Args: { _class: string }; Returns: boolean }
+      sqc_teacher_list: {
+        Args: never
+        Returns: {
+          teacher_id: string
+          teacher_name: string
+        }[]
       }
     }
     Enums: {
