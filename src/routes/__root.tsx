@@ -13,7 +13,6 @@ import { useEffect, type ReactNode } from "react";
 import { AppNav } from "../components/app/AppNav";
 import { AuthGate, Background } from "../components/app/auth";
 import { BottomNav, ShellFrame, Sidebar } from "../components/app/Shell";
-import { Guard } from "../components/app/Guard";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -85,7 +84,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Shikshak Diary — Teacher's Daily Record" },
       { name: "description", content: "Teacher diary: classes, lesson plans, attendance, assessments and monthly reports." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:card", content: "summary" },
+      { name: "theme-color", content: "#13265e" },
       
     ],
     links: [
@@ -93,7 +93,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.ico", sizes: "any" },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "manifest", href: "/site.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&family=Yatra+One&display=swap" },
     ],
@@ -124,15 +127,15 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Guard name="background"><Background /></Guard>
+      <Background />
       <ShellFrame>
-        <Guard name="sidebar"><Sidebar /></Guard>
+        <Sidebar />
         <div className="min-w-0 flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
-          <Guard name="header"><AppNav /></Guard>
+          <AppNav />
           <AuthGate><Outlet /></AuthGate>
         </div>
       </ShellFrame>
-      <Guard name="bottom-nav"><BottomNav /></Guard>
+      <BottomNav />
     </QueryClientProvider>
   );
 }
