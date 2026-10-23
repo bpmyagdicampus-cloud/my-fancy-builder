@@ -21,7 +21,6 @@ const P: Record<string, string> = {
   right: "M9 6l6 6-6 6",
   out: "M9 4H5v16h4M16 8l4 4-4 4M20 12H9",
   x: "M6 6l12 12M18 6L6 18",
-  campus: "M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6",
 };
 export const Icon = ({ n, size = 20 }: { n: keyof typeof P; size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={P[n]} /></svg>
@@ -36,7 +35,6 @@ const ITEMS: Item[] = [
   { to: "/records", ne: "अभिलेख", en: "Records", icon: "folder", who: "staff" },
   { to: "/reports", ne: "प्रतिवेदन", en: "Reports", icon: "chart", who: "staff" },
   { to: "/sqc", ne: "SQC", en: "Student Quality Control", icon: "shield", who: "all" },
-  { to: "/campus", ne: "क्याम्पस", en: "Campus", icon: "campus", who: "staff" },
   { to: "/years", ne: "शैक्षिक वर्ष", en: "Academic years", icon: "cal", who: "staff" },
   { to: "/setup", ne: "सेटअप", en: "Setup", icon: "sliders", who: "staff" },
   { to: "/admin", ne: "प्रशासन", en: "Admin", icon: "admin", who: "admin" },

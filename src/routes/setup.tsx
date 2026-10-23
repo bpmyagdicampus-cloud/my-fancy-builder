@@ -5,6 +5,8 @@ import { mutate, updateData, useTeacher, studentsOf } from "@/lib/store";
 import { weeklyOffOf } from "@/lib/migrate";
 import { CAL_TYPES } from "@/lib/constants";
 import { PROFILE_FIELDS } from "./profiles";
+import { useCloud } from "@/lib/cloud";
+import { CampusSetup } from "@/components/app/CampusSetup";
 
 export const Route = createFileRoute("/setup")({
   head: () => ({ meta: [
@@ -18,18 +20,22 @@ export const Route = createFileRoute("/setup")({
 
 function Setup() {
   const { profile } = useTeacher();
+  const cloud = useCloud();
+  const canEdit = cloud.status !== "ready" || cloud.roles.includes("admin");
   const [f, setF] = useState<Record<string, any>>({});
   useEffect(() => { if (profile) setF(profile); }, [profile?.id]);
   if (!profile) return <NeedProfile />;
   return (
-    <Page title="Setup" sub="Campus, teacher, classes and the academic calendar">
+    <Page title="Setup" sub="Campus, departments, classes, students, teacher details and the academic calendar">
+      <CampusSetup />
       <section className="panel mb-4">
-        <h2 className="mb-3 text-lg font-bold">Campus & teacher</h2>
-        <FormFields fields={PROFILE_FIELDS} value={f} onChange={setF} />
-        <button className="btn mt-3" onClick={() => mutate((x) => { const i = x.profiles.findIndex((p) => p.id === profile.id); x.profiles[i] = { ...x.profiles[i]!, ...f, id: profile.id }; })}>Save</button>
+        <h2 className="mb-3 text-lg font-bold">Teacher details</h2>
+        {!canEdit && <p className="mb-2 text-xs text-muted-foreground">These details are set by the administrator. Please ask the administrator to change them.</p>}
+        <fieldset disabled={!canEdit}><FormFields fields={PROFILE_FIELDS} value={f} onChange={setF} /></fieldset>
+        {canEdit && <button className="btn mt-3" onClick={() => mutate((x) => { const i = x.profiles.findIndex((p) => p.id === profile.id); x.profiles[i] = { ...x.profiles[i]!, ...f, id: profile.id }; })}>Save</button>}
       </section>
-      <WeeklyOff />
-      <p className="no-print mb-2 text-sm text-muted-foreground">Students are managed in <Link to="/students" className="underline">Students</Link>; academic years and subject upgrades in <Link to="/years" className="underline">Academic years</Link>.</p>
+      <WeeklyOff canEdit={canEdit} />
+      <p className="no-print mb-2 text-sm text-muted-foreground">Your own students are in <Link to="/students" className="underline">Students</Link>; academic years and subject upgrades in <Link to="/years" className="underline">Academic years</Link>.</p>
       <Collection k="classes" title="Classes" sort={(a, b) => a.name.localeCompare(b.name)}
         fields={[
           { k: "name", l: "Class / level (e.g. BBS I Year)" }, { k: "subject", l: "Subject" },
@@ -47,21 +53,21 @@ function Setup() {
 
 const DAYS: [string, string][] = [["Sun", "Sunday · आइतबार"], ["Mon", "Monday · सोमबार"], ["Tue", "Tuesday · मंगलबार"], ["Wed", "Wednesday · बुधबार"], ["Thu", "Thursday · बिहीबार"], ["Fri", "Friday · शुक्रबार"], ["Sat", "Saturday · शनिबार"]];
 
-function WeeklyOff() {
+function WeeklyOff({ canEdit }: { canEdit: boolean }) {
   const { data } = useTeacher();
   const off = weeklyOffOf(data);
-  const toggle = (d: string) => updateData((x) => {
+  const toggle = (d: string) => canEdit && updateData((x) => {
     const cur = weeklyOffOf(x);
     x.settings = { ...x.settings, weeklyOff: cur.includes(d) ? cur.filter((y) => y !== d) : [...cur, d] };
   });
   return (
     <section className="panel no-print mb-4">
       <h2 className="mb-1 text-lg font-bold">Weekly holidays · साप्ताहिक बिदा</h2>
-      <p className="mb-3 text-xs text-muted-foreground">Selected days are shaded as holidays in the monthly report and warned about when saving a diary entry.</p>
+      <p className="mb-3 text-xs text-muted-foreground">Selected days are shaded as holidays in the monthly report and warned about when saving a diary entry. {canEdit ? "" : "Only the administrator can change these."}</p>
       <div className="flex flex-wrap gap-2">
         {DAYS.map(([k, l]) => (
           <label key={k} className={off.includes(k) ? "chip-on cursor-pointer" : "chip cursor-pointer"}>
-            <input type="checkbox" className="mr-1.5" checked={off.includes(k)} onChange={() => toggle(k)} />{l}
+            <input type="checkbox" className="mr-1.5" checked={off.includes(k)} disabled={!canEdit} onChange={() => toggle(k)} />{l}
           </label>
         ))}
       </div>
