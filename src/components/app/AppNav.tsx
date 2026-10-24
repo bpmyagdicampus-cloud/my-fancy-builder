@@ -25,7 +25,7 @@ export function AppNav() {
   return (
     <header className="no-print sticky top-0 z-20 border-b border-border bg-card/95 pt-[env(safe-area-inset-top)] backdrop-blur">
       <div className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2">
-        <Link to="/" className="font-display text-lg text-primary md:hidden">शिक्षक डायरी</Link>
+        <Link to="/" className="leading-none text-primary md:hidden"><span className="block font-display text-lg">शिक्षक डायरी</span><span className="block text-[10px] font-normal tracking-wide text-muted-foreground">Teacher's Diary</span></Link>
         <div className="flex-1" />
         {showLinks && profile && yr && <Link to="/years" className={past ? "chip !border-destructive !text-destructive" : "chip"} title="Academic year · शैक्षिक वर्ष">{yr.name}</Link>}
         {staff && c.save !== "idle" && <span className={`chip ${c.save === "error" || c.save === "conflict" ? "!border-destructive !text-destructive" : ""}`}>{SAVE_LABEL[c.save]}</span>}

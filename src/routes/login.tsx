@@ -33,7 +33,8 @@ function Login() {
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 px-4">
       <div className="text-center">
         <h1 className="font-display text-4xl text-primary">शिक्षक डायरी</h1>
-        <p className="text-sm text-muted-foreground">Teacher's Daily Record — sign in</p>
+        <p className="text-sm font-medium tracking-wide text-muted-foreground">Teacher's Diary</p>
+        <p className="text-sm text-muted-foreground">Sign in</p>
       </div>
       <div className="panel space-y-3">
         <div><label className="lbl">User ID or e-mail</label><input className="field" autoComplete="username" value={id} onChange={(e) => setId(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} /></div>

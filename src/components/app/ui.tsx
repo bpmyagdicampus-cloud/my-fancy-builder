@@ -195,6 +195,31 @@ export function Signatures({ roles }: { roles: [string, (string | undefined)?][]
 }
 
 const ORIENT_KEY = "shikshak-print-orient";
+/** Collects every report/plan table on the page (with its heading) and saves it as an Excel or Word file. */
+function exportPage(kind: "xls" | "doc") {
+  const seen = new Set<Element>();
+  const parts: string[] = [];
+  document.querySelectorAll("table.rtable").forEach((t) => {
+    const box = t.closest("section") ?? t.parentElement;
+    if (!box || seen.has(box)) return;
+    seen.add(box);
+    const copy = box.cloneNode(true) as HTMLElement;
+    copy.querySelectorAll(".no-print, button, select, input, textarea").forEach((n) => n.remove());
+    parts.push(copy.innerHTML);
+  });
+  if (!parts.length) { alert("Nothing to export on this page yet. Choose a class / period first so the report is shown."); return; }
+  const css = "body{font-family:Arial,sans-serif;font-size:11pt}table{border-collapse:collapse;width:100%}th,td{border:1px solid #444;padding:4px;vertical-align:top}th{background:#e8edf7}h2,h3{margin:12px 0 6px}";
+  const ns = kind === "doc"
+    ? 'xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"'
+    : 'xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"';
+  const html = `<html ${ns}><head><meta charset="utf-8"><title>Shikshak Diary</title><style>${css}</style></head><body>${parts.join("<br/><br/>")}</body></html>`;
+  const blob = new Blob(["\ufeff", html], { type: kind === "doc" ? "application/msword" : "application/vnd.ms-excel" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `shikshak-diary-${new Date().toISOString().slice(0, 10)}.${kind}`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
 export function PrintBtn() {
   const [o, setO] = useState<"portrait" | "landscape">("portrait");
   useEffect(() => { try { const v = localStorage.getItem(ORIENT_KEY); if (v === "landscape" || v === "portrait") setO(v); } catch { /* ignore */ } }, []);
@@ -206,12 +231,14 @@ export function PrintBtn() {
     window.print();
   };
   return (
-    <div className="no-print flex items-center gap-2">
+    <div className="no-print flex flex-wrap items-center gap-2">
       <select className="field w-44" value={o} onChange={(e) => choose(e.target.value as "portrait" | "landscape")} aria-label="Page orientation">
         <option value="portrait">Portrait · ठाडो</option>
         <option value="landscape">Landscape · तेर्सो</option>
       </select>
-      <button className="btn" onClick={print}>Print</button>
+      <button className="btn" onClick={print} title="Print, or choose “Save as PDF” in the print window">PDF / Print</button>
+      <button className="btn-soft" onClick={() => exportPage("doc")} title="Save as a Word file">Word</button>
+      <button className="btn-soft" onClick={() => exportPage("xls")} title="Save as an Excel file">Excel</button>
     </div>
   );
 }

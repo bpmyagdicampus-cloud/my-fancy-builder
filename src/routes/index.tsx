@@ -21,6 +21,7 @@ function Home() {
     return (
       <main className="mx-auto max-w-2xl px-4 py-20 text-center">
         <h1 className="font-display text-5xl text-primary">शिक्षक डायरी</h1>
+        <p className="mt-1 text-base font-medium tracking-wide text-muted-foreground">Teacher's Diary</p>
         <p className="mt-3 text-muted-foreground">Daily teaching records, plans, attendance, assessments and monthly reports — kept on this device.</p>
         <Link to="/profiles" className="btn mt-6">Start — choose or create teacher</Link>
       </main>
