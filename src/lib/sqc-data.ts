@@ -25,7 +25,8 @@ async function run<T>(p: PromiseLike<{ data: any; error: any }>, pick: (d: any) 
 
 export const loadMemberships = (userId: string) => run<Membership[]>(sb.from("sqc_members").select("user_id,class_id,is_rep").eq("user_id", userId), (d) => d ?? []);
 export const loadAllMembers = () => run<Membership[]>(sb.from("sqc_members").select("user_id,class_id,is_rep"), (d) => d ?? []);
-export const loadClasses = () => run<SqcClass[]>(sb.from("sqc_classes").select("id,name,section").order("name"), (d) => d ?? []);
+// SQC uses the central class list from Setup (setup_classes) — see docs/phase5/40_sqc_central_classes.sql
+export const loadClasses = () => run<SqcClass[]>(sb.from("setup_classes").select("id,name").order("name"), (d) => (d ?? []).map((c: any) => ({ id: c.id, name: c.name, section: "" })));
 export const loadPeriods = () => run<Period[]>(sb.from("sqc_periods").select("period_no,start_time,end_time").order("period_no"), (d) => d ?? []);
 export const loadTeachers = () => run<Teacher[]>(sb.rpc("sqc_teacher_list"), (d) => d ?? []);
 export const loadReports = () => run<Report[]>(sb.from("sqc_reports").select("*").order("report_date", { ascending: false }).limit(5000), (d) => d ?? []);
