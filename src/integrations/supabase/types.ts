@@ -35,6 +35,153 @@ export type Database = {
         }
         Relationships: []
       }
+      campus_classes: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          no: number
+          program_id: string
+          section: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          no: number
+          program_id: string
+          section?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          no?: number
+          program_id?: string
+          section?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campus_classes_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campus_profile: {
+        Row: {
+          address: string
+          email: string
+          id: number
+          name: string
+          phone: string
+          updated_at: string
+          website: string
+        }
+        Insert: {
+          address?: string
+          email?: string
+          id?: number
+          name?: string
+          phone?: string
+          updated_at?: string
+          website?: string
+        }
+        Update: {
+          address?: string
+          email?: string
+          id?: number
+          name?: string
+          phone?: string
+          updated_at?: string
+          website?: string
+        }
+        Relationships: []
+      }
+      campus_students: {
+        Row: {
+          active: boolean
+          class_id: string
+          created_at: string
+          history: Json
+          id: string
+          name: string
+          roll: number
+        }
+        Insert: {
+          active?: boolean
+          class_id: string
+          created_at?: string
+          history?: Json
+          id?: string
+          name: string
+          roll?: number
+        }
+        Update: {
+          active?: boolean
+          class_id?: string
+          created_at?: string
+          history?: Json
+          id?: string
+          name?: string
+          roll?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campus_students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "campus_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      department_heads: {
+        Row: {
+          created_at: string
+          department_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "department_heads_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      departments: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string
@@ -76,6 +223,102 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      programs: {
+        Row: {
+          created_at: string
+          department_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          department_id: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programs_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_classes: {
+        Row: {
+          created_at: string
+          department_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          department_id: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_classes_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setup_students: {
+        Row: {
+          active: boolean
+          class_id: string
+          created_at: string
+          history: Json
+          id: string
+          name: string
+          roll: number
+        }
+        Insert: {
+          active?: boolean
+          class_id: string
+          created_at?: string
+          history?: Json
+          id?: string
+          name: string
+          roll?: number
+        }
+        Update: {
+          active?: boolean
+          class_id?: string
+          created_at?: string
+          history?: Json
+          id?: string
+          name?: string
+          roll?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "setup_classes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sqc_actions: {
         Row: {
@@ -328,6 +571,9 @@ export type Database = {
     }
     Functions: {
       bootstrap_admin: { Args: { _email: string }; Returns: string }
+      campus_class_dept: { Args: { _class: string }; Returns: string }
+      campus_program_dept: { Args: { _program: string }; Returns: string }
+      can_manage_dept: { Args: { _dept: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -335,7 +581,9 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_staff_user: { Args: never; Returns: boolean }
       set_active_academic_year: { Args: { _id: string }; Returns: undefined }
+      setup_class_dept: { Args: { _class: string }; Returns: string }
       sqc_is_member: { Args: { _class: string }; Returns: boolean }
       sqc_is_rep: { Args: { _class: string }; Returns: boolean }
       sqc_teacher_list: {

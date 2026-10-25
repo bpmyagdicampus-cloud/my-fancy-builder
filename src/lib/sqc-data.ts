@@ -25,7 +25,8 @@ async function run<T>(p: PromiseLike<{ data: any; error: any }>, pick: (d: any) 
 
 export const loadMemberships = (userId: string) => run<Membership[]>(sb.from("sqc_members").select("user_id,class_id,is_rep").eq("user_id", userId), (d) => d ?? []);
 export const loadAllMembers = () => run<Membership[]>(sb.from("sqc_members").select("user_id,class_id,is_rep"), (d) => d ?? []);
-export const loadClasses = () => run<SqcClass[]>(sb.from("sqc_classes").select("id,name,section").order("name"), (d) => d ?? []);
+// SQC uses the central class list from Setup (setup_classes) — see docs/phase5/40_sqc_central_classes.sql
+export const loadClasses = () => run<SqcClass[]>(sb.from("setup_classes").select("id,name").order("name"), (d) => (d ?? []).map((c: any) => ({ id: c.id, name: c.name, section: "" })));
 export const loadPeriods = () => run<Period[]>(sb.from("sqc_periods").select("period_no,start_time,end_time").order("period_no"), (d) => d ?? []);
 export const loadTeachers = () => run<Teacher[]>(sb.rpc("sqc_teacher_list"), (d) => d ?? []);
 export const loadReports = () => run<Report[]>(sb.from("sqc_reports").select("*").order("report_date", { ascending: false }).limit(5000), (d) => d ?? []);
@@ -58,10 +59,11 @@ export const addAction = (a: { report_id: string; response: string; responsible:
 
 // ----- administrator: classes, members, periods -----
 /** Brings the classes created in Setup into SQC (and links older SQC classes to them). Nothing is deleted. */
-export const syncClasses = () => run<number>(sb.rpc("sqc_sync_classes"), (d) => (typeof d === "number" ? d : 0));
-export const saveClass = (c: { id?: string; name: string; section: string }) =>
-  run<null>(c.id ? sb.from("sqc_classes").update({ name: c.name.trim(), section: c.section.trim() }).eq("id", c.id) : sb.from("sqc_classes").insert({ name: c.name.trim(), section: c.section.trim() }), () => null);
-export const deleteClass = (id: string) => run<null>(sb.from("sqc_classes").delete().eq("id", id), () => null);
+// Classes live only in Setup -> Classes now; SQC reads them directly, so there is nothing to sync or edit here.
+export const syncClasses = async (): Promise<R<number>> => ({ ok: true, data: 0 });
+const SETUP_ONLY = "Classes are created and renamed in Setup -> Classes.";
+export const saveClass = async (_c: { id?: string; name: string; section: string }): Promise<R<null>> => ({ ok: false, error: SETUP_ONLY });
+export const deleteClass = async (_id: string): Promise<R<null>> => ({ ok: false, error: SETUP_ONLY });
 export const setMember = (m: Membership) => run<null>(sb.from("sqc_members").upsert(m, { onConflict: "user_id,class_id" }), () => null);
 export const removeMember = (userId: string, classId: string) => run<null>(sb.from("sqc_members").delete().eq("user_id", userId).eq("class_id", classId), () => null);
 export const savePeriod = (p: Period) => run<null>(sb.from("sqc_periods").upsert({ period_no: p.period_no, start_time: p.start_time, end_time: p.end_time }, { onConflict: "period_no" }), () => null);
