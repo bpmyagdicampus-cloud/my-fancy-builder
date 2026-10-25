@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as CampusRouteImport } from './routes/campus'
 import { Route as DiaryRouteImport } from './routes/diary'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PlansRouteImport } from './routes/plans'
@@ -22,7 +23,6 @@ import { Route as SetupRouteImport } from './routes/setup'
 import { Route as SqcRouteImport } from './routes/sqc'
 import { Route as StudentsRouteImport } from './routes/students'
 import { Route as YearsRouteImport } from './routes/years'
-import { Route as CampusRouteImport } from './routes/campus'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -37,6 +37,11 @@ const AccountRoute = AccountRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampusRoute = CampusRouteImport.update({
+  id: '/campus',
+  path: '/campus',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DiaryRoute = DiaryRouteImport.update({
@@ -89,16 +94,12 @@ const YearsRoute = YearsRouteImport.update({
   path: '/years',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CampusRoute = CampusRouteImport.update({
-  id: '/campus',
-  path: '/campus',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
+  '/campus': typeof CampusRoute
   '/diary': typeof DiaryRoute
   '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
@@ -109,12 +110,12 @@ export interface FileRoutesByFullPath {
   '/sqc': typeof SqcRoute
   '/students': typeof StudentsRoute
   '/years': typeof YearsRoute
-  '/campus': typeof CampusRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
+  '/campus': typeof CampusRoute
   '/diary': typeof DiaryRoute
   '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
@@ -125,13 +126,13 @@ export interface FileRoutesByTo {
   '/sqc': typeof SqcRoute
   '/students': typeof StudentsRoute
   '/years': typeof YearsRoute
-  '/campus': typeof CampusRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
+  '/campus': typeof CampusRoute
   '/diary': typeof DiaryRoute
   '/login': typeof LoginRoute
   '/plans': typeof PlansRoute
@@ -142,7 +143,6 @@ export interface FileRoutesById {
   '/sqc': typeof SqcRoute
   '/students': typeof StudentsRoute
   '/years': typeof YearsRoute
-  '/campus': typeof CampusRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -150,6 +150,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/campus'
     | '/diary'
     | '/login'
     | '/plans'
@@ -160,12 +161,12 @@ export interface FileRouteTypes {
     | '/sqc'
     | '/students'
     | '/years'
-    | '/campus'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/account'
     | '/admin'
+    | '/campus'
     | '/diary'
     | '/login'
     | '/plans'
@@ -176,12 +177,12 @@ export interface FileRouteTypes {
     | '/sqc'
     | '/students'
     | '/years'
-    | '/campus'
   id:
     | '__root__'
     | '/'
     | '/account'
     | '/admin'
+    | '/campus'
     | '/diary'
     | '/login'
     | '/plans'
@@ -192,13 +193,13 @@ export interface FileRouteTypes {
     | '/sqc'
     | '/students'
     | '/years'
-    | '/campus'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
+  CampusRoute: typeof CampusRoute
   DiaryRoute: typeof DiaryRoute
   LoginRoute: typeof LoginRoute
   PlansRoute: typeof PlansRoute
@@ -209,7 +210,6 @@ export interface RootRouteChildren {
   SqcRoute: typeof SqcRoute
   StudentsRoute: typeof StudentsRoute
   YearsRoute: typeof YearsRoute
-  CampusRoute: typeof CampusRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -233,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campus': {
+      id: '/campus'
+      path: '/campus'
+      fullPath: '/campus'
+      preLoaderRoute: typeof CampusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/diary': {
@@ -305,13 +312,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof YearsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/campus': {
-      id: '/campus'
-      path: '/campus'
-      fullPath: '/campus'
-      preLoaderRoute: typeof CampusRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -319,6 +319,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
+  CampusRoute: CampusRoute,
   DiaryRoute: DiaryRoute,
   LoginRoute: LoginRoute,
   PlansRoute: PlansRoute,
@@ -329,7 +330,6 @@ const rootRouteChildren: RootRouteChildren = {
   SqcRoute: SqcRoute,
   StudentsRoute: StudentsRoute,
   YearsRoute: YearsRoute,
-  CampusRoute: CampusRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
