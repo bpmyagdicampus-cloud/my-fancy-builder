@@ -59,10 +59,11 @@ export const addAction = (a: { report_id: string; response: string; responsible:
 
 // ----- administrator: classes, members, periods -----
 /** Brings the classes created in Setup into SQC (and links older SQC classes to them). Nothing is deleted. */
-export const syncClasses = () => run<number>(sb.rpc("sqc_sync_classes"), (d) => (typeof d === "number" ? d : 0));
-export const saveClass = (c: { id?: string; name: string; section: string }) =>
-  run<null>(c.id ? sb.from("sqc_classes").update({ name: c.name.trim(), section: c.section.trim() }).eq("id", c.id) : sb.from("sqc_classes").insert({ name: c.name.trim(), section: c.section.trim() }), () => null);
-export const deleteClass = (id: string) => run<null>(sb.from("sqc_classes").delete().eq("id", id), () => null);
+// Classes live only in Setup -> Classes now; SQC reads them directly, so there is nothing to sync or edit here.
+export const syncClasses = async (): Promise<R<number>> => ({ ok: true, data: 0 });
+const SETUP_ONLY = "Classes are created and renamed in Setup -> Classes.";
+export const saveClass = async (_c: { id?: string; name: string; section: string }): Promise<R<null>> => ({ ok: false, error: SETUP_ONLY });
+export const deleteClass = async (_id: string): Promise<R<null>> => ({ ok: false, error: SETUP_ONLY });
 export const setMember = (m: Membership) => run<null>(sb.from("sqc_members").upsert(m, { onConflict: "user_id,class_id" }), () => null);
 export const removeMember = (userId: string, classId: string) => run<null>(sb.from("sqc_members").delete().eq("user_id", userId).eq("class_id", classId), () => null);
 export const savePeriod = (p: Period) => run<null>(sb.from("sqc_periods").upsert({ period_no: p.period_no, start_time: p.start_time, end_time: p.end_time }, { onConflict: "period_no" }), () => null);
