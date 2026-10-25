@@ -11,6 +11,9 @@ export type Cls = {
   id: string; name: string; subject: string; code: string; year: string; totalLh: number; students: string;
   /** subject was replaced by "Upgrade subject": kept for history, hidden from new entries */
   closed?: boolean;
+  /** department (campus structure) and the central class record this class is linked to */
+  deptId?: string;
+  centralId?: string;
   /** carried into a new academic year but the subject has not been upgraded/confirmed yet */
   pending?: boolean;
 };

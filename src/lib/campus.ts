@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { friendly, type R } from "@/lib/sqc-data";
 
@@ -28,18 +29,17 @@ function nice(e: any): string {
 
 export async function loadCampus(): Promise<R<CampusData>> {
   try {
-    const [p, d, h, c, s] = await Promise.all([
+    const [p, d, h, c] = await Promise.all([
       sb.from("campus_profile").select("name,address,website,email,phone").eq("id", 1).maybeSingle(),
       sb.from("departments").select("id,name").order("name"),
       sb.from("department_heads").select("user_id,department_id"),
       sb.from("setup_classes").select("id,department_id,name").order("name"),
-      sb.from("setup_students").select("id,class_id,name,roll,active,history").order("roll").limit(20000),
     ]);
-    for (const r of [p, d, h, c, s]) if (r.error) return { ok: false, error: nice(r.error) };
+    for (const r of [p, d, h, c]) if (r.error) return { ok: false, error: nice(r.error) };
     return { ok: true, data: {
       profile: { ...EMPTY_PROFILE, ...(p.data ?? {}) },
       departments: d.data ?? [], heads: h.data ?? [], classes: c.data ?? [],
-      students: (s.data ?? []).map((x: any) => ({ ...x, history: Array.isArray(x.history) ? x.history : [] })),
+      students: [], // students are managed in "Upgrade Students" (each teacher's own class lists)
     } };
   } catch (e) { return { ok: false, error: `No connection (${e instanceof Error ? e.message : e}).` }; }
 }
@@ -73,3 +73,28 @@ export async function moveStudents(list: CampusStudent[], toClass: string, label
   }
   return { ok: true, data: n };
 }
+
+// ---- shared lookup (departments + classes) used by the Setup > Classes form ----
+type Lookup = { departments: Department[]; classes: CampusClass[]; heads: Head[]; ready: boolean; failed: boolean };
+let LK: Lookup = { departments: [], classes: [], heads: [], ready: false, failed: false };
+const subs = new Set<() => void>();
+let loading = false;
+export async function refreshLookup(): Promise<R<CampusData>> {
+  loading = true;
+  const r = await loadCampus();
+  LK = r.ok ? { departments: r.data.departments, classes: r.data.classes, heads: r.data.heads, ready: true, failed: false } : { ...LK, ready: true, failed: true };
+  loading = false;
+  subs.forEach((f) => f());
+  return r;
+}
+export function useLookup(): Lookup {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const f = () => tick((x) => x + 1);
+    subs.add(f);
+    if (!LK.ready && !loading) void refreshLookup();
+    return () => { subs.delete(f); };
+  }, []);
+  return LK;
+}
+export const findManagement = (deps: Department[]) => deps.find((d) => d.name.trim().toLowerCase() === "management");

@@ -1,12 +1,11 @@
-# Batch 6A (version 2) — Campus set-up inside Setup
+# Batch 6 — database steps (run by YOU after a backup)
 
-Database step (run by YOU, after a backup):
-1. Supabase -> SQL Editor -> New query -> paste ALL of `30_campus.sql` -> Run.
-   It only ADDS new tables/functions. Works whether or not you ran the first version.
-2. Upload the app files (zip) to GitHub. Vercel builds it.
-3. Open Setup. At the top: campus name and details (everyone sees), then Departments -> Classes -> Students.
+Run in this order in the SQL editor of the SAME database the app uses (Lovable Cloud):
+1. `30_campus.sql`   (campus profile, departments, department heads, central class list)  — already run
+2. `32_class_link.sql` (links SQC classes to the classes created in Setup)
 
-Who can do what (enforced by the database, not only by the screen):
-- Administrator: edits the campus profile, departments, department heads, classes and students.
-- Department head (a teacher appointed by the administrator): classes and students of OWN department.
-- Other teachers: can view everything, change nothing here.
+Both only ADD tables / a column / a function. Nothing is deleted. Safe to run twice.
+
+Classes are created ONLY in Setup -> Classes (choose the department). SQC shows them automatically
+("Refresh from Setup" button in SQC -> Setup -> Classes). Only the administrator and a department head
+can create a new class; other teachers choose an existing one.

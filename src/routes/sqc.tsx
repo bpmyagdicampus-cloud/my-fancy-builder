@@ -7,7 +7,7 @@ import { SqcSetup, type StudentUser } from "@/components/sqc/SqcSetup";
 import { Summary } from "@/components/sqc/Summary";
 import { isStaff, useCloud } from "@/lib/cloud";
 import { adminListUsers, type AdminUser, type Result } from "@/lib/admin.functions";
-import { loadActions, loadAllMembers, loadClasses, loadMemberships, loadPeriods, loadReports, loadTeachers, type Membership, type Teacher } from "@/lib/sqc-data";
+import { syncClasses, loadActions, loadAllMembers, loadClasses, loadMemberships, loadPeriods, loadReports, loadTeachers, type Membership, type Teacher } from "@/lib/sqc-data";
 import type { Action, Period, Report, SqcClass } from "@/lib/sqc";
 
 export const Route = createFileRoute("/sqc")({
@@ -39,6 +39,7 @@ function Sqc() {
 
   const load = useCallback(async () => {
     if (!c.userId) return;
+    await syncClasses(); // best effort: classes come from Setup
     const [cl, pe, re, ac, me] = await Promise.all([loadClasses(), loadPeriods(), loadReports(), loadActions(), loadMemberships(c.userId)]);
     const bad = [cl, pe, re, ac, me].find((x) => !x.ok);
     if (bad && !bad.ok) { setError(bad.error); setState("error"); return; }

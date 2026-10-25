@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs } from "@/components/app/ui";
-import { deleteClass, deletePeriod, removeMember, saveClass, savePeriod, setMember, type Membership } from "@/lib/sqc-data";
+import { deletePeriod, removeMember, savePeriod, setMember, syncClasses, type Membership } from "@/lib/sqc-data";
 import { className, hhmm, type Period, type SqcClass } from "@/lib/sqc";
 
 export type StudentUser = { id: string; name: string; login: string };
@@ -28,21 +28,16 @@ export function SqcSetup({ classes, periods, members, students, onChanged }: {
 
       {tab === "classes" && (
         <div className="panel space-y-3">
-          <div className="flex flex-wrap items-end gap-2">
-            <div><label className="lbl">Class name</label><input className="field" placeholder="BBS I" value={nc.name} onChange={(e) => setNc({ ...nc, name: e.target.value })} /></div>
-            <div><label className="lbl">Section (optional)</label><input className="field" placeholder="A" value={nc.section} onChange={(e) => setNc({ ...nc, section: e.target.value })} /></div>
-            <button className="btn" onClick={async () => { if (!nc.name.trim()) return setNote("Enter the class name."); const r = await saveClass(nc); if (r.ok) setNc({ name: "", section: "" }); done(r, "Class added."); }}>Add class</button>
-          </div>
+          <p className="text-sm text-muted-foreground">SQC uses the classes created in <b>Setup → Classes</b>. To add or rename a class, do it there; it appears here automatically.</p>
+          <button className="btn-soft" onClick={async () => done(await syncClasses(), "Classes refreshed from Setup.")}>Refresh from Setup</button>
           <ul className="space-y-1 text-sm">
             {classes.map((c) => (
               <li key={c.id} className="flex flex-wrap items-center gap-2 border-b border-border py-1">
                 <span className="flex-1 font-medium">{className(c)}</span>
                 <span className="text-xs text-muted-foreground">{members.filter((m) => m.class_id === c.id).length} students · {members.filter((m) => m.class_id === c.id && m.is_rep).length} rep</span>
-                <button className="btn-soft" onClick={async () => { const n = prompt("Class name", c.name); if (n === null) return; const s = prompt("Section", c.section); if (s === null) return; done(await saveClass({ id: c.id, name: n, section: s }), "Saved."); }}>Rename</button>
-                <button className="btn-danger" onClick={async () => confirm(`Delete ${className(c)}? (not possible if it already has reports)`) && done(await deleteClass(c.id), "Deleted.")}>Delete</button>
               </li>
             ))}
-            {!classes.length && <li className="text-muted-foreground">No classes yet.</li>}
+            {!classes.length && <li className="text-muted-foreground">No classes yet. Create them in Setup → Classes, then press “Refresh from Setup”.</li>}
           </ul>
         </div>
       )}

@@ -31,7 +31,6 @@ const ITEMS: Item[] = [
   { to: "/", ne: "गृह", en: "Home", icon: "home", who: "staff" },
   { to: "/diary", ne: "दैनिक डायरी", en: "Daily Diary", icon: "book", who: "staff" },
   { to: "/plans", ne: "योजना", en: "Plans", icon: "plan", who: "staff" },
-  { to: "/students", ne: "विद्यार्थी", en: "Students", icon: "users", who: "staff" },
   { to: "/records", ne: "अभिलेख", en: "Records", icon: "folder", who: "staff" },
   { to: "/reports", ne: "प्रतिवेदन", en: "Reports", icon: "chart", who: "staff" },
   { to: "/sqc", ne: "SQC", en: "Student Quality Control", icon: "shield", who: "all" },

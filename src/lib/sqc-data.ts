@@ -57,6 +57,8 @@ export const addAction = (a: { report_id: string; response: string; responsible:
   run<null>(sb.from("sqc_actions").insert(a), () => null);
 
 // ----- administrator: classes, members, periods -----
+/** Brings the classes created in Setup into SQC (and links older SQC classes to them). Nothing is deleted. */
+export const syncClasses = () => run<number>(sb.rpc("sqc_sync_classes"), (d) => (typeof d === "number" ? d : 0));
 export const saveClass = (c: { id?: string; name: string; section: string }) =>
   run<null>(c.id ? sb.from("sqc_classes").update({ name: c.name.trim(), section: c.section.trim() }).eq("id", c.id) : sb.from("sqc_classes").insert({ name: c.name.trim(), section: c.section.trim() }), () => null);
 export const deleteClass = (id: string) => run<null>(sb.from("sqc_classes").delete().eq("id", id), () => null);

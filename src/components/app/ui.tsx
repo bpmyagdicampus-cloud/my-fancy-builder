@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { ClassPickField, DeptField } from "@/components/app/ClassFields";
 import { BS_MONTHS, daysInBsMonth, parseBs, bsKey, todayBs, fmtBs } from "@/lib/bs";
 import { updateData, uid, useTeacher, type ListKey } from "@/lib/store";
 
@@ -80,7 +81,7 @@ export function ClassSelect({ value, onChange, all, active }: { value: string; o
 /* ---------- Generic record collection ---------- */
 export type Field = {
   k: string; l: string;
-  t?: "text" | "area" | "num" | "date" | "time" | "sel" | "cls" | "rows";
+  t?: "text" | "area" | "num" | "date" | "time" | "sel" | "cls" | "rows" | "dept" | "cpick";
   opts?: string[]; cols?: [string, string][]; wide?: boolean;
 };
 type Rec = any;
@@ -101,6 +102,8 @@ export function FormFields({ fields, value, onChange }: { fields: Field[]; value
           {f.t === "area" ? <textarea className="field min-h-20" value={value[f.k] ?? ""} onChange={(e) => set(f.k, e.target.value)} />
           : f.t === "date" ? <BsDate value={value[f.k]} onChange={(v) => set(f.k, v)} />
           : f.t === "cls" ? <ClassSelect active value={value[f.k] ?? ""} onChange={(v) => set(f.k, v)} />
+          : f.t === "dept" ? <DeptField value={value} onChange={onChange} />
+          : f.t === "cpick" ? <ClassPickField value={value} onChange={onChange} />
           : f.t === "sel" ? (
             <select className="field" value={value[f.k] ?? ""} onChange={(e) => set(f.k, e.target.value)}>
               {f.opts?.map((o) => <option key={o}>{o}</option>)}

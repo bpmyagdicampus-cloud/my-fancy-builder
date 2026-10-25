@@ -7,6 +7,8 @@ import { CAL_TYPES } from "@/lib/constants";
 import { PROFILE_FIELDS } from "./profiles";
 import { useCloud } from "@/lib/cloud";
 import { CampusSetup } from "@/components/app/CampusSetup";
+import { DeptTag } from "@/components/app/ClassFields";
+import * as C from "@/lib/campus";
 
 export const Route = createFileRoute("/setup")({
   head: () => ({ meta: [
@@ -35,14 +37,14 @@ function Setup() {
         {canEdit && <button className="btn mt-3" onClick={() => mutate((x) => { const i = x.profiles.findIndex((p) => p.id === profile.id); x.profiles[i] = { ...x.profiles[i]!, ...f, id: profile.id }; })}>Save</button>}
       </section>
       <WeeklyOff canEdit={canEdit} />
-      <p className="no-print mb-2 text-sm text-muted-foreground">Your own students are in <Link to="/students" className="underline">Students</Link>; academic years and subject upgrades in <Link to="/years" className="underline">Academic years</Link>.</p>
-      <Collection k="classes" title="Classes" sort={(a, b) => a.name.localeCompare(b.name)}
-        fields={[
-          { k: "name", l: "Class / level (e.g. BBS I Year)" }, { k: "subject", l: "Subject" },
-          { k: "code", l: "Subject code (e.g. Acc 211)" },
-          { k: "totalLh", l: "Total lecture hours (LH)", t: "num" },
-        ]}
-        summary={(c) => <><b>{c.name}</b> · {c.subject} {c.code && `(${c.code})`}<div className="text-xs text-muted-foreground">{c.totalLh} LH · {studentsOf(c).length} students{c.closed && <span className="chip ml-2">closed · old subject</span>}{c.pending && <span className="chip ml-2">subject not upgraded yet</span>}</div></>} />
+      <section className="panel no-print mb-4 flex flex-wrap items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-bold">Upgrade Students · विद्यार्थी अपग्रेड</h2>
+          <p className="text-sm text-muted-foreground">Add students, move one student, or move a whole class to another class. The Active setting stays as it is. Academic years and subject upgrades are in <Link to="/years" className="underline">Academic years</Link>.</p>
+        </div>
+        <Link to="/students" className="btn">Upgrade Students</Link>
+      </section>
+      <ClassesByDept />
       <Collection k="cal" title="Campus academic calendar"
         fields={[{ k: "type", l: "Type", t: "sel", opts: CAL_TYPES }, { k: "title", l: "Title / note" }, { k: "from", l: "From", t: "date" }, { k: "to", l: "To (blank for one day)", t: "date" }]}
         defaults={{ to: "" }}
@@ -72,5 +74,72 @@ function WeeklyOff({ canEdit }: { canEdit: boolean }) {
         ))}
       </div>
     </section>
+  );
+}
+
+/** The original Classes list, now grouped by department (Management by default) with a department on every class. */
+function ClassesByDept() {
+  const { data } = useTeacher();
+  const cl = useCloud();
+  const lk = C.useLookup();
+  const [dept, setDept] = useState("all");
+  const [msg, setMsg] = useState("");
+  const mg = C.findManagement(lk.departments)?.id ?? "";
+  const deptOf = (c: { deptId?: string | undefined }) => c.deptId || mg;
+  const mine = lk.heads.filter((h) => h.user_id === cl.userId).map((h) => h.department_id);
+  const canIn = (id: string) => cl.roles.includes("admin") || mine.includes(id);
+  const unlinked = data.classes.filter((c) => !c.closed && !c.centralId);
+  const count = (id: string) => data.classes.filter((c) => deptOf(c) === id).length;
+
+  const linkAll = async () => {
+    setMsg("");
+    let made = 0, linked = 0;
+    let classes = [...lk.classes];
+    const map: Record<string, { deptId: string; centralId: string }> = {};
+    for (const c of unlinked) {
+      const dId = deptOf(c);
+      if (!dId) continue;
+      const find = () => classes.find((x) => x.department_id === dId && x.name.trim().toLowerCase() === c.name.trim().toLowerCase());
+      let hit = find();
+      if (!hit && canIn(dId) && c.name.trim()) {
+        const r = await C.addClass(dId, c.name);
+        if (r.ok) { made++; const rr = await C.refreshLookup(); if (rr.ok) { classes = rr.data.classes; hit = find(); } } else setMsg(r.error);
+      }
+      if (hit) { map[c.id] = { deptId: dId, centralId: hit.id }; linked++; }
+    }
+    updateData((d) => { for (const c of d.classes) { const m = map[c.id]; if (m) { c.deptId = m.deptId; c.centralId = m.centralId; } } });
+    setMsg(`${linked} classes linked${made ? `, ${made} new classes added to the department` : ""}.${unlinked.length - linked ? ` ${unlinked.length - linked} could not be linked (ask the administrator or department head).` : ""}`);
+  };
+
+  return (
+    <>
+      {lk.departments.length > 0 && (
+        <section className="panel no-print mb-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold">Department · विभाग:</span>
+            <button className={dept === "all" ? "chip-on" : "chip"} onClick={() => setDept("all")}>All ({data.classes.length})</button>
+            {lk.departments.map((d) => <button key={d.id} className={dept === d.id ? "chip-on" : "chip"} onClick={() => setDept(d.id)}>{d.name} ({count(d.id)})</button>)}
+          </div>
+          {unlinked.length > 0 && (
+            <div className="mt-2 text-sm">
+              <button className="btn-soft" onClick={() => void linkAll()}>Link {unlinked.length} existing classes to their department</button>
+              <span className="ml-2 text-xs text-muted-foreground">Classes without a department are treated as Management. Linking makes them available to SQC.</span>
+            </div>
+          )}
+          {msg && <p className="mt-2 rounded-md border border-primary p-2 text-sm">{msg}</p>}
+        </section>
+      )}
+      <Collection k="classes" title="Classes · कक्षा" sort={(a, b) => a.name.localeCompare(b.name)}
+        filter={(c) => dept === "all" || deptOf(c) === dept}
+        defaults={{ deptId: dept !== "all" ? dept : mg }}
+        fields={[
+          { k: "deptId", l: "Department · विभाग", t: "dept" },
+          { k: "name", l: "Class · कक्षा (e.g. BBS I)", t: "cpick" },
+          { k: "subject", l: "Subject" },
+          { k: "code", l: "Subject code (e.g. Acc 211)" },
+          { k: "totalLh", l: "Total lecture hours (LH)", t: "num" },
+        ]}
+        summary={(c) => <><DeptTag deptId={c.deptId} /><b>{c.name}</b> · {c.subject} {c.code && `(${c.code})`}<div className="text-xs text-muted-foreground">{c.totalLh} LH · {studentsOf(c).length} students{c.closed && <span className="chip ml-2">closed · old subject</span>}{c.pending && <span className="chip ml-2">subject not upgraded yet</span>}{!c.centralId && <span className="chip ml-2">not linked to a department class yet</span>}</div></>} />
+    </>
   );
 }
