@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Page } from "@/components/app/ui";
 import { addAcademicYear, openTeacher, setActiveAcademicYear, useCloud } from "@/lib/cloud";
-import { loadClasses } from "@/lib/sqc-data";
+import { loadClasses, syncClasses } from "@/lib/sqc-data";
 import { className, type SqcClass } from "@/lib/sqc";
 import { MIN_PASSWORD } from "@/lib/login";
 import { adminCreateUser, adminListUsers, adminResetPassword, adminSetDisabled, adminSetRole, type AdminUser, type Result } from "@/lib/admin.functions";
@@ -42,7 +42,7 @@ function Admin() {
     try { return await fn({ data }); } catch (e) { return { ok: false, error: `The request did not reach the server: ${msg(e)}` }; }
   };
   const load = async () => { const r = await call<{ users: AdminUser[] }>(adminListUsers as any, {}); if (r.ok) { setUsers(r.users); setErr(""); } else setErr(r.error); };
-  useEffect(() => { if (c.status === "ready" && c.roles.includes("admin")) { void load(); void loadClasses().then((r) => r.ok && setSqcClasses(r.data)); } }, [c.status, c.roles]);
+  useEffect(() => { if (c.status === "ready" && c.roles.includes("admin")) { void load(); void syncClasses().then(() => loadClasses()).then((r) => r.ok && setSqcClasses(r.data)); } }, [c.status, c.roles]);
 
   const create = async () => {
     setBusy(true); setErr("");

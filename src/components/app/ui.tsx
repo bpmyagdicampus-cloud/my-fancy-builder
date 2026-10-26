@@ -132,9 +132,13 @@ function RowsEditor({ cols, value, onChange }: { cols: [string, string][]; value
   );
 }
 
-export function Collection({ k, title, fields, summary, filter, defaults, sort }: {
+export function Collection({ k, title, fields, summary, filter, defaults, sort, canDelete, rowButtons }: {
   k: ListKey; title: string; fields: Field[]; summary: (r: any) => ReactNode;
   filter?: (r: any) => boolean; defaults?: Rec; sort?: (a: any, b: any) => number;
+  /** return a reason (text) to refuse deleting this entry, or null to allow it */
+  canDelete?: (r: any) => string | null;
+  /** show visible Edit / Delete buttons on every row */
+  rowButtons?: boolean;
 }) {
   const { data } = useTeacher();
   const [ed, setEd] = useState<Rec | null>(null);
@@ -149,7 +153,11 @@ export function Collection({ k, title, fields, summary, filter, defaults, sort }
     });
     setEd(null);
   };
-  const del = (id: string) => { if (confirm("Delete this entry?")) updateData((d) => { (d[k] as Rec[]).splice((d[k] as Rec[]).findIndex((x) => x.id === id), 1); }); setEd(null); };
+  const del = (id: string) => {
+    const row = (data[k] as Rec[]).find((x) => x.id === id);
+    const why = row && canDelete ? canDelete(row) : null;
+    if (why) { alert(why); return; }
+    if (confirm("Delete this entry?")) updateData((d) => { (d[k] as Rec[]).splice((d[k] as Rec[]).findIndex((x) => x.id === id), 1); }); setEd(null); };
   return (
     <section className="panel no-print mb-4">
       <div className="mb-3 flex items-center gap-2">
@@ -168,7 +176,17 @@ export function Collection({ k, title, fields, summary, filter, defaults, sort }
       )}
       <ul className="divide-y divide-border">
         {list.map((r) => (
-          <li key={r.id} className="cursor-pointer py-2 text-sm hover:bg-muted/50" onClick={() => setEd(structuredClone(r))}>{summary(r)}</li>
+          <li key={r.id} className="cursor-pointer py-2 text-sm hover:bg-muted/50" onClick={() => setEd(structuredClone(r))}>
+            {rowButtons ? (
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">{summary(r)}</div>
+                <div className="flex shrink-0 gap-1">
+                  <button type="button" className="btn-soft" onClick={(e) => { e.stopPropagation(); setEd(structuredClone(r)); }}>Edit</button>
+                  <button type="button" className="btn-danger" onClick={(e) => { e.stopPropagation(); del(r.id); }}>Delete</button>
+                </div>
+              </div>
+            ) : summary(r)}
+          </li>
         ))}
         {!list.length && <li className="py-2 text-sm text-muted-foreground">No entries yet.</li>}
       </ul>

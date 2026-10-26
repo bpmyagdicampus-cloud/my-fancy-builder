@@ -9,6 +9,7 @@ import { useCloud } from "@/lib/cloud";
 import { CampusSetup } from "@/components/app/CampusSetup";
 import { DeptTag } from "@/components/app/ClassFields";
 import * as C from "@/lib/campus";
+import { classDataSummary } from "@/lib/classes";
 
 export const Route = createFileRoute("/setup")({
   head: () => ({ meta: [
@@ -32,9 +33,8 @@ function Setup() {
       <CampusSetup />
       <section className="panel mb-4">
         <h2 className="mb-3 text-lg font-bold">Teacher details</h2>
-        {!canEdit && <p className="mb-2 text-xs text-muted-foreground">These details are set by the administrator. Please ask the administrator to change them.</p>}
-        <fieldset disabled={!canEdit}><FormFields fields={PROFILE_FIELDS} value={f} onChange={setF} /></fieldset>
-        {canEdit && <button className="btn mt-3" onClick={() => mutate((x) => { const i = x.profiles.findIndex((p) => p.id === profile.id); x.profiles[i] = { ...x.profiles[i]!, ...f, id: profile.id }; })}>Save</button>}
+        <FormFields fields={PROFILE_FIELDS} value={f} onChange={setF} />
+        <button className="btn mt-3" onClick={() => mutate((x) => { const i = x.profiles.findIndex((p) => p.id === profile.id); x.profiles[i] = { ...x.profiles[i]!, ...f, id: profile.id }; })}>Save</button>
       </section>
       <WeeklyOff canEdit={canEdit} />
       <section className="panel no-print mb-4 flex flex-wrap items-center gap-3">
@@ -129,7 +129,8 @@ function ClassesByDept() {
           {msg && <p className="mt-2 rounded-md border border-primary p-2 text-sm">{msg}</p>}
         </section>
       )}
-      <Collection k="classes" title="Classes · कक्षा" sort={(a, b) => a.name.localeCompare(b.name)}
+      <Collection k="classes" title="Classes · कक्षा" sort={(a, b) => a.name.localeCompare(b.name)} rowButtons
+        canDelete={(c) => { const hits = classDataSummary(data, c.id); return hits.length ? `“${c.name} · ${c.subject}” cannot be deleted because it already has data: ${hits.join(", ")}.\n\nA class with data is kept so nothing is lost. Use Academic years → Upgrade subject to close it instead.` : null; }}
         filter={(c) => dept === "all" || deptOf(c) === dept}
         defaults={{ deptId: dept !== "all" ? dept : mg }}
         fields={[

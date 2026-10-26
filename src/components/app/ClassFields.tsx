@@ -14,9 +14,12 @@ export function useCanCreate(deptId: string): boolean {
 /** Department chooser for a class. Options come from the department records; Management is the default. */
 export function DeptField({ value, onChange }: { value: Rec; onChange: (v: Rec) => void }) {
   const lk = C.useLookup();
+  const cl = useCloud();
   const def = C.findManagement(lk.departments)?.id ?? lk.departments[0]?.id ?? "";
+  const privileged = cl.roles.includes("admin") || lk.heads.some((h) => h.user_id === cl.userId && h.department_id === (value.deptId || def));
   useEffect(() => { if (!value.deptId && def) onChange({ ...value, deptId: def }); }, [def, value.deptId]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!lk.departments.length) return <p className="text-sm text-muted-foreground">{lk.ready ? "No departments yet (the administrator adds them in Setup → Campus)." : "Loading…"}</p>;
+  if (value.id && !privileged) return <p className="text-sm font-medium">{lk.departments.find((d) => d.id === (value.deptId || def))?.name ?? "—"}<span className="block text-xs font-normal text-muted-foreground">Only the administrator or department head can change this.</span></p>;
   return (
     <select className="field" value={value.deptId || def} onChange={(e) => onChange({ ...value, deptId: e.target.value, name: "", centralId: "" })}>
       {lk.departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -46,6 +49,7 @@ export function ClassPickField({ value, onChange }: { value: Rec; onChange: (v: 
   }, [lk.classes, deptId, value.name, value.centralId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!lk.departments.length) return <input className="field" value={value.name ?? ""} onChange={(e) => onChange({ ...value, name: e.target.value })} placeholder="e.g. BBS I" />;
+  if (value.id && !can) return <p className="text-sm font-medium">{value.name}<span className="block text-xs font-normal text-muted-foreground">Only the administrator or department head can change the class. You can still edit the subject, code and hours.</span></p>;
 
   const create = async () => {
     const n = nw.trim();

@@ -7,7 +7,7 @@ import { SqcSetup, type StudentUser } from "@/components/sqc/SqcSetup";
 import { Summary } from "@/components/sqc/Summary";
 import { isStaff, useCloud } from "@/lib/cloud";
 import { adminListUsers, type AdminUser, type Result } from "@/lib/admin.functions";
-import { syncClasses, loadActions, loadAllMembers, loadClasses, loadMemberships, loadPeriods, loadReports, loadTeachers, type Membership, type Teacher } from "@/lib/sqc-data";
+import { syncClasses, loadSubjects, loadActions, loadAllMembers, loadClasses, loadMemberships, loadPeriods, loadReports, loadTeachers, type ClassTeaching, type Membership, type Teacher } from "@/lib/sqc-data";
 import type { Action, Period, Report, SqcClass } from "@/lib/sqc";
 
 export const Route = createFileRoute("/sqc")({
@@ -21,8 +21,8 @@ export const Route = createFileRoute("/sqc")({
 });
 
 type T = "new" | "list" | "summary" | "setup";
-type Data = { classes: SqcClass[]; periods: Period[]; reports: Report[]; actions: Action[]; teachers: Teacher[]; mine: Membership[]; members: Membership[]; students: StudentUser[] };
-const EMPTY: Data = { classes: [], periods: [], reports: [], actions: [], teachers: [], mine: [], members: [], students: [] };
+type Data = { classes: SqcClass[]; periods: Period[]; reports: Report[]; actions: Action[]; teachers: Teacher[]; mine: Membership[]; members: Membership[]; students: StudentUser[]; teaching: ClassTeaching[] };
+const EMPTY: Data = { classes: [], periods: [], reports: [], actions: [], teachers: [], mine: [], members: [], students: [], teaching: [] };
 
 function Sqc() {
   const c = useCloud();
@@ -44,8 +44,12 @@ function Sqc() {
     const bad = [cl, pe, re, ac, me].find((x) => !x.ok);
     if (bad && !bad.ok) { setError(bad.error); setState("error"); return; }
     const mine = me.ok ? me.data : [];
-    let teachers: Teacher[] = [], members: Membership[] = [], students: StudentUser[] = [];
-    if (admin || mine.some((m) => m.is_rep)) { const t = await loadTeachers(); if (t.ok) teachers = t.data; }
+    let teachers: Teacher[] = [], members: Membership[] = [], students: StudentUser[] = [], teaching: ClassTeaching[] = [];
+    if (admin || mine.some((m) => m.is_rep)) {
+      const [t, sj] = await Promise.all([loadTeachers(), loadSubjects()]);
+      if (t.ok) teachers = t.data;
+      if (sj.ok) teaching = sj.data;
+    }
     if (admin) {
       const m = await loadAllMembers(); if (m.ok) members = m.data;
       try {
@@ -53,7 +57,7 @@ function Sqc() {
         if (u.ok) students = u.users.filter((x) => x.roles.includes("student")).map((x) => ({ id: x.id, name: x.name, login: x.login }));
       } catch { /* student list stays empty */ }
     }
-    setD({ classes: cl.ok ? cl.data : [], periods: pe.ok ? pe.data : [], reports: re.ok ? re.data : [], actions: ac.ok ? ac.data : [], teachers, mine, members, students });
+    setD({ classes: cl.ok ? cl.data : [], periods: pe.ok ? pe.data : [], reports: re.ok ? re.data : [], actions: ac.ok ? ac.data : [], teachers, mine, members, students, teaching });
     setError(""); setState("ok");
   }, [c.userId, admin]);
 
@@ -77,12 +81,12 @@ function Sqc() {
             <>
               <Tabs value={tab} onChange={(t) => { setTab(t); setEditing(null); }} items={tabs} />
               {tab === "new" && (editing
-                ? <ReportForm key={editing.id} classes={formClasses} teachers={d.teachers} periods={d.periods} initial={editing} onSaved={() => { setEditing(null); setTab("list"); void load(); }} onCancel={() => setEditing(null)} />
+                ? <ReportForm teaching={d.teaching} key={editing.id} classes={formClasses} teachers={d.teachers} periods={d.periods} initial={editing} onSaved={() => { setEditing(null); setTab("list"); void load(); }} onCancel={() => setEditing(null)} />
                 : formClasses.length === 0
                   ? <p className="panel text-sm">No class is assigned to you yet. Ask the administrator.</p>
-                  : <ReportForm classes={formClasses} teachers={d.teachers} periods={d.periods} onSaved={() => { setTab("list"); void load(); }} />)}
+                  : <ReportForm teaching={d.teaching} classes={formClasses} teachers={d.teachers} periods={d.periods} onSaved={() => { setTab("list"); void load(); }} />)}
               {tab === "list" && (editing
-                ? <ReportForm key={editing.id} classes={formClasses} teachers={d.teachers} periods={d.periods} initial={editing} onSaved={() => { setEditing(null); void load(); }} onCancel={() => setEditing(null)} />
+                ? <ReportForm teaching={d.teaching} key={editing.id} classes={formClasses} teachers={d.teachers} periods={d.periods} initial={editing} onSaved={() => { setEditing(null); void load(); }} onCancel={() => setEditing(null)} />
                 : <ReportList rows={d.reports} classes={d.classes} periods={d.periods} actions={d.actions} admin={admin} canEdit={admin || isRep} onEdit={setEditing} onChanged={load} />)}
               {tab === "summary" && <Summary rows={d.reports} periods={d.periods} classes={d.classes} />}
               {tab === "setup" && admin && <SqcSetup classes={d.classes} periods={d.periods} members={d.members} students={d.students} onChanged={load} />}

@@ -1,18 +1,23 @@
 import { useState } from "react";
 import { BsDate } from "@/components/app/ui";
 import { todayBs } from "@/lib/bs";
-import { saveReport, type Teacher } from "@/lib/sqc-data";
+import { saveReport, type ClassTeaching, type Teacher } from "@/lib/sqc-data";
 import { className, hhmm, validateReport, type Period, type Report, type ReportDraft, type SqcClass } from "@/lib/sqc";
 
 const OTHER = "__other";
 
-export function ReportForm({ classes, teachers, periods, initial, onSaved, onCancel }: {
-  classes: SqcClass[]; teachers: Teacher[]; periods: Period[]; initial?: Report; onSaved: (r: Report) => void; onCancel?: () => void;
+export function ReportForm({ classes, teachers, periods, teaching = [], initial, onSaved, onCancel }: {
+  classes: SqcClass[]; teachers: Teacher[]; periods: Period[]; teaching?: ClassTeaching[]; initial?: Report; onSaved: (r: Report) => void; onCancel?: () => void;
 }) {
   const [d, setD] = useState<ReportDraft & { id?: string }>(() => initial ?? { class_id: classes.length === 1 ? classes[0]!.id : "", report_date: todayBs(), period_no: 1, held: true, teacher_id: null, teacher_name: "", subject: "" });
   const [other, setOther] = useState(!!initial && !initial.teacher_id && !!initial.teacher_name);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  // subjects (and their teachers) of the chosen class, taken from the Setup classes the teachers linked
+  const opts = teaching.filter((t) => t.class_id === d.class_id);
+  const subjects = [...new Set(opts.map((t) => t.subject))];
+  const [subOther, setSubOther] = useState(!!initial?.subject && !teaching.some((t) => t.class_id === initial.class_id && t.subject === initial.subject));
+  const teacherList = (() => { const who = teachers.filter((t) => opts.some((o) => o.teacher_id === t.teacher_id)); return who.length ? who : teachers; })();
   const set = (p: Partial<ReportDraft>) => setD((x) => ({ ...x, ...p }));
   const per = periods.find((p) => p.period_no === Number(d.period_no));
 
@@ -40,14 +45,31 @@ export function ReportForm({ classes, teachers, periods, initial, onSaved, onCan
           <select className="field" value={d.period_no ?? 1} onChange={(e) => set({ period_no: Number(e.target.value) })}>
             {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => <option key={n} value={n}>{n}</option>)}
           </select></div>
-        <div><label className="lbl">Subject · विषय</label><input className="field" value={d.subject ?? ""} onChange={(e) => set({ subject: e.target.value })} /></div>
+        <div><label className="lbl">Subject · विषय</label>
+          {subjects.length ? (
+            <>
+              <select className="field" value={subOther ? OTHER : d.subject ?? ""} onChange={(e) => {
+                const v = e.target.value;
+                if (v === OTHER) { setSubOther(true); set({ subject: "" }); return; }
+                setSubOther(false);
+                const who = opts.filter((t) => t.subject === v);
+                if (v && who.length === 1) { setOther(false); set({ subject: v, teacher_id: who[0]!.teacher_id, teacher_name: who[0]!.teacher_name }); } else set({ subject: v });
+              }}>
+                <option value="">— Select —</option>
+                {subjects.map((s) => <option key={s} value={s}>{s}</option>)}
+                <option value={OTHER}>Other (type the subject)…</option>
+              </select>
+              {subOther && <input className="field mt-2" placeholder="Subject" value={d.subject ?? ""} onChange={(e) => set({ subject: e.target.value })} />}
+            </>
+          ) : <input className="field" value={d.subject ?? ""} onChange={(e) => set({ subject: e.target.value })} />}
+        </div>
         <div className="sm:col-span-2"><label className="lbl">Teacher · शिक्षक</label>
           <select className="field" value={other ? OTHER : d.teacher_id ?? ""} onChange={(e) => {
             if (e.target.value === OTHER) { setOther(true); set({ teacher_id: null, teacher_name: "" }); }
             else { setOther(false); const t = teachers.find((x) => x.teacher_id === e.target.value); set({ teacher_id: e.target.value || null, teacher_name: t?.teacher_name ?? "" }); }
           }}>
             <option value="">— Select —</option>
-            {teachers.map((t) => <option key={t.teacher_id} value={t.teacher_id}>{t.teacher_name}</option>)}
+            {teacherList.map((t) => <option key={t.teacher_id} value={t.teacher_id}>{t.teacher_name}</option>)}
             <option value={OTHER}>Other (type the name)…</option>
           </select>
           {other && <input className="field mt-2" placeholder="Teacher's name" value={d.teacher_name ?? ""} onChange={(e) => set({ teacher_name: e.target.value })} />}
