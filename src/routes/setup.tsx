@@ -91,6 +91,14 @@ function ClassesByDept() {
   const unlinked = data.classes.filter((c) => !c.closed && !c.centralId);
   const count = (id: string) => data.classes.filter((c) => deptOf(c) === id).length;
 
+  // a class renamed in the department list is renamed here too (names follow the central class)
+  useEffect(() => {
+    if (!lk.ready || lk.failed) return;
+    const stale = data.classes.some((c) => c.centralId && lk.classes.some((x) => x.id === c.centralId && x.name !== c.name));
+    if (!stale) return;
+    updateData((d) => { for (const c of d.classes) { const x = lk.classes.find((k) => k.id === c.centralId); if (x && x.name !== c.name) c.name = x.name; } });
+  }, [lk.classes, lk.ready, lk.failed, data.classes]);
+
   const linkAll = async () => {
     setMsg("");
     let made = 0, linked = 0;

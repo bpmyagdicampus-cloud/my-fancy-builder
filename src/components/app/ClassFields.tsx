@@ -62,12 +62,38 @@ export function ClassPickField({ value, onChange }: { value: Rec; onChange: (v: 
     setNw(""); setMsg("");
   };
 
+  const rename = async () => {
+    if (!value.centralId) return;
+    const n = prompt("New name for this class (it changes for every teacher who uses it):", value.name || "");
+    if (!n?.trim() || n.trim() === value.name) return;
+    const r = await C.renameClass(value.centralId, n);
+    if (!r.ok) { setMsg(r.error); return; }
+    await C.refreshLookup();
+    onChange({ ...value, name: n.trim() });
+    setMsg("");
+  };
+  const remove = async () => {
+    if (!value.centralId) return;
+    if (!confirm(`Delete the class “${value.name}” from this department? This works only if nothing uses it.`)) return;
+    const r = await C.deleteClassSafe(value.centralId);
+    if (!r.ok) { setMsg(r.error); return; }
+    await C.refreshLookup();
+    onChange({ ...value, name: "", centralId: "" });
+    setMsg("Class deleted.");
+  };
+
   return (
     <div>
       <select className="field" value={value.centralId || ""} onChange={(e) => { const c = lk.classes.find((x) => x.id === e.target.value); onChange({ ...value, deptId, name: c?.name ?? "", centralId: c?.id ?? "" }); }}>
         <option value="">{value.name && !value.centralId ? `${value.name} (not linked yet)` : "— Select class —"}</option>
         {list.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
       </select>
+      {can && value.centralId && (
+        <div className="mt-1 flex flex-wrap gap-2">
+          <button type="button" className="btn-soft" onClick={() => void rename()}>Rename this class</button>
+          <button type="button" className="btn-danger" onClick={() => void remove()}>Delete this class (only if unused)</button>
+        </div>
+      )}
       {can ? (
         <div className="mt-1 flex gap-2">
           <input className="field" placeholder="New class in this department (e.g. BBS III)" value={nw} onChange={(e) => setNw(e.target.value)} />

@@ -21,6 +21,7 @@ async function run<T>(p: PromiseLike<{ data: any; error: any }>, pick: (d: any) 
 }
 function nice(e: any): string {
   const m = String(e?.message ?? e ?? "");
+  if (e?.code === "P0001") return m; // a message written on purpose by the database function
   if (e?.code === "42P01" || /does not exist|schema cache|relation/i.test(m)) return "Campus set-up is not ready yet: the administrator must run docs/phase5/30_campus.sql in Supabase.";
   if (e?.code === "23505" || /duplicate key|unique/i.test(m)) return "This already exists (same name in the same place).";
   if (e?.code === "23503" || /foreign key/i.test(m)) return "This is still used by other items (classes or students). Remove or move those first.";
@@ -54,6 +55,8 @@ export const setHead = (user_id: string, department_id: string, on: boolean) => 
 
 export const addClass = (department_id: string, name: string) => run(sb.from("setup_classes").insert({ department_id, name: name.trim() }), () => true);
 export const renameClass = (id: string, name: string) => run(sb.from("setup_classes").update({ name: name.trim() }).eq("id", id), () => true);
+/** Deletes a class only if nothing uses it (checked in the database). */
+export const deleteClassSafe = (id: string) => run(sb.rpc("setup_class_delete", { _id: id }), () => true);
 export const deleteClass = (id: string) => run(sb.from("setup_classes").delete().eq("id", id), () => true);
 
 export const addStudents = (class_id: string, names: string[], startRoll: number) => {
