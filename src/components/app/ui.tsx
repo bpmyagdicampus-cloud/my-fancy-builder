@@ -132,13 +132,15 @@ function RowsEditor({ cols, value, onChange }: { cols: [string, string][]; value
   );
 }
 
-export function Collection({ k, title, fields, summary, filter, defaults, sort, canDelete, rowButtons }: {
+export function Collection({ k, title, fields, summary, filter, defaults, sort, canDelete, rowButtons, rowExtra }: {
   k: ListKey; title: string; fields: Field[]; summary: (r: any) => ReactNode;
   filter?: (r: any) => boolean; defaults?: Rec; sort?: (a: any, b: any) => number;
   /** return a reason (text) to refuse deleting this entry, or null to allow it */
   canDelete?: (r: any) => string | null;
   /** show visible Edit / Delete buttons on every row */
   rowButtons?: boolean;
+  /** extra buttons shown beside Edit / Delete (needs rowButtons) */
+  rowExtra?: (r: any) => ReactNode;
 }) {
   const { data } = useTeacher();
   const [ed, setEd] = useState<Rec | null>(null);
@@ -182,6 +184,7 @@ export function Collection({ k, title, fields, summary, filter, defaults, sort, 
                 <div className="min-w-0 flex-1">{summary(r)}</div>
                 <div className="flex shrink-0 gap-1">
                   <button type="button" className="btn-soft" onClick={(e) => { e.stopPropagation(); setEd(structuredClone(r)); }}>Edit</button>
+                  {rowExtra?.(r)}
                   <button type="button" className="btn-danger" onClick={(e) => { e.stopPropagation(); del(r.id); }}>Delete</button>
                 </div>
               </div>

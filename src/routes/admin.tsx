@@ -5,7 +5,7 @@ import { addAcademicYear, openTeacher, setActiveAcademicYear, useCloud } from "@
 import { loadClasses, syncClasses } from "@/lib/sqc-data";
 import { className, type SqcClass } from "@/lib/sqc";
 import { MIN_PASSWORD } from "@/lib/login";
-import { adminCreateUser, adminListUsers, adminResetPassword, adminSetDisabled, adminSetRole, type AdminUser, type Result } from "@/lib/admin.functions";
+import { adminCreateUser, adminListUsers, adminResetPassword, adminSetDisabled, adminSetRole, adminUpdateProfile, type AdminUser, type Result } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [
@@ -36,6 +36,7 @@ function Admin() {
   const [made, setMade] = useState<{ text: string } | null>(null);
   const [sqcClasses, setSqcClasses] = useState<SqcClass[]>([]);
   const [yr, setYr] = useState("");
+  const [ed, setEd] = useState<{ id: string; login: string; name: string; designation: string; dept: string; campus: string; address: string; hod: string; chief: string } | null>(null);
 
   // server functions are called without a typed payload (see admin.functions.ts), hence the casts
   const call = async <T,>(fn: (a: any) => Promise<Result<T>>, data: unknown): Promise<Result<T>> => {
@@ -120,6 +121,22 @@ function Admin() {
         )}
       </section>
 
+      {ed && (
+        <section className="panel mb-4">
+          <h2 className="mb-1 text-lg font-bold">Edit account details</h2>
+          <p className="mb-3 text-xs text-muted-foreground">Login ID: <b>{ed.login}</b> (the login ID cannot be changed here). Role, password and disable are in the table below.</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {([["name", "Name · नाम"], ["designation", "Designation · पद"], ["dept", "Department · विभाग"], ["campus", "Campus · क्याम्पस"], ["address", "Address · ठेगाना"], ["hod", "Head of department"], ["chief", "Campus chief"]] as const).map(([k, l]) => (
+              <div key={k}><label className="lbl">{l}</label><input className="field" value={ed[k]} onChange={(e) => setEd({ ...ed, [k]: e.target.value })} /></div>
+            ))}
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button className="btn" onClick={() => void run(async () => { const r = await call(adminUpdateProfile as any, ed); if (r.ok) setEd(null); return r; })}>Save details</button>
+            <button className="btn-soft" onClick={() => setEd(null)}>Cancel</button>
+          </div>
+        </section>
+      )}
+
       <section className="panel overflow-x-auto">
         <h2 className="mb-3 text-lg font-bold">Accounts ({users.length})</h2>
         <table className="w-full text-sm">
@@ -138,6 +155,7 @@ function Admin() {
                 </td>
                 <td className="p-2 text-xs">{u.lastSignIn ? new Date(u.lastSignIn).toLocaleString() : "never"}</td>
                 <td className="flex flex-wrap gap-1 p-2">
+                  <button className="btn-soft" onClick={() => { setEd({ id: u.id, login: u.login, name: u.name, designation: u.designation, dept: u.dept, campus: u.campus ?? "", address: u.address ?? "", hod: u.hod ?? "", chief: u.chief ?? "" }); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Edit</button>
                   {(u.roles.includes("teacher") || u.roles.includes("admin")) && <button className="btn-soft" onClick={async () => { try { await openTeacher(u.id); nav({ to: "/" }); } catch (e) { alert(msg(e)); } }}>Open diary</button>}
                   <button className="btn-soft" onClick={() => { const pw = prompt(`New password for ${u.name || u.login} (min ${MIN_PASSWORD}):`, genPw()); if (pw) void run(async () => { const r = await call(adminResetPassword as any, { id: u.id, password: pw }); if (r.ok) prompt("Password changed. Copy it now:", pw); return r; }); }}>Reset password</button>
                   {u.id !== c.userId && <button className="btn-danger" onClick={() => confirm(`${u.disabled ? "Enable" : "Disable"} ${u.name || u.login}?`) && run(() => call(adminSetDisabled as any, { id: u.id, disabled: !u.disabled }))}>{u.disabled ? "Enable" : "Disable"}</button>}

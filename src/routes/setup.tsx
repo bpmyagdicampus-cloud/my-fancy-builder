@@ -130,6 +130,7 @@ function ClassesByDept() {
         </section>
       )}
       <Collection k="classes" title="Classes · कक्षा" sort={(a, b) => a.name.localeCompare(b.name)} rowButtons
+        rowExtra={(c) => <button type="button" className="btn-soft" title="A disabled class keeps all its data but is hidden from new entries" onClick={(e) => { e.stopPropagation(); updateData((d) => { const x = d.classes.find((k) => k.id === c.id); if (x) x.closed = !c.closed; }); }}>{c.closed ? "Enable" : "Disable"}</button>}
         canDelete={(c) => { const hits = classDataSummary(data, c.id); return hits.length ? `“${c.name} · ${c.subject}” cannot be deleted because it already has data: ${hits.join(", ")}.\n\nA class with data is kept so nothing is lost. Use Academic years → Upgrade subject to close it instead.` : null; }}
         filter={(c) => dept === "all" || deptOf(c) === dept}
         defaults={{ deptId: dept !== "all" ? dept : mg }}
@@ -140,7 +141,7 @@ function ClassesByDept() {
           { k: "code", l: "Subject code (e.g. Acc 211)" },
           { k: "totalLh", l: "Total lecture hours (LH)", t: "num" },
         ]}
-        summary={(c) => <><DeptTag deptId={c.deptId} /><b>{c.name}</b> · {c.subject} {c.code && `(${c.code})`}<div className="text-xs text-muted-foreground">{c.totalLh} LH · {studentsOf(c).length} students{c.closed && <span className="chip ml-2">closed · old subject</span>}{c.pending && <span className="chip ml-2">subject not upgraded yet</span>}{!c.centralId && <span className="chip ml-2">not linked to a department class yet</span>}</div></>} />
+        summary={(c) => <><DeptTag deptId={c.deptId} /><b>{c.name}</b> · {c.subject} {c.code && `(${c.code})`}<div className="text-xs text-muted-foreground">{c.totalLh} LH · {studentsOf(c).length} students{c.closed && <span className="chip ml-2">disabled / closed</span>}{c.pending && <span className="chip ml-2">subject not upgraded yet</span>}{!c.centralId && <span className="chip ml-2">not linked to a department class yet</span>}</div></>} />
     </>
   );
 }

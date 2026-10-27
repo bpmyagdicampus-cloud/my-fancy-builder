@@ -7,7 +7,7 @@ import { LOGIN_DOMAIN, MIN_PASSWORD, ROLES, toEmail, validLogin } from "@/lib/lo
 // Results are RETURNED as { ok, error } (never thrown), so the real reason always reaches the screen.
 // No input validator is declared on purpose (inputs are checked below); this avoids depending on the validator API name of the installed TanStack version.
 
-export type AdminUser = { id: string; login: string; name: string; designation: string; dept: string; roles: string[]; disabled: boolean; lastSignIn: string | null };
+export type AdminUser = { id: string; login: string; name: string; designation: string; dept: string; campus?: string; address?: string; hod?: string; chief?: string; roles: string[]; disabled: boolean; lastSignIn: string | null };
 export type Fail = { ok: false; error: string };
 export type Done<T = unknown> = { ok: true } & T;
 export type Result<T = unknown> = Done<T> | Fail;
@@ -45,7 +45,7 @@ export const adminListUsers = createServerFn({ method: "POST" })
       const sb = await adminClient();
       const { data: lu, error } = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
       if (error) throw new Error(error.message);
-      const [p, r] = await Promise.all([sb.from("profiles").select("id,name,designation,dept"), sb.from("user_roles").select("user_id,role")]);
+      const [p, r] = await Promise.all([sb.from("profiles").select("id,name,designation,dept,campus,address,hod,chief"), sb.from("user_roles").select("user_id,role")]);
       if (p.error) throw new Error(p.error.message);
       const now = Date.now();
       const users: AdminUser[] = (lu.users as any[]).map((u) => {
@@ -55,6 +55,7 @@ export const adminListUsers = createServerFn({ method: "POST" })
           id: u.id,
           login: email.endsWith(`@${LOGIN_DOMAIN}`) ? email.slice(0, -(LOGIN_DOMAIN.length + 1)) : email,
           name: pr?.name ?? "", designation: pr?.designation ?? "", dept: pr?.dept ?? "",
+          campus: pr?.campus ?? "", address: pr?.address ?? "", hod: pr?.hod ?? "", chief: pr?.chief ?? "",
           roles: (r.data ?? []).filter((x: any) => x.user_id === u.id).map((x: any) => x.role),
           disabled: !!u.banned_until && new Date(u.banned_until).getTime() > now,
           lastSignIn: u.last_sign_in_at ?? null,
@@ -111,6 +112,23 @@ export const adminResetPassword = createServerFn({ method: "POST" })
       const data = ctx.data ?? {};
       checkPw(data.password);
       const { error } = await (await adminClient()).auth.admin.updateUserById(String(data.id), { password: data.password });
+      if (error) throw new Error(error.message);
+      return { ok: true };
+    } catch (e) { return fail(e); }
+  });
+
+/** Administrator edits another person's details (everything except the login ID). */
+export const adminUpdateProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async (ctx: any): Promise<Result> => {
+    try {
+      await assertAdmin(ctx.context);
+      const data = ctx.data ?? {};
+      const clean = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
+      const name = clean(data.name, 120);
+      if (!name) throw new Error("Name is required.");
+      const patch = { name, designation: clean(data.designation, 120), dept: clean(data.dept, 120), campus: clean(data.campus, 200), address: clean(data.address, 200), hod: clean(data.hod, 120), chief: clean(data.chief, 120) };
+      const { error } = await (await adminClient()).from("profiles").update(patch).eq("id", String(data.id));
       if (error) throw new Error(error.message);
       return { ok: true };
     } catch (e) { return fail(e); }
