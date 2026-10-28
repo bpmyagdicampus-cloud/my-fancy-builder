@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Page, FormFields, Collection, Dt, NeedProfile } from "@/components/app/ui";
 import { mutate, updateData, useTeacher, studentsOf } from "@/lib/store";
@@ -82,6 +82,7 @@ function ClassesByDept() {
   const { data } = useTeacher();
   const cl = useCloud();
   const lk = C.useLookup();
+  const nav = useNavigate();
   const [dept, setDept] = useState("all");
   const [msg, setMsg] = useState("");
   const mg = C.findManagement(lk.departments)?.id ?? "";
@@ -138,7 +139,7 @@ function ClassesByDept() {
         </section>
       )}
       <Collection k="classes" title="Classes · कक्षा" sort={(a, b) => a.name.localeCompare(b.name)} rowButtons
-        rowExtra={(c) => <button type="button" className="btn-soft" title="A disabled class keeps all its data but is hidden from new entries" onClick={(e) => { e.stopPropagation(); updateData((d) => { const x = d.classes.find((k) => k.id === c.id); if (x) x.closed = !c.closed; }); }}>{c.closed ? "Enable" : "Disable"}</button>}
+        rowExtra={(c) => <><button type="button" className="btn-soft" title="Add, edit, make inactive or remove the students of this class" onClick={(e) => { e.stopPropagation(); try { sessionStorage.setItem("shikshak-students-cls", c.id); } catch { /* ignore */ } void nav({ to: "/students" }); }}>Students</button><button type="button" className="btn-soft" title="A disabled class keeps all its data but is hidden from new entries" onClick={(e) => { e.stopPropagation(); updateData((d) => { const x = d.classes.find((k) => k.id === c.id); if (x) x.closed = !c.closed; }); }}>{c.closed ? "Enable" : "Disable"}</button></>}
         canDelete={(c) => { const hits = classDataSummary(data, c.id); return hits.length ? `“${c.name} · ${c.subject}” cannot be deleted because it already has data: ${hits.join(", ")}.\n\nA class with data is kept so nothing is lost. Use Academic years → Upgrade subject to close it instead.` : null; }}
         filter={(c) => dept === "all" || deptOf(c) === dept}
         defaults={{ deptId: dept !== "all" ? dept : mg }}

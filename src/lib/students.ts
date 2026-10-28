@@ -104,3 +104,19 @@ export function missingNames(d: Data, classId: string): string[] {
   return out;
 }
 export const importMissing = (d: Data, classId: string) => addStudents(d, classId, missingNames(d, classId));
+
+/**
+ * Permanently removes students from a class list (names added by mistake). To keep a record use "inactive" instead.
+ * If a class ends up with no students, its old text list is cleared so the removed names are not brought back.
+ */
+export function removeStudents(d: Data, ids: string[]) {
+  const set = new Set(ids);
+  const gone = d.students.filter((s) => set.has(s.id));
+  for (let i = d.students.length - 1; i >= 0; i--) if (set.has(d.students[i]!.id)) d.students.splice(i, 1);
+  for (const classId of new Set(gone.map((s) => s.classId))) {
+    const c = d.classes.find((x) => x.id === classId);
+    if (c && !c.closed && !d.students.some((s) => s.classId === classId)) c.students = "";
+  }
+  syncText(d);
+  return gone.map((s) => s.name);
+}
