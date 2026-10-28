@@ -86,7 +86,7 @@ function Account() {
                   <li key={u.key} className="flex items-center gap-2">
                     <span className="flex-1">{new Date(u.at).toLocaleString()}</span>
                     <button className="btn-soft" onClick={() => downloadUnsaved(u.key)}>Download</button>
-                    <button className="btn-danger" onClick={() => confirm("Delete this unsaved copy from this device? Make sure you downloaded it.") && (deleteUnsaved(u.key), setNote("Deleted."))}>Delete</button>
+                    <button className="btn-danger" onClick={() => confirm("Do you want to permanently delete this unsaved copy from this device? Make sure you downloaded it first.") && (deleteUnsaved(u.key), setNote("Deleted."))}>Delete</button>
                   </li>
                 ))}
               </ul>

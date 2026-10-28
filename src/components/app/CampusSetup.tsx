@@ -68,7 +68,7 @@ export function CampusSetup() {
             <h3 className="flex-1 text-base font-bold">{curDept.name}</h3>
             {admin && <>
               <button className="btn-soft" onClick={() => { const n = prompt("New department name", curDept.name); if (n?.trim()) void act(C.renameDepartment(curDept.id, n), "Renamed."); }}>Rename</button>
-              <button className="btn-danger" onClick={() => { if (confirm(`Delete department "${curDept.name}"? Only possible when it has no classes.`)) void act(C.deleteDepartment(curDept.id), "Deleted.").then((ok) => ok && setDept("")); }}>Remove</button>
+              <button className="btn-danger" onClick={() => { if (confirm(`Do you want to permanently delete the department "${curDept.name}"? (Only possible when it has no classes.)`)) void act(C.deleteDepartment(curDept.id), "Deleted.").then((ok) => ok && setDept("")); }}>Remove</button>
             </>}
           </div>
           <Heads d={d} dept={curDept} users={users} admin={admin} act={act} />
@@ -139,7 +139,7 @@ function Heads({ d, dept, users, admin, act }: { d: C.CampusData; dept: C.Depart
     <div className="text-sm">
       <span className="text-muted-foreground">Department head: </span>
       {heads.length ? heads.map((h) => (
-        <span key={h.user_id} className="chip mr-1">{nameOf(h.user_id)}{admin && <button className="ml-1" title="Remove" onClick={() => void act(C.setHead(h.user_id, dept.id, false), "Head removed.")}>×</button>}</span>
+        <span key={h.user_id} className="chip mr-1">{nameOf(h.user_id)}{admin && <button className="ml-1" title="Remove" onClick={() => confirm("Do you want to permanently remove this department head?") && void act(C.setHead(h.user_id, dept.id, false), "Head removed.")}>×</button>}</span>
       )) : <span className="text-muted-foreground">not appointed</span>}
       {admin && (
         <select className="field mt-2 !w-64" value="" onChange={(e) => e.target.value && void act(C.setHead(e.target.value, dept.id, true), "Department head appointed.")}>

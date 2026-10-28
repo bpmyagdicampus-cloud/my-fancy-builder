@@ -96,7 +96,7 @@ function Students() {
                         ["Edit name / roll", () => setEditing({ id: s.id, name: s.name, roll: s.roll })],
                         [s.active ? "Make inactive" : "Make active", () => run((d) => setActive(d, s.id, !s.active))],
                         ["Move to another class", () => setMoving(s.id)],
-                        ["Remove", () => { if (confirm(`Remove ${s.name} permanently from this class? Use “Make inactive” if you want to keep the record.`)) run((d) => { removeStudents(d, [s.id]); return `${s.name} removed.`; }); }, true],
+                        ["Remove", () => { if (confirm(`Do you want to permanently remove ${s.name} from this class? Use “Make inactive” if you want to keep the record.`)) run((d) => { removeStudents(d, [s.id]); return `${s.name} removed.`; }); }, true],
                       ]} />
                     </td>
                   </tr>
@@ -194,7 +194,7 @@ function RemoveByRoll({ list, run }: { list: { id: string; name: string; roll: n
   const go = () => {
     if (!hit.length) return;
     const shown = hit.slice(0, 12).map((s) => `${s.roll}. ${s.name}`).join("\n");
-    if (!confirm(`Permanently remove ${hit.length} students from this class?\n\n${shown}${hit.length > 12 ? `\n… and ${hit.length - 12} more` : ""}\n\nThis cannot be undone. (To keep a record, use “Make inactive” instead.)`)) return;
+    if (!confirm(`Do you want to permanently remove ${hit.length} students from this class?\n\n${shown}${hit.length > 12 ? `\n… and ${hit.length - 12} more` : ""}\n\nThis cannot be undone. (To keep a record, use “Make inactive” instead.)`)) return;
     const ids = hit.map((s) => s.id);
     run((d) => `${removeStudents(d, ids).length} students removed.`);
     setTxt("");

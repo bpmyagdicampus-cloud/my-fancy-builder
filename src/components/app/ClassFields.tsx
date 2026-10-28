@@ -74,7 +74,7 @@ export function ClassPickField({ value, onChange }: { value: Rec; onChange: (v: 
   };
   const remove = async () => {
     if (!value.centralId) return;
-    if (!confirm(`Delete the class “${value.name}” from this department? This works only if nothing uses it.`)) return;
+    if (!confirm(`Do you want to permanently delete the class “${value.name}” from this department? (Works only if nothing uses it.)`)) return;
     const r = await C.deleteClassSafe(value.centralId);
     if (!r.ok) { setMsg(r.error); return; }
     await C.refreshLookup();

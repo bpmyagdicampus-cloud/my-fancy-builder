@@ -80,7 +80,7 @@ function Assessments() {
           <div className="flex gap-2">
             <button className="btn" onClick={save}>Save</button>
             <button className="btn-soft" onClick={() => setEd(null)}>Cancel</button>
-            {ed.id && <button className="btn-danger ml-auto" onClick={() => { if (confirm("Delete?")) { updateData((d) => { d.assess = d.assess.filter((x) => x.id !== ed.id); }); setEd(null); } }}>Delete</button>}
+            {ed.id && <button className="btn-danger ml-auto" onClick={() => { if (confirm("Do you want to permanently delete this?")) { updateData((d) => { d.assess = d.assess.filter((x) => x.id !== ed.id); }); setEd(null); } }}>Delete</button>}
           </div>
         </div>
       )}

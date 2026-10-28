@@ -159,7 +159,7 @@ export function Collection({ k, title, fields, summary, filter, defaults, sort, 
     const row = (data[k] as Rec[]).find((x) => x.id === id);
     const why = row && canDelete ? canDelete(row) : null;
     if (why) { alert(why); return; }
-    if (confirm("Delete this entry?")) updateData((d) => { (d[k] as Rec[]).splice((d[k] as Rec[]).findIndex((x) => x.id === id), 1); }); setEd(null); };
+    if (confirm("Do you want to permanently delete this?")) updateData((d) => { (d[k] as Rec[]).splice((d[k] as Rec[]).findIndex((x) => x.id === id), 1); }); setEd(null); };
   return (
     <section className="panel no-print mb-4">
       <div className="mb-3 flex items-center gap-2">

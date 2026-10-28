@@ -103,7 +103,7 @@ function Detail({ r, classes, periods, actions, admin, canEdit, onEdit, onChange
         <h3 className="text-lg font-bold">{className(classes.find((c) => c.id === r.class_id))} · {fmtBs(r.report_date)} · Period {r.period_no}</h3><Chip s={r.status} />
         <span className="flex-1" />
         {canEdit && r.status === "Submitted" && <button className="btn-soft" onClick={() => onEdit(r)}>Edit</button>}
-        {admin && <button className="btn-danger" onClick={async () => { if (!confirm("Delete this report permanently?")) return; const x = await deleteReport(r.id); if (!x.ok) alert(x.error); else onChanged(); }}>Delete</button>}
+        {admin && <button className="btn-danger" onClick={async () => { if (!confirm("Do you want to permanently delete this report?")) return; const x = await deleteReport(r.id); if (!x.ok) alert(x.error); else onChanged(); }}>Delete</button>}
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
         <div><div className="lbl">Teacher</div>{r.teacher_name || "—"}<div className="text-xs text-muted-foreground">{r.subject}</div></div>

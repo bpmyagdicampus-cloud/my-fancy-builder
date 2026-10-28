@@ -55,7 +55,7 @@ function Profiles() {
               {(!signedIn || isCloud) && <button className="btn" onClick={() => { mutate((x) => { x.current = p.id; }); nav({ to: "/" }); }}>Open</button>}
               <button className="btn-soft" onClick={() => download(p.id, p.name)}>Backup</button>
               {signedIn && !isCloud && <button className="btn-soft" onClick={() => nav({ to: "/account" })}>Move to cloud…</button>}
-              {!isCloud && <button className="btn-danger" onClick={() => confirm(`Delete ${p.name} and all their data?\n\nThis cannot be undone. Download a Backup first if unsure.`) && mutate((x) => { x.profiles = x.profiles.filter((y) => y.id !== p.id); delete x.data[p.id]; if (x.current === p.id) x.current = null; })}>Delete</button>}
+              {!isCloud && <button className="btn-danger" onClick={() => confirm(`Do you want to permanently delete ${p.name} and all their data?\n\nThis cannot be undone. Download a Backup first if unsure.`) && mutate((x) => { x.profiles = x.profiles.filter((y) => y.id !== p.id); delete x.data[p.id]; if (x.current === p.id) x.current = null; })}>Delete</button>}
             </div>
           </div>
           );

@@ -64,7 +64,7 @@ export function SqcSetup({ classes, periods, members, students, onChanged }: {
                       <td className="p-2">{s ? `${s.name || s.login}` : m.user_id.slice(0, 8)}</td>
                       <td className="p-2">{className(classes.find((c) => c.id === m.class_id))}</td>
                       <td className="p-2"><input type="checkbox" checked={m.is_rep} onChange={async (e) => done(await setMember({ ...m, is_rep: e.target.checked }))} /></td>
-                      <td className="p-2"><button className="btn-danger" onClick={async () => confirm("Remove this student from the class?") && done(await removeMember(m.user_id, m.class_id), "Removed.")}>Remove</button></td>
+                      <td className="p-2"><button className="btn-danger" onClick={async () => confirm("Do you want to permanently remove this student from the class?") && done(await removeMember(m.user_id, m.class_id), "Removed.")}>Remove</button></td>
                     </tr>
                   );
                 })}
@@ -90,7 +90,7 @@ export function SqcSetup({ classes, periods, members, students, onChanged }: {
                     <td className="p-2"><input className="field !w-32" type="time" value={v.e} onChange={(e) => setPd({ ...pd, [n]: { ...v, e: e.target.value } })} /></td>
                     <td className="flex gap-1 p-2">
                       <button className="btn-soft" onClick={async () => { if (!v.s || !v.e) return setNote("Enter both start and end."); if (v.e <= v.s) return setNote("End must be after start."); done(await savePeriod({ period_no: n, start_time: v.s, end_time: v.e }), `Period ${n} saved.`); }}>Save</button>
-                      {periods.some((p) => p.period_no === n) && <button className="btn-danger" onClick={async () => done(await deletePeriod(n), `Period ${n} cleared.`)}>Clear</button>}
+                      {periods.some((p) => p.period_no === n) && <button className="btn-danger" onClick={async () => confirm("Do you want to permanently delete this period time?") && done(await deletePeriod(n), `Period ${n} cleared.`)}>Clear</button>}
                     </td>
                   </tr>
                 );
