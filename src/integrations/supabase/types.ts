@@ -370,20 +370,31 @@ export type Database = {
           id: string
           name: string
           section: string
+          setup_class_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
           section?: string
+          setup_class_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
           section?: string
+          setup_class_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sqc_classes_setup_class_id_fkey"
+            columns: ["setup_class_id"]
+            isOneToOne: false
+            referencedRelation: "setup_classes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sqc_members: {
         Row: {
@@ -583,9 +594,30 @@ export type Database = {
       }
       is_staff_user: { Args: never; Returns: boolean }
       set_active_academic_year: { Args: { _id: string }; Returns: undefined }
+      setup_class_delete: { Args: { _id: string }; Returns: string }
       setup_class_dept: { Args: { _class: string }; Returns: string }
+      sqc_class_subjects: {
+        Args: never
+        Returns: {
+          class_id: string
+          code: string
+          subject: string
+          teacher_id: string
+          teacher_name: string
+        }[]
+      }
+      sqc_class_teaching: {
+        Args: { _class: string }
+        Returns: {
+          code: string
+          subject: string
+          teacher_id: string
+          teacher_name: string
+        }[]
+      }
       sqc_is_member: { Args: { _class: string }; Returns: boolean }
       sqc_is_rep: { Args: { _class: string }; Returns: boolean }
+      sqc_sync_classes: { Args: never; Returns: number }
       sqc_teacher_list: {
         Args: never
         Returns: {
