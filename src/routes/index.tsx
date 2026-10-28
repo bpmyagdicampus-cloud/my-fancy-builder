@@ -1,8 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useTeacher } from "@/lib/store";
 import { todayBs, fmtBs, inRange } from "@/lib/bs";
 import { totalLhDone, pct } from "@/lib/progress";
 import { ACT_CATS } from "@/lib/constants";
+import { useCloud } from "@/lib/cloud";
+import * as C from "@/lib/campus";
+import * as D from "@/lib/dm";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -16,7 +20,22 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { profile, data } = useTeacher();
+  const cl = useCloud();
+  const lk = C.useLookup();
+  const [actSum, setActSum] = useState<D.ActionSummary | null>(null);
   const today = todayBs();
+
+  const admin = cl.roles.includes("admin");
+  const headDepts = lk.heads.filter((h) => h.user_id === cl.userId).map((h) => h.department_id);
+
+  useEffect(() => {
+    if (cl.status !== "ready" || !cl.userId) {
+      setActSum(null);
+      return;
+    }
+    void D.loadActionSummary(cl.userId, admin, headDepts).then(setActSum);
+  }, [cl.status, cl.userId, admin, headDepts.join(",")]);
+
   if (!profile) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-20 text-center">
@@ -35,6 +54,14 @@ function Home() {
   const todayEv = data.cal.filter((e) => inRange(today, e.from, e.to));
   const actCounts = ACT_CATS.map((c) => [c, data.acts.filter((a) => a.category === c).length] as const).filter(([, n]) => n > 0);
 
+  const hasAlerts =
+    !!actSum &&
+    (actSum.submittedPlans > 0 ||
+      actSum.pendingBudgetLines > 0 ||
+      actSum.pendingRevisions > 0 ||
+      actSum.myAssignedActivities > 0 ||
+      actSum.pendingSqcReports > 0);
+
   return (
     <main className="mx-auto max-w-6xl px-3 py-4 sm:px-4 sm:py-6">
       <section className="panel mb-5 bg-gradient-to-br from-secondary to-card">
@@ -45,9 +72,48 @@ function Home() {
         <div className="mt-3 flex flex-wrap gap-2">
           <Link to="/diary" className="btn">+ Today's diary</Link>
           <Link to="/reports" className="btn-soft">Monthly report</Link>
+          <Link to="/department" className="btn-soft">विभागीय व्यवस्थापन · Department</Link>
           <Link to="/sqc" className="btn-soft">SQC</Link>
         </div>
       </section>
+
+      {hasAlerts && actSum && (
+        <section className="panel mb-5 border-primary/40">
+          <h2 className="mb-2 text-base font-bold">ध्यानाकर्षण तथा जिम्मेवारीहरू · Action Notifications</h2>
+          <div className="flex flex-wrap gap-2 text-xs">
+            {admin && actSum.submittedPlans > 0 && (
+              <Link to="/department" className="chip-on">
+                स्वीकृतिको लागि पेस भएका वार्षिक योजना: {actSum.submittedPlans}
+              </Link>
+            )}
+            {admin && actSum.pendingBudgetLines > 0 && (
+              <Link to="/department" className="chip-on">
+                स्वीकृतिको लागि पेस भएका बजेट शीर्षक: {actSum.pendingBudgetLines}
+              </Link>
+            )}
+            {admin && actSum.pendingRevisions > 0 && (
+              <Link to="/department" className="chip-on">
+                बजेट संशोधन अनुरोध (Pending revisions): {actSum.pendingRevisions}
+              </Link>
+            )}
+            {admin && actSum.pendingSqcReports > 0 && (
+              <Link to="/sqc" className="chip-on">
+                सम्बोधन हुन बाँकी SQC रिपोर्ट: {actSum.pendingSqcReports}
+              </Link>
+            )}
+            {!admin && headDepts.length > 0 && actSum.submittedPlans > 0 && (
+              <Link to="/department" className="chip">
+                मस्यौदा (Draft) वार्षिक योजना: {actSum.submittedPlans}
+              </Link>
+            )}
+            {actSum.myAssignedActivities > 0 && (
+              <Link to="/department" className="chip-on">
+                मेरो जिम्मेवारीमा रहेका विभागीय गतिविधि: {actSum.myAssignedActivities}
+              </Link>
+            )}
+          </div>
+        </section>
+      )}
 
       <h2 className="mb-2 text-lg font-bold">My classes — course completion</h2>
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
