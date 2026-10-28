@@ -2,12 +2,23 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { LOGIN_DOMAIN, MIN_PASSWORD, ROLES, toEmail, validLogin } from "@/lib/login";
 
-// Every function runs on the server and first checks that the caller is an administrator.
+// Every function runs on the server and first checks the caller's role/permissions.
 // The service-role key never reaches the browser.
 // Results are RETURNED as { ok, error } (never thrown), so the real reason always reaches the screen.
 // No input validator is declared on purpose (inputs are checked below); this avoids depending on the validator API name of the installed TanStack version.
 
 export type AdminUser = { id: string; login: string; name: string; designation: string; dept: string; campus?: string; address?: string; hod?: string; chief?: string; roles: string[]; disabled: boolean; lastSignIn: string | null };
+export type SetupTeacher = { id: string; name: string; designation: string; dept: string; campus: string; address: string; hod: string; chief: string; canEdit: boolean };
+export type PeerStudentSource = {
+  key: string;
+  teacherId: string;
+  teacherName: string;
+  classId: string;
+  className: string;
+  subject: string;
+  code: string;
+  students: { name: string; roll: number }[];
+};
 export type Fail = { ok: false; error: string };
 export type Done<T = unknown> = { ok: true } & T;
 export type Result<T = unknown> = Done<T> | Fail;
@@ -158,4 +169,217 @@ export const adminSetRole = createServerFn({ method: "POST" })
       await setRolesExact(await adminClient(), String(data.id), data.role);
       return { ok: true };
     } catch (e) { return fail(e); }
+  });
+
+/**
+ * Lists teacher profiles for Setup -> Teacher details based on the caller's role:
+ * - Admin: sees all teachers
+ * - Department Head: sees teachers of own department(s) (and self)
+ * - Teacher: sees own profile only
+ */
+export const setupListTeachers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async (ctx: any): Promise<Result<{ teachers: SetupTeacher[]; scope: "admin" | "head" | "teacher"; headDepts: string[] }>> => {
+    try {
+      const uid = String(ctx.context.userId);
+      const sb = await adminClient();
+      const [rolesRes, profRes, headsRes, deptsRes, tdRes] = await Promise.all([
+        sb.from("user_roles").select("user_id,role"),
+        sb.from("profiles").select("id,name,designation,dept,campus,address,hod,chief").order("name"),
+        sb.from("department_heads").select("user_id,department_id"),
+        sb.from("departments").select("id,name"),
+        sb.from("teacher_data").select("teacher_id,content"),
+      ]);
+      if (profRes.error) throw new Error(profRes.error.message);
+      const allRoles = (rolesRes.data ?? []) as { user_id: string; role: string }[];
+      const myRoles = allRoles.filter((r) => r.user_id === uid).map((r) => r.role);
+      const isAdmin = myRoles.includes("admin");
+      const staffIds = new Set(allRoles.filter((r) => r.role === "teacher" || r.role === "admin").map((r) => r.user_id));
+
+      const heads = (headsRes.data ?? []) as { user_id: string; department_id: string }[];
+      const depts = (deptsRes.data ?? []) as { id: string; name: string }[];
+      const myHeadDeptIds = new Set(heads.filter((h) => h.user_id === uid).map((h) => h.department_id));
+      const myHeadDeptNames = depts
+        .filter((d) => myHeadDeptIds.has(d.id))
+        .map((d) => d.name.trim());
+      const myHeadDeptNamesLower = new Set(myHeadDeptNames.map((n) => n.toLowerCase()));
+
+      // Also check which teachers teach a class in the head's department(s)
+      const teachesInMyDept = new Set<string>();
+      if (myHeadDeptIds.size > 0 && Array.isArray(tdRes.data)) {
+        for (const row of tdRes.data as any[]) {
+          const classes = Array.isArray(row?.content?.classes) ? row.content.classes : [];
+          if (classes.some((c: any) => c?.deptId && myHeadDeptIds.has(String(c.deptId)))) {
+            teachesInMyDept.add(String(row.teacher_id));
+          }
+        }
+        for (const h of heads) {
+          if (myHeadDeptIds.has(h.department_id)) teachesInMyDept.add(h.user_id);
+        }
+      }
+
+      const scope: "admin" | "head" | "teacher" = isAdmin ? "admin" : myHeadDeptIds.size > 0 ? "head" : "teacher";
+      const profiles = (profRes.data ?? []) as any[];
+      const filtered = profiles.filter((p) => {
+        if (!staffIds.has(p.id) && p.id !== uid) return false;
+        if (isAdmin) return true;
+        if (p.id === uid) return true;
+        if (scope === "head") {
+          const dName = String(p.dept ?? "").trim().toLowerCase();
+          return (dName && myHeadDeptNamesLower.has(dName)) || teachesInMyDept.has(p.id);
+        }
+        return false;
+      });
+
+      const teachers: SetupTeacher[] = filtered.map((p) => ({
+        id: p.id,
+        name: p.name ?? "",
+        designation: p.designation ?? "",
+        dept: p.dept ?? "",
+        campus: p.campus ?? "",
+        address: p.address ?? "",
+        hod: p.hod ?? "",
+        chief: p.chief ?? "",
+        canEdit: true,
+      }));
+      return { ok: true, teachers, scope, headDepts: myHeadDeptNames };
+    } catch (e) {
+      return fail(e);
+    }
+  });
+
+/**
+ * Updates a teacher's profile details from Setup -> Teacher details according to role:
+ * - Admin: can edit any teacher
+ * - Department Head: can edit teachers of own department (and self)
+ * - Teacher: can edit own profile only
+ */
+export const setupUpdateTeacher = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async (ctx: any): Promise<Result> => {
+    try {
+      const uid = String(ctx.context.userId);
+      const data = ctx.data ?? {};
+      const targetId = String(data.id ?? "").trim();
+      if (!targetId) throw new Error("Teacher ID is required.");
+
+      const sb = await adminClient();
+      const [rolesRes, headsRes, deptsRes, targetProfRes, tdRes] = await Promise.all([
+        sb.from("user_roles").select("role").eq("user_id", uid),
+        sb.from("department_heads").select("user_id,department_id"),
+        sb.from("departments").select("id,name"),
+        sb.from("profiles").select("id,dept").eq("id", targetId).maybeSingle(),
+        sb.from("teacher_data").select("content").eq("teacher_id", targetId).maybeSingle(),
+      ]);
+
+      const isAdmin = (rolesRes.data ?? []).some((r: any) => r.role === "admin");
+      let allowed = isAdmin || targetId === uid;
+
+      if (!allowed) {
+        const heads = (headsRes.data ?? []) as { user_id: string; department_id: string }[];
+        const depts = (deptsRes.data ?? []) as { id: string; name: string }[];
+        const myHeadDeptIds = new Set(heads.filter((h) => h.user_id === uid).map((h) => h.department_id));
+        const myHeadDeptNamesLower = new Set(
+          depts.filter((d) => myHeadDeptIds.has(d.id)).map((d) => d.name.trim().toLowerCase())
+        );
+        const targetDept = String(targetProfRes.data?.dept ?? "").trim().toLowerCase();
+        const targetClasses = Array.isArray(tdRes.data?.content?.classes) ? tdRes.data.content.classes : [];
+        const teachesInDept = targetClasses.some((c: any) => c?.deptId && myHeadDeptIds.has(String(c.deptId)));
+        const isHeadOfSame = heads.some((h) => h.user_id === targetId && myHeadDeptIds.has(h.department_id));
+        if ((targetDept && myHeadDeptNamesLower.has(targetDept)) || teachesInDept || isHeadOfSame) {
+          allowed = true;
+        }
+      }
+
+      if (!allowed) throw new Error("तपाइँलाई यो शिक्षकको विवरण सम्पादन गर्ने अनुमति छैन। / You are not allowed to edit this teacher's details.");
+
+      const clean = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
+      const name = clean(data.name, 120);
+      if (!name) throw new Error("Name is required.");
+      const patch = {
+        name,
+        designation: clean(data.designation, 120),
+        dept: clean(data.dept, 120),
+        campus: clean(data.campus, 200),
+        address: clean(data.address, 200),
+        hod: clean(data.hod, 120),
+        chief: clean(data.chief, 120),
+      };
+      const { error } = await sb.from("profiles").update(patch).eq("id", targetId);
+      if (error) throw new Error(error.message);
+      return { ok: true };
+    } catch (e) {
+      return fail(e);
+    }
+  });
+
+/**
+ * Finds other subjects of the SAME class (across all teachers in the cloud) that already have students,
+ * so a teacher creating/editing their subject or adding students can view and pull students from another subject of that class.
+ */
+export const listPeerClassStudents = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async (ctx: any): Promise<Result<{ sources: PeerStudentSource[] }>> => {
+    try {
+      const data = ctx.data ?? {};
+      const centralId = String(data.centralId ?? "").trim();
+      const className = String(data.className ?? "").trim().toLowerCase();
+      const excludeClassId = String(data.excludeClassId ?? "").trim();
+      if (!centralId && !className) return { ok: true, sources: [] };
+
+      const sb = await adminClient();
+      const [tdRes, profRes] = await Promise.all([
+        sb.from("teacher_data").select("teacher_id,content"),
+        sb.from("profiles").select("id,name"),
+      ]);
+      if (tdRes.error) throw new Error(tdRes.error.message);
+      const nameMap = new Map<string, string>();
+      for (const p of (profRes.data ?? []) as any[]) nameMap.set(String(p.id), String(p.name ?? "Teacher"));
+
+      const sources: PeerStudentSource[] = [];
+      for (const row of (tdRes.data ?? []) as any[]) {
+        const tId = String(row.teacher_id);
+        const tName = nameMap.get(tId) || "Teacher";
+        const content = row.content ?? {};
+        const classes = Array.isArray(content.classes) ? content.classes : [];
+        const allStudents = Array.isArray(content.students) ? content.students : [];
+
+        for (const c of classes) {
+          if (!c || c.closed) continue;
+          if (excludeClassId && String(c.id) === excludeClassId) continue;
+          const matchCentral = centralId && c.centralId && String(c.centralId) === centralId;
+          const matchName = className && String(c.name ?? "").trim().toLowerCase() === className;
+          if (!matchCentral && !matchName) continue;
+
+          // Collect active students of this class
+          let stu: { name: string; roll: number }[] = allStudents
+            .filter((s: any) => s && s.classId === c.id && s.active !== false && String(s.name ?? "").trim())
+            .map((s: any, idx: number) => ({ name: String(s.name).trim(), roll: Number(s.roll) || idx + 1 }))
+            .sort((a: { roll: number; name: string }, b: { roll: number; name: string }) => a.roll - b.roll || a.name.localeCompare(b.name));
+
+          if (stu.length === 0 && typeof c.students === "string" && c.students.trim()) {
+            stu = c.students
+              .split("\n")
+              .map((s: string) => s.trim())
+              .filter(Boolean)
+              .map((name: string, idx: number) => ({ name, roll: idx + 1 }));
+          }
+          if (stu.length === 0) continue;
+
+          sources.push({
+            key: `${tId}:${c.id}`,
+            teacherId: tId,
+            teacherName: tName,
+            classId: String(c.id),
+            className: String(c.name ?? ""),
+            subject: String(c.subject ?? "Subject"),
+            code: String(c.code ?? ""),
+            students: stu,
+          });
+        }
+      }
+      return { ok: true, sources };
+    } catch (e) {
+      return fail(e);
+    }
   });

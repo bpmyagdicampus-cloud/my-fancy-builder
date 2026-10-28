@@ -11,8 +11,33 @@ function loadSet(d: Data, set: any) { for (const k of WORK_KEYS) (d as any)[k] =
 
 export const currentYear = (d: Pick<Data, "years" | "settings">) => d.years.find((y) => y.id === d.settings.yearId);
 export const latestYear = (d: Pick<Data, "years">) => d.years[d.years.length - 1];
-/** true when an older year is open for viewing/editing */
-export const isPast = (d: Pick<Data, "years" | "settings">) => { const l = latestYear(d); return !!l && d.settings.yearId !== l.id; };
+
+/** Returns the active academic year (respecting Admin's cloud active year or local activeYearId, falling back to latest). */
+export function activeYear(d: Pick<Data, "years" | "settings">, cloudActiveName?: string | null) {
+  if (cloudActiveName) {
+    const byCloud = d.years.find((y) => y.name.trim().toLowerCase() === cloudActiveName.trim().toLowerCase());
+    if (byCloud) return byCloud;
+  }
+  if (d.settings?.activeYearId) {
+    const byId = d.years.find((y) => y.id === d.settings.activeYearId);
+    if (byId) return byId;
+  }
+  return latestYear(d);
+}
+
+/** true when a non-active year is open (view-only for non-admin users) */
+export const isPast = (d: Pick<Data, "years" | "settings">, cloudActiveName?: string | null) => {
+  const act = activeYear(d, cloudActiveName);
+  return !!act && d.settings.yearId !== act.id;
+};
+
+/** Marks a specific year (including a previous year) as the active editable year and opens it. */
+export function setActiveYearLocal(d: Data, id: string): string | null {
+  if (!d.years.some((y) => y.id === id)) return "Unknown academic year.";
+  d.settings.activeYearId = id;
+  if (d.settings.yearId !== id) return switchYear(d, id);
+  return null;
+}
 
 export function switchYear(d: Data, id: string): string | null {
   if (!d.years.some((y) => y.id === id)) return "Unknown academic year.";
@@ -54,6 +79,7 @@ export function startYear(d: Data, o: CarryOpts): string | null {
   const id = uid();
   d.years.push({ id, name });
   d.settings.yearId = id;
+  d.settings.activeYearId = id;
 
   const map: Record<string, string> = {};
   const classes: Cls[] = [], students: Student[] = [];

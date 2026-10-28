@@ -39,7 +39,7 @@ export type Blended = {
 export type Reminder = { id: string; date: string; time: string; title: string; note: string; status: string };
 /** Teacher's own leave. Kept in Records, NOT in the academic calendar; counted in the monthly report. */
 export type Leave = { id: string; kind: string; from: string; to: string; reason: string };
-export type Settings = { weeklyOff: string[]; yearId: string };
+export type Settings = { weeklyOff: string[]; yearId: string; activeYearId?: string };
 
 export type Data = {
   classes: Cls[]; units: Unit[]; cal: CalEvent[]; lessons: Lesson[]; plans: Plan[]; blended: Blended[];
@@ -72,8 +72,11 @@ let loaded = false;
 let loadError: string | null = null;
 let warned = false;
 let afterMutate: (() => void) | null = null;
+let editGuard: ((d: Data) => string | null) | null = null;
 /** The cloud layer registers here to be told about every normal (non-silent) change. */
 export const setAfterMutate = (fn: (() => void) | null) => { afterMutate = fn; };
+/** Optional guard to block non-admin edits when viewing an inactive academic year. */
+export const setEditGuard = (fn: ((d: Data) => string | null) | null) => { editGuard = fn; };
 const listeners = new Set<() => void>();
 
 function load() {
@@ -163,7 +166,13 @@ export function useTeacher() {
   return { profile, data, profiles: d.profiles };
 }
 
-export function updateData(fn: (d: Data) => void) {
+export function updateData(fn: (d: Data) => void, bypassGuard = false) {
+  load();
+  if (!bypassGuard && editGuard && db.current) {
+    const cur = { ...emptyData(), ...db.data[db.current] };
+    const deny = editGuard(cur);
+    if (deny) { alert(deny); return; }
+  }
   mutate((x) => {
     if (!x.current) return;
     x.data[x.current] = { ...emptyData(), ...x.data[x.current] };

@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { Page, ClassSelect, NeedProfile } from "@/components/app/ui";
 import { updateData, useTeacher, type Data } from "@/lib/store";
 import { addStudents, classStudents, importMissing, missingNames, moveStudents, removeStudents, renameStudent, setActive, setRoll } from "@/lib/students";
+import { useCloud } from "@/lib/cloud";
+import { listPeerClassStudents, type PeerStudentSource, type Result } from "@/lib/admin.functions";
 
 const PRESELECT = "shikshak-students-cls";
 
@@ -18,13 +20,82 @@ export const Route = createFileRoute("/students")({
 
 function Students() {
   const { profile, data } = useTeacher();
+  const cl = useCloud();
   const [cls, setCls] = useState("");
   const [bulk, setBulk] = useState("");
   const [note, setNote] = useState("");
   const [editing, setEditing] = useState<{ id: string; name: string; roll: number } | null>(null);
   const [moving, setMoving] = useState<string | null>(null);
+
+  // Other subjects of the same class that have students
+  const [peerSources, setPeerSources] = useState<PeerStudentSource[]>([]);
+  const [selectedSourceKey, setSelectedSourceKey] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
+
   // coming from Setup -> Classes -> "Students" opens this class directly
   useEffect(() => { try { const v = sessionStorage.getItem(PRESELECT); if (v) { setCls(v); sessionStorage.removeItem(PRESELECT); } } catch { /* ignore */ } }, []);
+
+  const curClass = data.classes.find((c) => c.id === cls);
+
+  // Find students from other subjects of the SAME class (both own subjects and other teachers' subjects in cloud)
+  useEffect(() => {
+    if (!curClass) {
+      setPeerSources([]);
+      setSelectedSourceKey("");
+      setPreviewOpen(false);
+      return;
+    }
+    const cCentral = String(curClass.centralId ?? "").trim();
+    const cName = curClass.name.trim().toLowerCase();
+
+    const localMatches: PeerStudentSource[] = data.classes
+      .filter((c) => {
+        if (c.closed || c.id === curClass.id) return false;
+        const mCentral = cCentral && c.centralId && c.centralId === cCentral;
+        const mName = cName && c.name.trim().toLowerCase() === cName;
+        return mCentral || mName;
+      })
+      .map((c) => ({
+        key: `local:${c.id}`,
+        teacherId: profile?.id ?? "me",
+        teacherName: `${profile?.name ?? "My class"} (मेरो अर्को विषय)`,
+        classId: c.id,
+        className: c.name,
+        subject: c.subject || "Subject",
+        code: c.code || "",
+        students: classStudents(data, c.id, true).map((s) => ({ name: s.name, roll: s.roll })),
+      }))
+      .filter((s) => s.students.length > 0);
+
+    setPeerSources(localMatches);
+    if (localMatches[0]) setSelectedSourceKey(localMatches[0].key);
+    else setSelectedSourceKey("");
+
+    if (cl.status === "ready" && cl.userId) {
+      let active = true;
+      void (listPeerClassStudents as any)({
+        data: { centralId: cCentral, className: curClass.name.trim(), excludeClassId: curClass.id },
+      })
+        .then((r: Result<{ sources: PeerStudentSource[] }>) => {
+          if (!active || !r?.ok) return;
+          const merged = [...localMatches];
+          const seenIds = new Set(localMatches.map((x) => x.classId));
+          for (const s of r.sources) {
+            if (!seenIds.has(s.classId)) {
+              seenIds.add(s.classId);
+              merged.push(s);
+            }
+          }
+          setPeerSources(merged);
+          if (merged[0]) setSelectedSourceKey((prev) => (merged.some((m) => m.key === prev) ? prev : merged[0]!.key));
+        })
+        .catch(() => {});
+      return () => {
+        active = false;
+      };
+    }
+  }, [curClass?.id, curClass?.centralId, curClass?.name, data.classes, data.students, cl.status, cl.userId, profile?.id, profile?.name]);
+
   if (!profile) return <NeedProfile />;
   const open = data.classes.filter((c) => !c.closed);
   const list = cls ? classStudents(data, cls, false) : [];
@@ -35,6 +106,8 @@ function Students() {
     if (msg) setNote(String(msg)); else setNote("");
   };
 
+  const selectedSource = peerSources.find((s) => s.key === selectedSourceKey) ?? null;
+
   return (
     <Page title="Upgrade Students · विद्यार्थी अपग्रेड" sub="Each student has a permanent ID. Renaming a student updates old attendance and marks of this year automatically.">
       <div className="no-print mb-3 w-72"><ClassSelect active value={cls} onChange={(v) => { setCls(v); setNote(""); }} /></div>
@@ -44,7 +117,73 @@ function Students() {
       {cls && (
         <>
           <section className="panel mb-4">
-            <h2 className="mb-2 text-lg font-bold">Add students</h2>
+            <h2 className="mb-2 text-lg font-bold">Add students · विद्यार्थी थप्नुहोस्</h2>
+
+            {/* Pull from another subject of the same class */}
+            {peerSources.length > 0 && (
+              <div className="mb-4 rounded-md border border-primary/40 bg-secondary/30 p-3">
+                <div className="text-sm font-bold text-primary">
+                  यही कक्षा ({curClass?.name}) को अन्य विषयबाट विद्यार्थी तान्नुहोस् · Pull from another subject of {curClass?.name}
+                </div>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  यो कक्षाको अन्य विषयमा पहिले नै विद्यार्थी प्रविष्ट छन्। तलबाट विषय छानेर नामावली हेर्नुहोस् र सिधै तान्नुहोस्:
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    className="field !w-auto min-w-64"
+                    value={selectedSourceKey}
+                    onChange={(e) => setSelectedSourceKey(e.target.value)}
+                  >
+                    {peerSources.map((s) => (
+                      <option key={s.key} value={s.key}>
+                        {s.className} · {s.subject} {s.code ? `(${s.code})` : ""} — {s.teacherName} ({s.students.length} students)
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="btn-soft"
+                    onClick={() => setPreviewOpen((v) => !v)}
+                  >
+                    {previewOpen ? "Hide list · लुकाउनुहोस्" : `View ${selectedSource?.students.length ?? 0} students · हेर्नुहोस्`}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={!selectedSource}
+                    onClick={() => {
+                      if (!selectedSource) return;
+                      run((d) => {
+                        const r = addStudents(
+                          d,
+                          cls,
+                          selectedSource.students.map((s) => s.name)
+                        );
+                        return `${r.added.length} students pulled from ${selectedSource.subject}${r.skipped.length ? ` (${r.skipped.length} already in this class)` : ""}.`;
+                      });
+                    }}
+                  >
+                    Pull {selectedSource?.students.length ?? 0} students · तान्नुहोस्
+                  </button>
+                </div>
+
+                {previewOpen && selectedSource && (
+                  <div className="mt-3 max-h-48 overflow-y-auto rounded border border-border bg-card p-2.5 text-xs">
+                    <div className="mb-1.5 font-semibold text-muted-foreground">
+                      {selectedSource.className} · {selectedSource.subject} ({selectedSource.teacherName}) मा रहेका विद्यार्थीहरू:
+                    </div>
+                    <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
+                      {selectedSource.students.map((st, idx) => (
+                        <div key={idx} className="truncate">
+                          <b>{st.roll}.</b> {st.name}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <textarea className="field min-h-24" placeholder="One name per line" value={bulk} onChange={(e) => setBulk(e.target.value)} />
             <div className="mt-2 flex flex-wrap gap-2">
               <button className="btn" onClick={() => { run((d) => { const r = addStudents(d, cls, bulk.split("\n")); return `${r.added.length} added${r.skipped.length ? `; already in the class: ${r.skipped.join(", ")}` : ""}.`; }); setBulk(""); }}>Add</button>
