@@ -14,10 +14,13 @@ export type PeerStudentSource = {
   teacherId: string;
   teacherName: string;
   classId: string;
+  centralId?: string;
   className: string;
   subject: string;
   code: string;
   students: { name: string; roll: number }[];
+  isOtherTeacher?: boolean;
+  sameClass?: boolean;
 };
 export type Fail = { ok: false; error: string };
 export type Done<T = unknown> = { ok: true } & T;
@@ -314,18 +317,15 @@ export const setupUpdateTeacher = createServerFn({ method: "POST" })
   });
 
 /**
- * Finds other subjects of the SAME class (across all teachers in the cloud) that already have students,
- * so a teacher creating/editing their subject or adding students can view and pull students from another subject of that class.
+ * Returns all classes across ALL teachers in the cloud that have students,
+ * so any teacher can view and pull students from another teacher's subject of the same class.
  */
 export const listPeerClassStudents = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async (ctx: any): Promise<Result<{ sources: PeerStudentSource[] }>> => {
     try {
       const data = ctx.data ?? {};
-      const centralId = String(data.centralId ?? "").trim();
-      const className = String(data.className ?? "").trim().toLowerCase();
       const excludeClassId = String(data.excludeClassId ?? "").trim();
-      if (!centralId && !className) return { ok: true, sources: [] };
 
       const sb = await adminClient();
       const [tdRes, profRes] = await Promise.all([
@@ -334,24 +334,18 @@ export const listPeerClassStudents = createServerFn({ method: "POST" })
       ]);
       if (tdRes.error) throw new Error(tdRes.error.message);
       const nameMap = new Map<string, string>();
-      for (const p of (profRes.data ?? []) as any[]) nameMap.set(String(p.id), String(p.name ?? "Teacher"));
+      for (const p of (profRes.data ?? []) as any[]) {
+        if (p?.id) nameMap.set(String(p.id), String(p.name ?? "").trim() || "Teacher");
+      }
 
       const sources: PeerStudentSource[] = [];
-      for (const row of (tdRes.data ?? []) as any[]) {
-        const tId = String(row.teacher_id);
-        const tName = nameMap.get(tId) || "Teacher";
-        const content = row.content ?? {};
-        const classes = Array.isArray(content.classes) ? content.classes : [];
-        const allStudents = Array.isArray(content.students) ? content.students : [];
-
+      const extractFromSet = (tId: string, tName: string, setObj: any) => {
+        const classes = Array.isArray(setObj?.classes) ? setObj.classes : [];
+        const allStudents = Array.isArray(setObj?.students) ? setObj.students : [];
         for (const c of classes) {
           if (!c || c.closed) continue;
           if (excludeClassId && String(c.id) === excludeClassId) continue;
-          const matchCentral = centralId && c.centralId && String(c.centralId) === centralId;
-          const matchName = className && String(c.name ?? "").trim().toLowerCase() === className;
-          if (!matchCentral && !matchName) continue;
 
-          // Collect active students of this class
           let stu: { name: string; roll: number }[] = allStudents
             .filter((s: any) => s && s.classId === c.id && s.active !== false && String(s.name ?? "").trim())
             .map((s: any, idx: number) => ({ name: String(s.name).trim(), roll: Number(s.roll) || idx + 1 }))
@@ -371,11 +365,24 @@ export const listPeerClassStudents = createServerFn({ method: "POST" })
             teacherId: tId,
             teacherName: tName,
             classId: String(c.id),
+            centralId: String(c.centralId ?? ""),
             className: String(c.name ?? ""),
             subject: String(c.subject ?? "Subject"),
             code: String(c.code ?? ""),
             students: stu,
           });
+        }
+      };
+
+      for (const row of (tdRes.data ?? []) as any[]) {
+        const tId = String(row.teacher_id);
+        const tName = nameMap.get(tId) || "Teacher";
+        const content = row.content ?? {};
+        extractFromSet(tId, tName, content);
+        if (content.archive && typeof content.archive === "object") {
+          for (const archSet of Object.values(content.archive)) {
+            extractFromSet(tId, tName, archSet);
+          }
         }
       }
       return { ok: true, sources };
