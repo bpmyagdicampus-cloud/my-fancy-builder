@@ -59,3 +59,32 @@ export async function loadOverview(departmentId: string, year: string): Promise<
     } };
   } catch (e) { return { ok: false, error: `No connection (${e instanceof Error ? e.message : e}).` }; }
 }
+
+// ---------- annual plans ----------
+export type DmPlan = {
+  id: string; department_id: string; academic_year: string; title: string;
+  objectives: string; expected_outcomes: string; indicators: string; targets: string;
+  estimated_budget: number; funding_source: string; start_date: string; end_date: string;
+  status: "draft" | "submitted" | "approved" | "rejected"; approval_comment: string;
+  approved_by: string | null; approved_at: string | null; version: number;
+  created_at: string; updated_at: string;
+};
+export type PlanForm = Pick<DmPlan, "title" | "objectives" | "expected_outcomes" | "indicators" | "targets" | "estimated_budget" | "funding_source" | "start_date" | "end_date">;
+export type PlanRevision = { id: string; version: number; snapshot: Partial<DmPlan>; changed_at: string };
+
+async function run<T>(p: PromiseLike<{ data: any; error: any }>, pick: (d: any) => T): Promise<R<T>> {
+  try { const { data, error } = await p; return error ? { ok: false, error: nice(error) } : { ok: true, data: pick(data) }; }
+  catch (e) { return { ok: false, error: `No connection (${e instanceof Error ? e.message : e}).` }; }
+}
+const norm = (r: any): DmPlan => ({ ...r, estimated_budget: Number(r.estimated_budget ?? 0) });
+
+export const loadPlans = (dept: string, year: string) =>
+  run(sb.from("dm_plans").select("*").eq("department_id", dept).eq("academic_year", year).order("created_at", { ascending: false }), (d) => (d ?? []).map(norm) as DmPlan[]);
+export const loadRevisions = (planId: string) =>
+  run(sb.from("dm_plan_revisions").select("id,version,snapshot,changed_at").eq("plan_id", planId).order("version", { ascending: false }), (d) => (d ?? []) as PlanRevision[]);
+export const createPlan = (dept: string, year: string, f: PlanForm) =>
+  run(sb.from("dm_plans").insert({ department_id: dept, academic_year: year, ...f }).select("id").single(), (d) => d?.id as string);
+export const updatePlan = (id: string, f: PlanForm) => run(sb.from("dm_plans").update(f).eq("id", id), () => true);
+export const setPlanStatus = (id: string, status: DmPlan["status"], comment = "") =>
+  run(sb.from("dm_plans").update({ status, approval_comment: comment }).eq("id", id), () => true);
+export const deletePlan = (id: string) => run(sb.from("dm_plans").delete().eq("id", id), () => true);

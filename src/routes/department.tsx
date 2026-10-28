@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Page } from "@/components/app/ui";
+import { Page, Tabs } from "@/components/app/ui";
+import { PlansTab } from "@/components/dm/PlansTab";
 import { useCloud } from "@/lib/cloud";
 import * as C from "@/lib/campus";
 import * as D from "@/lib/dm";
@@ -31,6 +32,8 @@ function Department() {
   const [dept, setDept] = useState("");
   const [ov, setOv] = useState<D.Overview | null>(null);
   const [err, setErr] = useState("");
+  const [tab, setTab] = useState<"overview" | "plans">("overview");
+  const [tick, setTick] = useState(0);
 
   const admin = cl.roles.includes("admin");
   const staff = admin || cl.roles.includes("teacher");
@@ -53,7 +56,7 @@ function Department() {
     if (!dept || !year) { setOv(null); return; }
     setErr("");
     void D.loadOverview(dept, year).then((r) => { if (r.ok) setOv(r.data); else { setOv(null); setErr(r.error); } });
-  }, [dept, year]);
+  }, [dept, year, tick]);
 
   if (cl.status !== "ready" || !cl.userId) return <Page title="Department Management · विभागीय व्यवस्थापन"><p className="text-sm text-muted-foreground">Please sign in.</p></Page>;
   if (!staff) return <Page title="Department Management · विभागीय व्यवस्थापन"><p className="text-sm text-muted-foreground">This module is for teachers, department heads and the administration.</p></Page>;
@@ -80,6 +83,11 @@ function Department() {
       {yearErr && <p className="mb-3 rounded-md border border-border p-2 text-sm text-muted-foreground">{yearErr}</p>}
       {err && <p className="mb-3 rounded-md border border-destructive p-3 text-sm text-destructive">{err}</p>}
 
+      <Tabs value={tab} onChange={setTab} items={[["overview", "Overview · सारांश"], ["plans", "Annual plans · वार्षिक योजना"]]} />
+
+      {tab === "plans" && <PlansTab dept={dept} year={year} admin={admin} canManage={canManage} onChanged={() => setTick((x) => x + 1)} />}
+
+      {tab === "overview" && (<>
       <section className="panel mb-4">
         <h2 className="mb-1 text-lg font-bold">{dname || "—"} · {year || "—"}</h2>
         <p className="mb-3 text-xs text-muted-foreground">सबै संख्या यो विभाग र वर्षको सुरक्षित रेकर्डबाट गणना गरिएको हो।</p>
@@ -104,10 +112,11 @@ function Department() {
             <div className="flex items-center gap-2"><h3 className="flex-1 text-base font-bold">{m.ne}</h3><span className="chip">Stage {m.stage}</span></div>
             <div className="text-sm font-medium">{m.en}</div>
             <p className="text-sm text-muted-foreground">{m.note}</p>
-            <p className="mt-2 text-xs text-muted-foreground">अर्को चरणमा थपिने।</p>
+            {m.stage === 2 ? <button className="btn-soft mt-2" onClick={() => setTab("plans")}>Open · खोल्नुहोस्</button> : <p className="mt-2 text-xs text-muted-foreground">अर्को चरणमा थपिने।</p>}
           </section>
         ))}
       </div>
+      </>)}
 
       <p className="mt-4 text-xs text-muted-foreground">यो विभागीय अनुगमन औजार हो, क्याम्पसको आधिकारिक लेखा प्रणाली होइन। · This is departmental tracking, not the campus's official accounting system.</p>
     </Page>
