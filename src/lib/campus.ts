@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCloud } from "@/lib/cloud";
 import { friendly, type R } from "@/lib/sqc-data";
 
 // Campus set-up data (docs/phase5/30_campus.sql). Every call runs WITH the signed-in user's login,
@@ -82,6 +83,7 @@ type Lookup = { departments: Department[]; classes: CampusClass[]; heads: Head[]
 let LK: Lookup = { departments: [], classes: [], heads: [], ready: false, failed: false };
 const subs = new Set<() => void>();
 let loading = false;
+let lkUser = "";
 export async function refreshLookup(): Promise<R<CampusData>> {
   loading = true;
   const r = await loadCampus();
@@ -92,12 +94,18 @@ export async function refreshLookup(): Promise<R<CampusData>> {
 }
 export function useLookup(): Lookup {
   const [, tick] = useState(0);
+  const cl = useCloud();
+  const authed = cl.status === "ready" && !!cl.userId;
   useEffect(() => {
     const f = () => tick((x) => x + 1);
     subs.add(f);
-    if (!LK.ready && !loading) void refreshLookup();
     return () => { subs.delete(f); };
   }, []);
+  // load only after the person is signed in (a load before sign-in is refused by the database),
+  // and again when a different person signs in or the first load failed
+  useEffect(() => {
+    if (authed && !loading && (!LK.ready || LK.failed || lkUser !== cl.userId)) { lkUser = cl.userId ?? ""; void refreshLookup(); }
+  }, [authed, cl.userId]);
   return LK;
 }
 export const findManagement = (deps: Department[]) => deps.find((d) => d.name.trim().toLowerCase() === "management");

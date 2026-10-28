@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Page, Tabs } from "@/components/app/ui";
 import { PlansTab } from "@/components/dm/PlansTab";
 import { useCloud } from "@/lib/cloud";
 import * as C from "@/lib/campus";
 import * as D from "@/lib/dm";
+import { useTeacher } from "@/lib/store";
+import { currentYear } from "@/lib/years";
 
 export const Route = createFileRoute("/department")({
   head: () => ({ meta: [
@@ -26,6 +28,7 @@ const MODULES: { ne: string; en: string; note: string; stage: number }[] = [
 function Department() {
   const cl = useCloud();
   const lk = C.useLookup();
+  const { data: diary } = useTeacher();
   const [years, setYears] = useState<D.AcademicYear[]>([]);
   const [yearErr, setYearErr] = useState("");
   const [year, setYear] = useState("");
@@ -48,9 +51,17 @@ function Department() {
     void D.loadYears().then((r) => {
       if (!r.ok) { setYearErr(r.error); return; }
       setYears(r.data);
-      setYear((cur) => cur || r.data.find((y) => y.is_active)?.name || r.data[r.data.length - 1]?.name || "");
     });
   }, [cl.status]);
+  // year names: the administrator's list, plus the years already used in the diary (so the module works before the list is filled)
+  const yearNames = useMemo(() => {
+    const set = new Set<string>([...years.map((y) => y.name), ...diary.years.map((y) => y.name)]);
+    return [...set].filter(Boolean);
+  }, [years, diary.years]);
+  const activeName = years.find((y) => y.is_active)?.name ?? currentYear(diary)?.name ?? "";
+  useEffect(() => {
+    if (!year && yearNames.length) setYear(activeName && yearNames.includes(activeName) ? activeName : yearNames[yearNames.length - 1]!);
+  }, [yearNames, activeName, year]);
   useEffect(() => { if (!dept && options[0]) setDept(options[0].id); }, [options, dept]);
   useEffect(() => {
     if (!dept || !year) { setOv(null); return; }
@@ -74,12 +85,13 @@ function Department() {
           </select></div>
         <div><label className="lbl">Academic year · शैक्षिक वर्ष</label>
           <select className="field" value={year} onChange={(e) => setYear(e.target.value)}>
-            {!years.length && <option value="">{yearErr ? "—" : "No academic year yet"}</option>}
-            {years.map((y) => <option key={y.id} value={y.name}>{y.name}{y.is_active ? " (active)" : ""}</option>)}
+            {!yearNames.length && <option value="">No academic year yet</option>}
+            {yearNames.map((n) => <option key={n} value={n}>{n}{n === activeName ? " (active)" : ""}</option>)}
           </select></div>
         <div className="flex items-end"><span className="chip">{admin ? "Administration" : canManage ? "Department head" : "Teacher · view"}</span></div>
       </div>
 
+      {!years.length && !yearErr && <p className="mb-3 text-xs text-muted-foreground">The administrator has not added academic years in Admin yet, so the years used in your diary are shown.</p>}
       {yearErr && <p className="mb-3 rounded-md border border-border p-2 text-sm text-muted-foreground">{yearErr}</p>}
       {err && <p className="mb-3 rounded-md border border-destructive p-3 text-sm text-destructive">{err}</p>}
 
