@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Page, Tabs, Collection, ClassSelect, PrintHead, Signatures, PrintBtn, Dt, NeedProfile } from "@/components/app/ui";
-import { updateData, uid, useTeacher, type Cls, type Data, type Lesson, type Plan, type Unit } from "@/lib/store";
+import { updateData, uid, useTeacher, type Blended, type Cls, type Data, type Lesson, type Plan, type Unit } from "@/lib/store";
 import { currentYear } from "@/lib/years";
 import { fmtBs } from "@/lib/bs";
 
@@ -17,18 +17,20 @@ export const Route = createFileRoute("/plans")({
 
 function Plans() {
   const { profile, data } = useTeacher();
-  const [tab, setTab] = useState<"annual" | "plans" | "lesson">("annual");
+  const [tab, setTab] = useState<"annual" | "plans" | "lesson" | "blended">("annual");
   const [cls, setCls] = useState("");
   const [lesson, setLesson] = useState<string>("");
+  const [bl, setBl] = useState<string>("");
   if (!profile) return <NeedProfile />;
   const c = data.classes.find((x) => x.id === cls);
   const units = data.units.filter((u) => u.classId === cls).sort((a, b) => a.from.localeCompare(b.from));
   const lp = data.lessons.find((l) => l.id === lesson);
+  const bp = data.blended.find((l) => l.id === bl);
   const cn = (id: string) => { const x = data.classes.find((y) => y.id === id); return x ? `${x.name} · ${x.subject}` : "—"; };
 
   return (
     <Page title="Teaching plans" actions={<PrintBtn />}>
-      <Tabs value={tab} onChange={setTab} items={[["annual", "Annual / unit plan"], ["plans", "Monthly & daily plans"], ["lesson", "Lesson plans"]]} />
+      <Tabs value={tab} onChange={setTab} items={[["annual", "Annual / unit plan"], ["plans", "Monthly & daily plans"], ["lesson", "Lesson plans"], ["blended", "Blended lesson plans"]]} />
 
       {tab === "annual" && (<>
         <div className="no-print mb-3 w-72"><ClassSelect value={cls} onChange={setCls} /></div>
@@ -81,7 +83,75 @@ function Plans() {
           summary={(l) => <div className="flex items-center gap-2"><div className="flex-1"><b>{l.title}</b><div className="text-xs text-muted-foreground"><Dt d={l.date} /> · {cn(l.classId)}</div></div><button className="btn-soft" onClick={(e) => { e.stopPropagation(); setLesson(l.id); }}>View / print</button></div>} />
         {lp && <LessonSheet l={lp} cls={cn(lp.classId)} />}
       </>)}
+
+      {tab === "blended" && (<>
+        <Collection k="blended" title="Blended Learning Lesson Plans"
+          fields={[
+            { k: "classId", l: "Class / Subject", t: "cls" }, { k: "date", l: "Date", t: "date" },
+            { k: "title", l: "Lesson topic" }, { k: "duration", l: "Teaching duration (e.g. 45 minutes)" },
+            { k: "outcomes", l: "2. Learning outcomes: what will students know, explain or do after the lesson?", t: "area" },
+            { k: "preTeacher", l: "3. Pre-class learning: Teacher's activities", t: "area" },
+            { k: "preStudent", l: "3. Pre-class learning: Students' activities", t: "area" },
+            { k: "preMaterials", l: "3. Pre-class learning: Learning materials (links allowed)", t: "area" },
+            { k: "steps", l: "4. Face-to-face learning activities (one row per time block)", t: "rows", cols: [["time", "Time (e.g. 5 min)"], ["teacher", "Teacher's activities"], ["student", "Students' activities"], ["methods", "Teaching methods / materials"]] },
+            { k: "postTeacher", l: "5. Post-class learning: Teacher's activities", t: "area" },
+            { k: "postStudent", l: "5. Post-class learning: Students' activities", t: "area" },
+            { k: "assignment", l: "5. Post-class learning: Assignment / practice", t: "area" },
+            { k: "resources", l: "6. Learning resources and technology (digital tools, offline resources, links)", t: "area" },
+            { k: "asPre", l: "7. Assessment: Pre-class", t: "area" },
+            { k: "asIn", l: "7. Assessment: In-class", t: "area" },
+            { k: "asPost", l: "7. Assessment: Post-class", t: "area" },
+            { k: "feedback", l: "8. Feedback and improvement (feedback, remedial or additional activities)", t: "area" },
+            { k: "offline", l: "9. Offline learning alternative (limited internet or devices)", t: "area" },
+            { k: "refAchieved", l: "10. Reflection: Were the learning outcomes achieved?", t: "area" },
+            { k: "refDifficulty", l: "10. Reflection: What difficulties did students face?", t: "area" },
+            { k: "refWorked", l: "10. Reflection: What worked well?", t: "area" },
+            { k: "refImprove", l: "10. Reflection: What should be improved in the next lesson?", t: "area" },
+          ]}
+          summary={(l) => <div className="flex items-center gap-2"><div className="flex-1"><b>{l.title}</b><div className="text-xs text-muted-foreground"><Dt d={l.date} /> · {cn(l.classId)}</div></div><button className="btn-soft" onClick={(e) => { e.stopPropagation(); setBl(l.id); }}>View / print</button></div>} />
+        {bp && <BlendedSheet l={bp} cls={data.classes.find((x) => x.id === bp.classId)} />}
+      </>)}
     </Page>
+  );
+}
+
+function BlendedSheet({ l, cls }: { l: Blended; cls: Cls | undefined }) {
+  const { profile } = useTeacher();
+  const T = (v: string) => <td className="whitespace-pre-line">{v}</td>;
+  const row = (a: string, v: string) => <tr key={a}><td className="w-56 font-medium">{a}</td>{T(v)}</tr>;
+  return (
+    <section className="panel">
+      <PrintHead title="Blended Learning Lesson Plan" />
+      <h3 className="mb-1 mt-2 font-semibold">1. Basic information</h3>
+      <table className="rtable text-sm"><tbody>
+        {row("Teacher", profile?.name ?? "")}{row("Class / Level", cls?.name ?? "")}{row("Subject", cls ? `${cls.subject}${cls.code ? ` (${cls.code})` : ""}` : "")}
+        {row("Lesson topic", l.title)}{row("Date", fmtBs(l.date))}{row("Teaching duration", l.duration)}{row("Teaching model", "Blended Learning")}
+      </tbody></table>
+      <h3 className="mb-1 mt-4 font-semibold">2. Learning outcomes</h3>
+      <table className="rtable text-sm"><tbody><tr>{T(l.outcomes)}</tr></tbody></table>
+      <h3 className="mb-1 mt-4 font-semibold">3. Pre-class learning</h3>
+      <table className="rtable text-sm"><tbody>{row("Teacher's activities", l.preTeacher)}{row("Students' activities", l.preStudent)}{row("Learning materials", l.preMaterials)}</tbody></table>
+      <h3 className="mb-1 mt-4 font-semibold">4. Face-to-face learning activities</h3>
+      <table className="rtable text-sm">
+        <thead><tr><th className="w-24">Time</th><th>Teacher's activities</th><th>Students' activities</th><th>Teaching methods / materials</th></tr></thead>
+        <tbody>{(l.steps || []).map((s, i) => <tr key={i}>{T(s.time ?? "")}{T(s.teacher ?? "")}{T(s.student ?? "")}{T(s.methods ?? "")}</tr>)}</tbody>
+      </table>
+      <h3 className="mb-1 mt-4 font-semibold">5. Post-class learning</h3>
+      <table className="rtable text-sm"><tbody>{row("Teacher's activities", l.postTeacher)}{row("Students' activities", l.postStudent)}{row("Assignment / practice", l.assignment)}</tbody></table>
+      <h3 className="mb-1 mt-4 font-semibold">6. Learning resources and technology</h3>
+      <table className="rtable text-sm"><tbody><tr>{T(l.resources)}</tr></tbody></table>
+      <h3 className="mb-1 mt-4 font-semibold">7. Assessment</h3>
+      <table className="rtable text-sm"><tbody>{row("Pre-class assessment", l.asPre)}{row("In-class assessment", l.asIn)}{row("Post-class assessment", l.asPost)}</tbody></table>
+      <h3 className="mb-1 mt-4 font-semibold">8. Feedback and improvement</h3>
+      <table className="rtable text-sm"><tbody><tr>{T(l.feedback)}</tr></tbody></table>
+      <h3 className="mb-1 mt-4 font-semibold">9. Offline learning alternative</h3>
+      <table className="rtable text-sm"><tbody><tr>{T(l.offline)}</tr></tbody></table>
+      <h3 className="mb-1 mt-4 font-semibold">10. Teacher reflection</h3>
+      <table className="rtable text-sm"><tbody>
+        {row("Were the learning outcomes achieved?", l.refAchieved)}{row("What difficulties did students face?", l.refDifficulty)}{row("What worked well?", l.refWorked)}{row("What should be improved in the next lesson?", l.refImprove)}
+      </tbody></table>
+      <Signatures roles={[["Subject Teacher", profile?.name], ["Head of Department", profile?.hod]]} />
+    </section>
   );
 }
 

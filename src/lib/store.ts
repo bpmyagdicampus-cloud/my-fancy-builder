@@ -27,13 +27,22 @@ export type Plan = { id: string; type: string; classId: string; date: string; ti
 export type Diary = { id: string; classId: string; date: string; total: number; absent: string[]; reasons: string; codes: string[]; lh: number; unitId: string; topic: string; methods: string; studentActs: string; feedback: string; evaluation: string; remarks: string };
 export type Assess = { id: string; classId: string; date: string; kind: string; title: string; max: number; marks: Record<string, { m: string; c: string }> };
 export type Act = { id: string; date: string; category: string; title: string; details: string };
+/** Blended learning lesson plan: before class, in class, after class. */
+export type Blended = {
+  id: string; classId: string; date: string; title: string; duration: string;
+  outcomes: string; preTeacher: string; preStudent: string; preMaterials: string;
+  steps: Record<string, string>[];
+  postTeacher: string; postStudent: string; assignment: string; resources: string;
+  asPre: string; asIn: string; asPost: string; feedback: string; offline: string;
+  refAchieved: string; refDifficulty: string; refWorked: string; refImprove: string;
+};
 export type Reminder = { id: string; date: string; time: string; title: string; note: string; status: string };
 /** Teacher's own leave. Kept in Records, NOT in the academic calendar; counted in the monthly report. */
 export type Leave = { id: string; kind: string; from: string; to: string; reason: string };
 export type Settings = { weeklyOff: string[]; yearId: string };
 
 export type Data = {
-  classes: Cls[]; units: Unit[]; cal: CalEvent[]; lessons: Lesson[]; plans: Plan[];
+  classes: Cls[]; units: Unit[]; cal: CalEvent[]; lessons: Lesson[]; plans: Plan[]; blended: Blended[];
   diary: Diary[]; assess: Assess[]; acts: Act[]; reminders: Reminder[];
   leaves: Leave[]; settings: Settings;
   students: Student[]; years: Year[];
@@ -41,13 +50,13 @@ export type Data = {
   archive: Record<string, Partial<Pick<Data, WorkKey>>>;
 };
 /** The lists that belong to one academic year. */
-export type WorkKey = "classes" | "units" | "cal" | "lessons" | "plans" | "diary" | "assess" | "acts" | "reminders" | "leaves" | "students";
+export type WorkKey = "classes" | "units" | "cal" | "lessons" | "plans" | "blended" | "diary" | "assess" | "acts" | "reminders" | "leaves" | "students";
 /** Keys of Data that hold a list of records (used by the generic Collection editor). */
 export type ListKey = Exclude<keyof Data, "settings" | "years" | "archive">;
 type DB = { profiles: Profile[]; current: string | null; data: Record<string, Data> };
 
 export const emptyData = (): Data => ({
-  classes: [], units: [], cal: [], lessons: [], plans: [], diary: [], assess: [], acts: [], reminders: [],
+  classes: [], units: [], cal: [], lessons: [], plans: [], blended: [], diary: [], assess: [], acts: [], reminders: [],
   leaves: [], settings: { weeklyOff: [...DEFAULT_WEEKLY_OFF], yearId: "" },
   students: [], years: [], archive: {},
 });

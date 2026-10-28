@@ -3,7 +3,7 @@ import { uid } from "./id";
 import { syncText } from "./students";
 
 /** The lists that belong to ONE academic year. Everything else (years, settings) is shared. */
-export const WORK_KEYS: WorkKey[] = ["classes", "units", "cal", "lessons", "plans", "diary", "assess", "acts", "reminders", "leaves", "students"];
+export const WORK_KEYS: WorkKey[] = ["classes", "units", "cal", "lessons", "plans", "blended", "diary", "assess", "acts", "reminders", "leaves", "students"];
 
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
 export const snapshot = (d: Data) => { const o: any = {}; for (const k of WORK_KEYS) o[k] = clone(d[k]); return o as Partial<Pick<Data, WorkKey>>; };
@@ -72,7 +72,7 @@ export function startYear(d: Data, o: CarryOpts): string | null {
   d.classes = classes;
   d.students = students;
   if (o.units) d.units = carry(prev.units, (u: any) => ({ ...u, from: "", to: "" }));
-  if (o.lessons) { d.lessons = carry(prev.lessons, (x: any) => x); d.plans = carry(prev.plans.filter((p: any) => map[p.classId]), (x: any) => x); }
+  if (o.lessons) { d.lessons = carry(prev.lessons, (x: any) => x); d.plans = carry(prev.plans.filter((p: any) => map[p.classId]), (x: any) => x); d.blended = carry((prev as any).blended ?? [], (x: any) => x); }
   if (o.calendar) d.cal = prev.cal.map((e: any) => ({ ...clone(e), id: uid() }));
   syncText(d);
   return null;

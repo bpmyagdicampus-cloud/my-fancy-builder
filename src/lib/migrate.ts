@@ -9,7 +9,7 @@ export const WEEKDAY_FULL: Record<string, string> = {
   Sun: "Sunday", Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday",
 };
 
-const LIST_KEYS = ["classes", "units", "cal", "lessons", "plans", "diary", "assess", "acts", "reminders", "leaves"] as const;
+const LIST_KEYS = ["classes", "units", "cal", "lessons", "plans", "blended", "diary", "assess", "acts", "reminders", "leaves"] as const;
 
 /**
  * Brings any teacher data (old backup, old localStorage, new format) to the current shape.
@@ -55,7 +55,7 @@ export function normalizeData(raw: unknown): Data {
 /** "2083/84" for data whose earliest date is in the 2083 academic year (Shrawan–Chaitra counts as that year; Baisakh–Ashadh as the year before). */
 export function guessYearName(d: any): string {
   const dates: string[] = [];
-  for (const k of ["diary", "lessons", "plans"]) for (const x of d[k] ?? []) if (typeof x?.date === "string") dates.push(x.date);
+  for (const k of ["diary", "lessons", "plans", "blended"]) for (const x of d[k] ?? []) if (typeof x?.date === "string") dates.push(x.date);
   for (const k of ["units", "cal", "leaves"]) for (const x of d[k] ?? []) if (typeof x?.from === "string") dates.push(x.from);
   const ok = dates.filter((s) => /^\d{4}-\d{2}-\d{2}$/.test(s)).sort();
   let y: number;

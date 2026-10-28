@@ -1,7 +1,7 @@
 import { studentsOf, type Data } from "./store";
 
 const LABEL: Record<string, string> = {
-  students: "students", diary: "diary entries", plans: "plans", units: "units", lessons: "lessons",
+  students: "students", diary: "diary entries", plans: "plans", units: "units", lessons: "lessons", blended: "blended lesson plans",
   assess: "assessments / marks", acts: "activities", reminders: "reminders", leaves: "leave records", cal: "calendar events",
 };
 
