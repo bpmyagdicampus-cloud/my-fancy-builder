@@ -21,6 +21,8 @@ function Plans() {
   const [cls, setCls] = useState("");
   const [lesson, setLesson] = useState<string>("");
   const [bl, setBl] = useState<string>("");
+  const [guide, setGuide] = useState(false);
+  const [sample, setSample] = useState(false);
   if (!profile) return <NeedProfile />;
   const c = data.classes.find((x) => x.id === cls);
   const units = data.units.filter((u) => u.classId === cls).sort((a, b) => a.from.localeCompare(b.from));
@@ -85,7 +87,31 @@ function Plans() {
       </>)}
 
       {tab === "blended" && (<>
-        <Collection k="blended" title="Blended Learning Lesson Plans"
+        {guide && (
+          <section className="panel no-print mb-3">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <h2 className="flex-1 text-lg font-bold">कुन कुरा कहिले भर्ने? · Guide</h2>
+              <button className="btn-soft" onClick={() => setSample((v) => !v)}>{sample ? "Hide sample lesson plan" : "View sample lesson plan"}</button>
+              <button className="btn-soft" onClick={() => setGuide(false)}>Close</button>
+            </div>
+            <div className="space-y-4">
+              {GUIDE.map((g) => (
+                <div key={g.step} className="rounded-md border border-border p-3">
+                  <div className="font-semibold">{g.step}</div>
+                  <div className="text-xs text-muted-foreground">{g.en}</div>
+                  {g.note && <p className="mt-1 text-sm">{g.note}</p>}
+                  <ul className="mt-1 space-y-1 text-sm">{g.items.map(([a, b]) => <li key={a}><b>{a}</b> — {b}</li>)}</ul>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button className="btn" onClick={() => { updateData((d) => { d.blended.push({ ...SAMPLE, id: uid(), classId: "", date: "" }); }); alert("A copy of the sample was added to your list below. Open it with Edit, choose your class and date, and change the content."); }}>Use the sample as a new plan</button>
+              <span className="text-xs text-muted-foreground">A copy is added to your list; you can edit it freely. The original sample does not change.</span>
+            </div>
+            {sample && <div className="mt-3"><BlendedSheet l={SAMPLE} cls={undefined} over={{ level: "MBS III", subject: "Research methodology" }} /></div>}
+          </section>
+        )}
+        <Collection k="blended" title="Blended Learning Lesson Plans" titleExtra={<button className="btn-soft !min-h-8 !py-0.5 text-xs" onClick={(e) => { e.stopPropagation(); setGuide((v) => !v); }}>Guide</button>}
           fields={[
             { k: "classId", l: "Class / Subject", t: "cls" }, { k: "date", l: "Date", t: "date" },
             { k: "title", l: "Lesson topic" }, { k: "duration", l: "Teaching duration (e.g. 45 minutes)" },
@@ -115,7 +141,7 @@ function Plans() {
   );
 }
 
-function BlendedSheet({ l, cls }: { l: Blended; cls: Cls | undefined }) {
+function BlendedSheet({ l, cls, over }: { l: Blended; cls: Cls | undefined; over?: { level: string; subject: string } }) {
   const { profile } = useTeacher();
   const T = (v: string) => <td className="whitespace-pre-line">{v}</td>;
   const row = (a: string, v: string) => <tr key={a}><td className="w-56 font-medium">{a}</td>{T(v)}</tr>;
@@ -124,8 +150,8 @@ function BlendedSheet({ l, cls }: { l: Blended; cls: Cls | undefined }) {
       <PrintHead title="Blended Learning Lesson Plan" />
       <h3 className="mb-1 mt-2 font-semibold">1. Basic information</h3>
       <table className="rtable text-sm"><tbody>
-        {row("Teacher", profile?.name ?? "")}{row("Class / Level", cls?.name ?? "")}{row("Subject", cls ? `${cls.subject}${cls.code ? ` (${cls.code})` : ""}` : "")}
-        {row("Lesson topic", l.title)}{row("Date", fmtBs(l.date))}{row("Teaching duration", l.duration)}{row("Teaching model", "Blended Learning")}
+        {row("Teacher", profile?.name ?? "")}{row("Class / Level", over?.level ?? cls?.name ?? "")}{row("Subject", over?.subject ?? (cls ? `${cls.subject}${cls.code ? ` (${cls.code})` : ""}` : ""))}
+        {row("Lesson topic", l.title)}{row("Date", l.date ? fmtBs(l.date) : "")}{row("Teaching duration", l.duration)}{row("Teaching model", "Blended Learning")}
       </tbody></table>
       <h3 className="mb-1 mt-4 font-semibold">2. Learning outcomes</h3>
       <table className="rtable text-sm"><tbody><tr>{T(l.outcomes)}</tr></tbody></table>
@@ -245,3 +271,60 @@ function PrevPlan() {
     </section>
   );
 }
+
+/** Who fills what, and when. */
+const GUIDE: { step: string; en: string; note?: string; items: [string, string][] }[] = [
+  { step: "चरण १: कक्षा सुरु हुनुभन्दा पहिले", en: "Planning Stage", note: "शिक्षकले पाठ योजना तयार गर्दा भर्ने।", items: [
+    ["१. Basic Information", "कक्षा, विषय, पाठ, मिति र अवधि।"],
+    ["२. Learning Outcomes", "विद्यार्थीले के सिक्ने वा गर्न सक्नेछन्?"],
+    ["३. Pre-Class Learning", "कक्षाअघि पढ्ने सामग्री र गतिविधि।"],
+    ["४. Face-to-Face Learning Activities", "प्रत्यक्ष कक्षाको समय विभाजन र गतिविधि।"],
+    ["५. Post-Class Learning", "कक्षापछि गर्ने अभ्यास वा गृहकार्य।"],
+    ["६. Learning Resources and Technology", "पुस्तक, नोट, भिडियो, मोबाइल वा अन्य सामग्री।"],
+    ["७. Assessment", "सिकाइ जाँच्ने प्रश्न, अभ्यास र मूल्याङ्कन विधि।"],
+    ["८. Feedback and Improvement", "सम्भावित कठिनाइअनुसार दिने प्रतिक्रिया र सुधारको योजना।"],
+    ["९. Offline Learning Alternative", "इन्टरनेट वा उपकरण नभएका विद्यार्थीका लागि वैकल्पिक व्यवस्था।"],
+  ] },
+  { step: "चरण २: कक्षा सञ्चालन गर्दा", en: "During Class", items: [
+    ["४. Face-to-Face Learning Activities", "मा लेखिएको योजनाअनुसार कक्षा सञ्चालन गर्ने। आवश्यक परे वास्तविक गतिविधि वा समय परिवर्तन भएमा अद्यावधिक गर्ने।"],
+    ["७. Assessment", "अन्तर्गत विद्यार्थीको उत्तर, सहभागिता र सिकाइको अवस्था जाँच्ने।"],
+  ] },
+  { step: "चरण ३: कक्षा सम्पन्न भएपछि", en: "Reflection Stage", items: [
+    ["७. Assessment", "वास्तविक मूल्याङ्कन नतिजा अभिलेख गर्ने।"],
+    ["८. Feedback and Improvement", "विद्यार्थीलाई दिएको प्रतिक्रिया तथा आवश्यक सुधार अभिलेख गर्ने।"],
+    ["१०. Teacher Reflection", "सिकाइ उपलब्धि, देखिएका समस्या र अर्को कक्षामा गर्नुपर्ने सुधार लेख्ने।"],
+    ["५. Post-Class Learning", "गृहकार्य वा अभ्यास पूरा भएपछि आवश्यक भएमा प्रगति अद्यावधिक गर्ने।"],
+  ] },
+];
+
+/** Sample lesson plan (Research Methodology, MBS III) taken from the PDF sample. */
+const SAMPLE: Blended = {
+  id: "sample", classId: "", date: "", title: "Concept and Meaning of Research", duration: "55 mins. 1 Lecture Hour",
+  outcomes: "By the end of the lesson, students will be able to:\n1. Explain the meaning of research in their own words.\n2. Identify the basic characteristics of a research activity.\n3. Distinguish systematic research from ordinary observation or guesswork.\n4. Provide one example of a research problem related to management or business.",
+  preTeacher: "The teacher will provide a one-page note or a short video",
+  preStudent: "Before attending class, students will:\n• Think about one problem faced by a business, bank, cooperative or educational institution.\n• Consider what information would be needed to understand that problem.\n• Read a short introductory note on the meaning of research, provided by the teacher.",
+  preMaterials: "A one-page printed note or a short digital reading.",
+  steps: [
+    { time: "0–5 min", teacher: "Introduction: Ask, “Why might sales decline even when a business has many customers?” Connect students’ responses with the need for research.", student: "Share initial ideas and experiences.", methods: "short videos, ppt" },
+    { time: "5–15 min", teacher: "Concept and meaning: Explain research as a systematic process of inquiry used to investigate questions and develop evidence-based understanding. Clarify the difference between casual guessing and systematic investigation.", student: "Listen, take notes and ask questions.", methods: "lecture" },
+    { time: "15–25 min", teacher: "Management example: Discuss a business experiencing declining sales. Explain how a researcher might examine customer preferences, prices, product quality and competitors.", student: "Identify what information should be collected and why.", methods: "discussion" },
+    { time: "25–35 min", teacher: "Pair activity: Students identify one management-related problem and write one research question about it.", student: "Work in pairs and prepare a research question.", methods: "Group work" },
+    { time: "35–43 min", teacher: "Sharing and clarification: Invite two or three pairs to present their questions. Explain how a broad problem can be investigated systematically.", student: "Present ideas and provide peer feedback.", methods: "presentation" },
+    { time: "43–48 min", teacher: "Quick assessment: Ask short oral or written questions about the meaning and purpose of research.", student: "Answer individually.", methods: "assessment," },
+    { time: "48–50 min", teacher: "Conclusion: Summarize the lesson and introduce the next topic, Types of Research.", student: "State one key learning point.", methods: "lecture" },
+    { time: "50-55 min", teacher: "Assignment given, homework and assignment", student: "", methods: "Assignment problems" },
+  ],
+  postTeacher: "• Bring their example to the next class for discussion",
+  postStudent: "• Write a short explanation of research in their own words.\n• Identify one researchable problem from a business or management setting.\n• Frame one research question related to that problem.",
+  assignment: "",
+  resources: "• Whiteboard and markers\n• Teacher-prepared lecture notes\n• Printed example of a business problem\n• Projector or presentation slides, if available\n• Mobile phone or internet-based learning materials, where accessible\nTechnology alternative: The lesson can be conducted fully offline using printed notes, board work and pair discussion.",
+  asPre: "questioning",
+  asIn: "Formative assessment during the lesson:\n1. What is meant by research?\n2. How is systematic research different from guesswork?\n3. A shop's sales have declined. Write one research question that could help the owner understand the problem.\n4. Why is reliable information important for managerial decisions?",
+  asPost: "Students' oral responses, written answers and pair-activity outputs.",
+  feedback: "Planned feedback approach:\n• Provide immediate verbal feedback on students' answers.\n• Correct misunderstandings about research and ordinary observation.\n• Give examples if students struggle to frame research questions.\n• Begin the next class by revisiting any concept that remains unclear.\nAfter-class record: The teacher will record common difficulties and decide whether additional explanation or a short remedial activity is needed",
+  offline: "For students with limited internet access:\n• Provide printed notes before or during class.\n• Explain the example using the whiteboard.\n• Conduct the pair activity without digital devices.\n• Allow homework to be submitted in a notebook.\n• Share any additional learning materials in printed form or through an accessible campus notice board.",
+  refAchieved: "To be completed after the class:\n• Were the planned learning outcomes achieved?\n• Could students explain the meaning of research in their own words?\n• Were students able to frame a relevant research question?",
+  refDifficulty: "• What difficulties did students experience?",
+  refWorked: "Which activity generated the most participation?",
+  refImprove: "• What should be improved in the next lesson?",
+};

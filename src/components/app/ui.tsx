@@ -132,7 +132,7 @@ function RowsEditor({ cols, value, onChange }: { cols: [string, string][]; value
   );
 }
 
-export function Collection({ k, title, fields, summary, filter, defaults, sort, canDelete, rowButtons, rowExtra }: {
+export function Collection({ k, title, fields, summary, filter, defaults, sort, canDelete, rowButtons, rowExtra, titleExtra }: {
   k: ListKey; title: string; fields: Field[]; summary: (r: any) => ReactNode;
   filter?: (r: any) => boolean; defaults?: Rec; sort?: (a: any, b: any) => number;
   /** return a reason (text) to refuse deleting this entry, or null to allow it */
@@ -141,6 +141,8 @@ export function Collection({ k, title, fields, summary, filter, defaults, sort, 
   rowButtons?: boolean;
   /** extra buttons shown beside Edit / Delete (needs rowButtons) */
   rowExtra?: (r: any) => ReactNode;
+  /** shown right after the title and the count (for example a Guide button) */
+  titleExtra?: ReactNode;
 }) {
   const { data } = useTeacher();
   const [ed, setEd] = useState<Rec | null>(null);
@@ -163,7 +165,7 @@ export function Collection({ k, title, fields, summary, filter, defaults, sort, 
   return (
     <section className="panel no-print mb-4">
       <div className="mb-3 flex items-center gap-2">
-        <h2 className="flex-1 text-lg font-bold">{title} <span className="text-sm font-normal text-muted-foreground">({list.length})</span></h2>
+        <h2 className="flex-1 text-lg font-bold">{title} <span className="text-sm font-normal text-muted-foreground">({list.length})</span>{titleExtra && <span className="ml-2 align-middle">{titleExtra}</span>}</h2>
         {!ed && <button className="btn" onClick={() => setEd({ ...blank(fields), ...defaults })}>+ Add</button>}
       </div>
       {ed && (
