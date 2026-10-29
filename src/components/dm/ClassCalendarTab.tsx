@@ -10,6 +10,8 @@ export function ClassCalendarTab({
   dept,
   deptName,
   year,
+  years = [],
+  onYearChange,
   admin,
   canManage,
   onChanged,
@@ -17,6 +19,8 @@ export function ClassCalendarTab({
   dept: string;
   deptName: string;
   year: string;
+  years?: string[];
+  onYearChange?: (y: string) => void;
   admin: boolean;
   canManage: boolean;
   onChanged: () => void;
@@ -33,8 +37,8 @@ export function ClassCalendarTab({
 
   // Edit form state
   const [isEditing, setIsEditing] = useState(false);
-  const [startMonth, setStartMonth] = useState(7); // Kartik
-  const [endMonth, setEndMonth] = useState(4);     // Shrawan
+  const [startMonth, setStartMonth] = useState(1); // Baishakh (default)
+  const [endMonth, setEndMonth] = useState(12);    // Chaitra (default)
   const [particulars, setParticulars] = useState<D.CalendarParticularRow[]>([]);
   const [approvalNote, setApprovalNote] = useState("");
   const [copySourceId, setCopySourceId] = useState("");
@@ -63,14 +67,14 @@ export function ClassCalendarTab({
       const single = await D.loadClassCalendar(dept, year, classId);
       if (single.ok && single.data) {
         setCal(single.data);
-        setStartMonth(single.data.start_month || 7);
-        setEndMonth(single.data.end_month || 4);
+        setStartMonth(single.data.start_month || 1);
+        setEndMonth(single.data.end_month || 12);
         setParticulars(single.data.particulars || []);
         setApprovalNote(single.data.approval_note || "");
       } else {
         setCal(null);
-        setStartMonth(7);
-        setEndMonth(4);
+        setStartMonth(1);
+        setEndMonth(12);
         setParticulars(
           D.DEFAULT_MATRIX_PARTICULARS.map((p, idx) => ({
             id: `row-${idx}-${Date.now()}`,
@@ -95,6 +99,10 @@ export function ClassCalendarTab({
   const handleMonthRangeChange = (start: number, end: number) => {
     setStartMonth(start);
     setEndMonth(end);
+    if (canManage && !isEditing) {
+      setIsEditing(true);
+      setNote("महिना दायरा परिवर्तन भयो। आवश्यक भए विवरण भरी \"Save changes\" थिच्नुहोस्।");
+    }
   };
 
   const updateCellValue = (rowId: string, monthKey: string, val: string) => {
@@ -267,6 +275,26 @@ export function ClassCalendarTab({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
             <div>
+              <label className="lbl">Academic Year · शैक्षिक सत्र</label>
+              {onYearChange && years.length > 0 ? (
+                <select
+                  className="field !w-auto min-w-32 font-bold"
+                  value={year}
+                  onChange={(e) => onYearChange(e.target.value)}
+                  title="शैक्षिक सत्र परिवर्तन गर्नुहोस्"
+                >
+                  {years.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="field !w-auto min-w-28 font-bold">{year}</div>
+              )}
+            </div>
+
+            <div>
               <label className="lbl">Class · कक्षा</label>
               <select
                 className="field !w-auto min-w-56"
@@ -348,46 +376,78 @@ export function ClassCalendarTab({
           </div>
         </div>
 
-        {/* Edit controls: month range, holiday sync, add row */}
-        {isEditing && (
-          <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3 text-xs">
-            <span className="font-semibold text-muted-foreground">Month Range · महिना दायरा:</span>
-            <div className="flex items-center gap-1">
-              <span>Start:</span>
-              <select
-                className="field !h-8 !py-0 !text-xs"
-                value={startMonth}
-                onChange={(e) => handleMonthRangeChange(Number(e.target.value), endMonth)}
-              >
-                {D.BS_MONTH_INFO.map((m) => (
-                  <option key={m.bsMonth} value={m.bsMonth}>
-                    {m.ne} ({m.en})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-center gap-1">
-              <span>End:</span>
-              <select
-                className="field !h-8 !py-0 !text-xs"
-                value={endMonth}
-                onChange={(e) => handleMonthRangeChange(startMonth, Number(e.target.value))}
-              >
-                {D.BS_MONTH_INFO.map((m) => (
-                  <option key={m.bsMonth} value={m.bsMonth}>
-                    {m.ne} ({m.en})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button type="button" className="btn-soft !py-1 text-xs" onClick={importCampusHolidays}>
-              Import Campus Holidays · क्याम्पस बिदा तान्नुहोस्
+        {/* Clickable Month Range & Presets Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="font-semibold text-foreground">📅 महिना दायरा (Month Range):</span>
+            <button
+              type="button"
+              className={`btn-soft !h-7 !py-0 !px-2.5 text-xs transition-colors ${startMonth === 1 && endMonth === 12 ? "!bg-primary !text-primary-foreground font-bold shadow-sm" : ""}`}
+              onClick={() => handleMonthRangeChange(1, 12)}
+              title="बैशाख देखि चैत सम्म (१२ महिना - नेपालको शैक्षिक क्यालेन्डर)"
+            >
+              बैशाख – चैत (Default · १२ महिना)
             </button>
-            <button type="button" className="btn-soft !py-1 text-xs" onClick={addCustomRow}>
-              + Add Row · नयाँ बुँदा थप्नुहोस्
+            <button
+              type="button"
+              className={`btn-soft !h-7 !py-0 !px-2.5 text-xs transition-colors ${startMonth === 7 && endMonth === 4 ? "!bg-primary !text-primary-foreground font-bold shadow-sm" : ""}`}
+              onClick={() => handleMonthRangeChange(7, 4)}
+              title="कार्तिक देखि साउन सम्म (१० महिना - TU स्नातक प्रथम वर्ष)"
+            >
+              कार्तिक – साउन (१० महिना · TU)
+            </button>
+            <button
+              type="button"
+              className={`btn-soft !h-7 !py-0 !px-2.5 text-xs transition-colors ${startMonth === 8 && endMonth === 6 ? "!bg-primary !text-primary-foreground font-bold shadow-sm" : ""}`}
+              onClick={() => handleMonthRangeChange(8, 6)}
+              title="मंसिर देखि असोज सम्म (११ महिना)"
+            >
+              मंसिर – असोज (११ महिना)
             </button>
           </div>
-        )}
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-muted-foreground">कस्टम:</span>
+            <select
+              className="field !h-7 !py-0 !w-auto text-xs font-medium"
+              value={startMonth}
+              onChange={(e) => handleMonthRangeChange(Number(e.target.value), endMonth)}
+              title="सुरु महिना छान्नुहोस्"
+            >
+              {D.BS_MONTH_INFO.map((m) => (
+                <option key={m.bsMonth} value={m.bsMonth}>
+                  {m.ne} ({m.en})
+                </option>
+              ))}
+            </select>
+            <span className="text-muted-foreground font-semibold">देखि</span>
+            <select
+              className="field !h-7 !py-0 !w-auto text-xs font-medium"
+              value={endMonth}
+              onChange={(e) => handleMonthRangeChange(startMonth, Number(e.target.value))}
+              title="अन्तिम महिना छान्नुहोस्"
+            >
+              {D.BS_MONTH_INFO.map((m) => (
+                <option key={m.bsMonth} value={m.bsMonth}>
+                  {m.ne} ({m.en})
+                </option>
+              ))}
+            </select>
+            <span className="text-[11px] font-semibold text-primary ml-1">
+              ({currentMonths.length} महिना)
+            </span>
+            {isEditing && (
+              <div className="ml-2 flex items-center gap-1 border-l border-border pl-2">
+                <button type="button" className="btn-soft !py-1 text-xs" onClick={importCampusHolidays}>
+                  Import Holidays
+                </button>
+                <button type="button" className="btn-soft !py-1 text-xs" onClick={addCustomRow}>
+                  + Add Row
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Approval action bar */}
         {cal && (
@@ -456,7 +516,24 @@ export function ClassCalendarTab({
 
         <div className="mb-2 flex flex-wrap items-center justify-between text-sm font-bold">
           <div>{currentClassName}</div>
-          <div>Academic Year: {year}</div>
+          <div className="flex items-center gap-1.5">
+            <span>Academic Year · शैक्षिक सत्र:</span>
+            {onYearChange && years.length > 0 ? (
+              <select
+                className="no-print field !h-7 !py-0 !w-auto text-xs font-bold"
+                value={year}
+                onChange={(e) => onYearChange(e.target.value)}
+                title="शैक्षिक सत्र परिवर्तन गर्नुहोस्"
+              >
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+            <span className={onYearChange && years.length > 0 ? "print-only" : ""}>{year}</span>
+          </div>
         </div>
 
         <table className="rtable w-full text-xs">

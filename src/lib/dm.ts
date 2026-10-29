@@ -930,7 +930,7 @@ export const BS_MONTH_INFO: { m0: number; bsMonth: number; en: string; ne: strin
 ];
 
 /** Builds an ordered sequence of months from startMonth (e.g. 7 Kartik) to endMonth (e.g. 4 Shrawan). */
-export function buildAcademicMonths(startMonth = 7, endMonth = 4): CalendarMonthCol[] {
+export function buildAcademicMonths(startMonth = 1, endMonth = 12): CalendarMonthCol[] {
   const result: CalendarMonthCol[] = [];
   let cur = startMonth;
   for (let i = 0; i < 12; i++) {
@@ -985,9 +985,9 @@ export function normalizeCalendarRecord(d: any): ClassAcademicCalendar {
       academic_year: "",
       class_id: "",
       class_name: "",
-      start_month: 7,
-      end_month: 4,
-      months: buildAcademicMonths(7, 4),
+      start_month: 1,
+      end_month: 12,
+      months: buildAcademicMonths(1, 12),
       particulars: DEFAULT_MATRIX_PARTICULARS.map((p, idx) => ({ id: `row-${idx}`, ...p, values: { ...p.values } })),
       status: "draft",
       approval_note: "",
@@ -1002,7 +1002,7 @@ export function normalizeCalendarRecord(d: any): ClassAcademicCalendar {
     try { months = JSON.parse(months); } catch { months = null; }
   }
   if (!Array.isArray(months) || months.length === 0) {
-    months = buildAcademicMonths(Number(d.start_month) || 7, Number(d.end_month) || 4);
+    months = buildAcademicMonths(Number(d.start_month) || 1, Number(d.end_month) || 12);
   }
 
   let parts = d.particulars;

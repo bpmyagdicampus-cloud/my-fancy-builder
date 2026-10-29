@@ -30,7 +30,7 @@ const MODULES: { key: DeptTab; ne: string; en: string; note: string; headOnly?: 
   { key: "plans", ne: "वार्षिक योजना", en: "Annual plans", note: "उद्देश्य, लक्ष्य, सूचक, अनुमानित बजेट र स्वीकृति प्रक्रिया" },
   { key: "activities", ne: "गतिविधि तथा प्रगति", en: "Activities and progress", note: "जिम्मेवार व्यक्ति, प्रगति प्रतिशत (%), उपलब्धि र प्रमाण अपलोड" },
   { key: "budget", ne: "बजेट व्यवस्थापन र खर्च", en: "Budget & expenses", note: "प्रस्तावित/स्वीकृत बजेट, बजेट संशोधन र भौचर सहितको खर्च अभिलेख", headOnly: true },
-  { key: "calendar", ne: "कक्षागत शैक्षिक पात्रो", en: "Class Academic Calendar", note: "प्रत्येक कक्षाको महिनागत कार्यदिन, पढाउने दिन, परीक्षा र बिदाको पात्रो (हस्ताक्षर सहित)" },
+  { key: "calendar", ne: "कक्षागत शैक्षिक पात्रो", en: "Class Academic Calendar", note: "बैशाखदेखि चैत (वा आवश्यकता अनुसारका महिनाहरू) को कक्षागत कार्यदिन, पढाउने दिन, परीक्षा र बिदाको कार्यतालिका" },
   { key: "reports", ne: "स्वचालित प्रतिवेदन", en: "Automated reports", note: "मासिक, वार्षिक वा मितिअनुसार प्रिन्ट तथा Word/Excel प्रतिवेदन" },
 ];
 
@@ -204,6 +204,8 @@ function Department() {
           dept={dept}
           deptName={dname}
           year={year}
+          years={yearNames}
+          onYearChange={(y) => setYear(y)}
           admin={admin}
           canManage={canManage}
           onChanged={() => setTick((x) => x + 1)}
