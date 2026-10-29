@@ -1,18 +1,12 @@
 {
-  "id": "/",
-  "name": "शिक्षक डायरी — Shikshak Diary",
+  "name": "शिक्षक डायरी",
   "short_name": "शिक्षक डायरी",
   "description": "दैनिक शिक्षण अभिलेख, पाठ योजना, विद्यार्थी हाजिरी, मूल्याङ्कन र मासिक प्रतिवेदन प्रणाली।",
-  "lang": "ne",
-  "dir": "ltr",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "orientation": "any",
   "background_color": "#13265e",
   "theme_color": "#13265e",
-  "categories": ["education", "productivity"],
-  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.png",
@@ -31,12 +25,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
     }
   ]
 }

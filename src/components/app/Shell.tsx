@@ -391,7 +391,7 @@ export function InstallHelpModal() {
               </li>
             </ol>
             <p className="text-[11px] text-muted-foreground pt-1">
-              इन्स्टल भएपछि होम-स्क्रिनमा <b>शिक्षक डायरी</b> को ओरिजिनल आइकन आउँछ र अफलाइनमा समेत चल्छ।
+              💡 <b>टिप:</b> यदि एन्ड्रोइडमा Play Protect पप-अप देखिएमा <b>"More details ⌄"</b> मा थिचेर <b>"Install anyway"</b> छान्नुहोस् (वा <b>Google Chrome</b> ब्राउजर प्रयोग गर्नुहोस्)।
             </p>
           </div>
         )}

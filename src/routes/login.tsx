@@ -97,9 +97,6 @@ function Login() {
             <img src="/icon-192.png" alt="" className="h-5 w-5 rounded" />
             <span>मोबाइल वा कम्प्युटरमा एपको रूपमा राख्नुहोस्</span>
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            १-क्लिकमा होम-स्क्रिन वा डेस्कटपमा इन्स्टल गरी इन्टरनेट नहुँदा पनि सजिलै चलाउनुहोस्:
-          </p>
           <button
             type="button"
             className="btn mt-2 w-full text-xs"
@@ -107,6 +104,10 @@ function Login() {
           >
             📲 Install App · एप इन्स्टल गर्नुहोस्
           </button>
+          <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
+            💡 <b>नोट:</b> एन्ड्रोइडमा Play Protect पप-अप आएमा <b>"More details ⌄"</b> मा थिचेर{" "}
+            <b>"Install anyway"</b> मा क्लिक गर्नुहोस् (वा <b>Google Chrome</b> प्रयोग गर्नुहोस्)।
+          </p>
         </div>
       )}
 

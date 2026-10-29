@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getLoadError, setEditGuard, useTeacher } from "@/lib/store";
 import { getCloudState, isStaff, listUnsaved, openTeacher, resolveConflict, retryNow, useCloud } from "@/lib/cloud";
@@ -7,10 +7,10 @@ import { activeYear, currentYear, isPast } from "@/lib/years";
 import { triggerInstallApp, usePwa } from "@/lib/pwa";
 
 const SAVE_LABEL: Record<string, string> = {
-  dirty: "Saving locally…",
+  dirty: "Saving…",
   saving: "Syncing…",
   saved: "Saved ✓",
-  error: "Saved on device ☁️",
+  error: "Offline ☁️",
   conflict: "Conflict ⚠",
 };
 
@@ -18,6 +18,7 @@ export function AppNav() {
   const { profile, data } = useTeacher();
   const c = useCloud();
   const pwa = usePwa();
+  const path = useRouterState({ select: (s) => s.location.pathname });
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,6 +43,9 @@ export function AppNav() {
     return () => setEditGuard(null);
   }, []);
 
+  // Hide the top app bar on the Login screen so the login page stays clean
+  if (path === "/login") return null;
+
   const signedIn = c.status === "ready" && !!c.userId;
   const staff = signedIn && isStaff(c.roles);
   const isAdmin = signedIn ? c.roles.includes("admin") : c.localMode;
@@ -54,11 +58,11 @@ export function AppNav() {
 
   return (
     <header className="no-print sticky top-0 z-20 border-b border-border bg-card/95 pt-[env(safe-area-inset-top)] backdrop-blur">
-      <div className="flex items-center gap-2 px-3 py-2 md:px-5">
-        <Link to="/" className="flex items-center gap-2 leading-none text-primary md:hidden">
-          <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-8 w-8 rounded-lg shadow-sm" />
-          <div>
-            <span className="block font-display text-lg">शिक्षक डायरी</span>
+      <div className="flex items-center gap-1.5 px-3 py-2 sm:gap-2 md:px-5">
+        <Link to="/" className="flex shrink-0 items-center gap-2 leading-none text-primary md:hidden">
+          <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-8 w-8 shrink-0 rounded-lg shadow-sm" />
+          <div className="whitespace-nowrap">
+            <span className="block font-display text-base sm:text-lg">शिक्षक डायरी</span>
             <span className="block text-[10px] font-medium tracking-wide text-muted-foreground">
               Teacher's Diary
             </span>
@@ -78,31 +82,31 @@ export function AppNav() {
           <button
             type="button"
             onClick={() => void triggerInstallApp()}
-            className="chip !border-primary/40 !bg-secondary font-semibold text-primary"
+            className="chip shrink-0 whitespace-nowrap !border-primary/40 !bg-secondary font-semibold text-primary"
             title="मोबाइल वा कम्प्युटरमा एप इन्स्टल गर्नुहोस् · Install App"
           >
-            📲 <span className="hidden sm:inline">Install App · </span>एप इन्स्टल
+            📲 <span className="hidden sm:inline">Install App · </span>एप
           </button>
         )}
 
         {showLinks && profile && yr && (
           <Link
             to="/years"
-            className={
+            className={`shrink-0 whitespace-nowrap ${
               past
                 ? "chip !border-destructive !text-destructive font-semibold"
                 : "chip !border-primary/40 !text-primary font-semibold"
-            }
+            }`}
             title="Academic year · शैक्षिक वर्ष परिवर्तन वा व्यवस्थापन गर्नुहोस्"
           >
             📅 {yr.name}
-            {past ? (isAdmin ? " · inactive" : " · view only") : ""}
+            {past ? <span className="hidden sm:inline">{isAdmin ? " · inactive" : " · view only"}</span> : ""}
           </Link>
         )}
 
         {staff && c.save !== "idle" && (
           <span
-            className={`chip ${
+            className={`chip shrink-0 whitespace-nowrap ${
               c.save === "conflict"
                 ? "!border-destructive !text-destructive"
                 : c.save === "error"
@@ -122,23 +126,16 @@ export function AppNav() {
         {signedIn ? (
           <Link
             to="/account"
-            className="flex min-h-9 items-center gap-2 rounded-full border border-border bg-background py-0.5 pl-0.5 pr-3 text-xs font-semibold shadow-sm transition hover:bg-muted sm:text-sm"
+            className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-border bg-background py-0.5 pl-0.5 pr-1 sm:pr-3 text-xs font-semibold shadow-sm transition hover:bg-muted sm:text-sm"
             title="My account · मेरो खाता"
           >
             <Avatar name={c.me?.name} path={c.me?.avatar_path} size={30} />
-            <span className="hidden max-w-40 truncate sm:inline">{c.me?.name || c.email}</span>
+            <span className="hidden max-w-36 truncate sm:inline">{c.me?.name || c.email}</span>
           </Link>
         ) : (
-          <>
-            <Link to="/profiles" className="chip">
-              {profile ? profile.name : "Choose teacher"}
-            </Link>
-            {c.status === "anon" && (
-              <Link to="/login" className="btn-soft !min-h-9 !px-3 !py-1 text-xs">
-                Sign in
-              </Link>
-            )}
-          </>
+          <Link to="/login" className="btn-soft shrink-0 whitespace-nowrap !min-h-8 !px-3 !py-1 text-xs">
+            Sign in
+          </Link>
         )}
       </div>
 
