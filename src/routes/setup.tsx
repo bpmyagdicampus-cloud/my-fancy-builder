@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Page, FormFields, Collection, Dt, NeedProfile, BsDate, type Field } from "@/components/app/ui";
+import { Page, Tabs, FormFields, Collection, Dt, NeedProfile, BsDate, type Field } from "@/components/app/ui";
 import { mutate, updateData, uid, useTeacher, studentsOf, type Cls } from "@/lib/store";
 import { weeklyOffOf } from "@/lib/migrate";
 import { CAL_TYPES } from "@/lib/constants";
@@ -30,25 +30,64 @@ export const Route = createFileRoute("/setup")({
   component: Setup,
 });
 
+type SetupTab = "classes" | "teachers" | "calendar" | "campus" | "all";
+
 function Setup() {
   const { profile } = useTeacher();
   const cloud = useCloud();
+  const [tab, setTab] = useState<SetupTab>("classes");
   const canEdit = cloud.status !== "ready" || cloud.roles.includes("admin");
   if (!profile) return <NeedProfile />;
   return (
-    <Page title="Setup" sub="Campus, departments, classes, students, teacher details and the annual academic calendar">
-      <CampusSetup />
-      <TeacherDetailsSection />
-      <WeeklyOff canEdit={canEdit} />
-      <section className="panel no-print mb-4 flex flex-wrap items-center gap-3">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-bold">Upgrade Students · विद्यार्थी अपग्रेड</h2>
-          <p className="text-sm text-muted-foreground">Add students, pull from other teachers' subjects of the same class, move one student, or move a whole class. Academic years and subject upgrades are in <Link to="/years" className="underline">Academic years</Link>.</p>
-        </div>
-        <Link to="/students" className="btn">Upgrade Students</Link>
-      </section>
-      <ClassesByDept />
-      <CampusAnnualCalendarSection canEdit={canEdit} />
+    <Page
+      title="Setup · सेटअप र व्यवस्थापन"
+      sub="कक्षा, विषय, विद्यार्थी, शिक्षक विवरण, क्याम्पस वार्षिक क्यालेन्डर र प्रोफाइल सेटिङ"
+    >
+      <Tabs
+        value={tab}
+        onChange={setTab}
+        items={[
+          ["classes", "📚 कक्षा र विषय (Classes & Students)"],
+          ["teachers", "👨‍🏫 शिक्षक विवरण (Teachers)"],
+          ["calendar", "📅 वार्षिक क्यालेन्डर (Annual Calendar)"],
+          ["campus", "🏛️ प्रोफाइल र क्याम्पस (Profile & Campus)"],
+          ["all", "सबै हेर्नुहोस् (All)"],
+        ]}
+      />
+
+      {(tab === "classes" || tab === "all") && (
+        <>
+          <section className="panel no-print mb-4 flex flex-wrap items-center justify-between gap-3 border-primary/25 bg-gradient-to-r from-primary/5 to-secondary/40">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-bold text-primary">
+                🎓 Upgrade & Manage Students · विद्यार्थी व्यवस्थापन र अपग्रेड
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                विद्यार्थी थप्ने, सोही कक्षाका अन्य शिक्षकको विषयबाट तान्ने वा कक्षा अपग्रेड गर्ने। शैक्षिक वर्ष व्यवस्थापनका लागि{" "}
+                <Link to="/years" className="font-semibold text-primary underline">
+                  Academic years
+                </Link>{" "}
+                मा जानुहोस्।
+              </p>
+            </div>
+            <Link to="/students" className="btn">
+              विद्यार्थी व्यवस्थापन (Students) →
+            </Link>
+          </section>
+          <ClassesByDept />
+        </>
+      )}
+
+      {(tab === "teachers" || tab === "all") && <TeacherDetailsSection />}
+
+      {(tab === "calendar" || tab === "all") && <CampusAnnualCalendarSection canEdit={canEdit} />}
+
+      {(tab === "campus" || tab === "all") && (
+        <>
+          <CampusSetup />
+          <WeeklyOff canEdit={canEdit} />
+        </>
+      )}
     </Page>
   );
 }
@@ -222,7 +261,7 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
             {missingFromCloud.length > 0 && (
               <button
                 type="button"
-                className="btn !bg-amber-600 hover:!bg-amber-700 text-white text-xs font-semibold shadow-xs"
+                className="btn !bg-amber-600 hover:!bg-amber-700 text-white text-xs font-semibold shadow-sm"
                 disabled={syncing}
                 onClick={syncAllToCloud}
                 title="स्थानीय क्यालेन्डरका कार्यक्रमहरू Supabase Cloud मा पठाउनुहोस्"

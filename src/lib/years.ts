@@ -58,6 +58,48 @@ export function renameYear(d: Data, id: string, name: string): string | null {
   return null;
 }
 
+/**
+ * Deletes an accidentally created academic year and restores/switches to the active or previous year.
+ */
+export function deleteYear(d: Data, id: string, fallbackName?: string | null): string | null {
+  if (d.years.length <= 1) {
+    return "कम्तीमा एउटा शैक्षिक वर्ष हुनुपर्छ, त्यसैले यसलाई हटाउन मिल्दैन (Cannot delete the only academic year).";
+  }
+  const idx = d.years.findIndex((y) => y.id === id);
+  if (idx < 0) return "शैक्षिक वर्ष भेटिएन (Academic year not found).";
+
+  const remaining = d.years.filter((y) => y.id !== id);
+  const target =
+    (fallbackName && remaining.find((y) => y.name.trim().toLowerCase() === fallbackName.trim().toLowerCase())) ||
+    remaining.find((y) => y.id === d.settings.activeYearId) ||
+    remaining[remaining.length - 1]!;
+
+  if (d.settings.yearId === id) {
+    loadSet(d, d.archive[target.id]);
+    delete d.archive[target.id];
+    d.settings.yearId = target.id;
+  }
+  delete d.archive[id];
+  d.years.splice(idx, 1);
+
+  if (d.settings.activeYearId === id || !d.years.some((y) => y.id === d.settings.activeYearId)) {
+    d.settings.activeYearId = target.id;
+  }
+  syncText(d);
+  return null;
+}
+
+/** Returns summary counts for any year (whether currently open or in archive). */
+export function yearSummaryCounts(d: Data, id: string) {
+  const src: any = d.settings.yearId === id ? d : d.archive[id] || {};
+  return {
+    classes: Array.isArray(src.classes) ? src.classes.length : 0,
+    diary: Array.isArray(src.diary) ? src.diary.length : 0,
+    assess: Array.isArray(src.assess) ? src.assess.length : 0,
+    units: Array.isArray(src.units) ? src.units.length : 0,
+  };
+}
+
 /** "2083/84" -> "2084/85", "2083" -> "2084" */
 export function nextYearName(name: string) {
   const m = /^\s*(\d{4})\s*\/\s*(\d{2,4})\s*$/.exec(name);
@@ -113,7 +155,7 @@ export function upgradeSubject(d: Data, classId: string, o: SubjectOpts): string
   if (!o.subject.trim()) return "Enter the new subject.";
   syncText(d); // freeze the up-to-date list on the old class
   const nid = uid();
-  d.classes.push({ id: nid, name: o.name.trim() || old.name, subject: o.subject.trim(), code: o.code.trim(), year: old.year, totalLh: Number(o.totalLh) || 0, students: "", pending: false, closed: false });
+  d.classes.push({ id: nid, name: o.name.trim() || old.name, subject: o.subject.trim(), code: o.code.trim(), totalLh: Number(o.totalLh) || 0, year: old.year, students: "", pending: false, closed: false });
   old.closed = true;
   for (const s of d.students) if (s.classId === classId && s.active) { if (!s.history.includes(classId)) s.history.push(classId); s.classId = nid; }
   syncText(d);

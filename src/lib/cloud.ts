@@ -144,6 +144,12 @@ export async function setActiveAcademicYear(id: string): Promise<string | null> 
   await refreshYears();
   return null;
 }
+export async function deleteAcademicYear(id: string): Promise<string | null> {
+  const { error } = await sb.from("academic_years").delete().eq("id", id);
+  if (error) return error.message;
+  await refreshYears();
+  return null;
+}
 
 /** Try loading the diary again after a load error or when the connection is back. */
 export async function retryLoad() {

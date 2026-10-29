@@ -51,6 +51,8 @@ function DiaryPage() {
   const { profile, data } = useTeacher();
   const [ed, setEd] = useState<Diary | null>(null);
   const [fc, setFc] = useState("");
+  const [searchQ, setSearchQ] = useState("");
+  const [showMoreDetails, setShowMoreDetails] = useState(false);
   const [editingCount, setEditingCount] = useState<"total" | "present" | "absent" | null>(null);
   const [manualCount, setManualCount] = useState(false);
 
@@ -67,6 +69,7 @@ function DiaryPage() {
     const count = studentsOf(c).length;
     setEditingCount(null);
     setManualCount(false);
+    setShowMoreDetails(false);
     setEd(blank(fc, count));
   };
 
@@ -82,6 +85,7 @@ function DiaryPage() {
     copy.absent = realAbs;
     setEditingCount(null);
     setManualCount(p !== Math.max(0, total - realAbs.length));
+    setShowMoreDetails(!!(copy.methods || copy.studentActs || copy.feedback || copy.evaluation));
     setEd(copy);
   };
 
@@ -177,7 +181,19 @@ function DiaryPage() {
     setEd(null);
   };
 
-  const list = data.diary.filter((d) => !fc || d.classId === fc).sort((a, b) => b.date.localeCompare(a.date));
+  const list = data.diary
+    .filter((d) => {
+      if (fc && d.classId !== fc) return false;
+      if (!searchQ.trim()) return true;
+      const q = searchQ.trim().toLowerCase();
+      return (
+        (d.topic || "").toLowerCase().includes(q) ||
+        (d.remarks || "").toLowerCase().includes(q) ||
+        (d.reasons || "").toLowerCase().includes(q) ||
+        d.date.includes(q)
+      );
+    })
+    .sort((a, b) => b.date.localeCompare(a.date));
 
   const area = (k: keyof Diary, l: string) => (
     <div>
@@ -192,23 +208,32 @@ function DiaryPage() {
 
   return (
     <Page
-      title="Daily diary"
-      sub="One entry per class taught"
-      actions={!ed && <button className="btn" onClick={startNewEntry}>+ New entry</button>}
+      title="Daily diary · दैनिक डायरी"
+      sub="प्रत्येक कक्षाको हाजिरी, पाठ विवरण, शिक्षण क्रियाकलाप र कैफियत अभिलेख"
+      actions={!ed && <button className="btn" onClick={startNewEntry}>+ New entry · नयाँ इन्ट्री</button>}
     >
       {ed && (
-        <section className="panel mb-5 space-y-4">
+        <section className="panel mb-5 space-y-4 border-primary/30 shadow-md">
+          <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
+            <h2 className="text-base font-bold text-primary">
+              {ed.id ? "✏️ दैनिक डायरी सम्पादन (Edit Entry)" : "➕ नयाँ दैनिक डायरी (New Daily Entry)"}
+            </h2>
+            <button type="button" className="btn-soft !min-h-8 !px-2.5 !py-1 text-xs" onClick={() => setEd(null)}>
+              ✕ बन्द गर्नुहोस्
+            </button>
+          </div>
+
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
-              <label className="lbl">Class</label>
+              <label className="lbl">Class · कक्षा र विषय</label>
               <ClassSelect active value={ed.classId} onChange={pickClass} />
             </div>
             <div>
-              <label className="lbl">Date (BS)</label>
+              <label className="lbl">Date (BS) · मिति</label>
               <BsDate value={ed.date} onChange={(v) => set({ date: v })} />
             </div>
             <div>
-              <label className="lbl">Lecture hours taught</label>
+              <label className="lbl">Lecture hours taught · घण्टी (LH)</label>
               <input
                 type="number"
                 className="field"
@@ -217,13 +242,13 @@ function DiaryPage() {
               />
             </div>
             <div>
-              <label className="lbl">Unit</label>
+              <label className="lbl">Unit · एकाइ</label>
               <select
                 className="field"
                 value={ed.unitId}
                 onChange={(e) => set({ unitId: e.target.value })}
               >
-                <option value="">—</option>
+                <option value="">— Select unit —</option>
                 {data.units
                   .filter((u) => u.classId === ed.classId)
                   .map((u) => (
@@ -234,9 +259,10 @@ function DiaryPage() {
               </select>
             </div>
             <div className="sm:col-span-2">
-              <label className="lbl">Topic taught</label>
+              <label className="lbl">Topic taught · पढाएको शीर्षक / पाठ</label>
               <input
                 className="field"
+                placeholder="आज पढाएको मुख्य पाठ वा विषयवस्तु लेख्नुहोस्..."
                 value={ed.topic}
                 onChange={(e) => set({ topic: e.target.value })}
               />
@@ -244,11 +270,11 @@ function DiaryPage() {
           </div>
 
           {/* Student Headcount & Attendance Section */}
-          <div className="rounded-lg border border-border bg-muted/60 p-3.5 space-y-3">
+          <div className="rounded-xl border border-border bg-muted/50 p-3.5 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-3 text-sm">
+              <div className="flex flex-wrap items-center gap-2.5 text-sm">
                 {/* Total Students: shows class student count by default, click to edit */}
-                <div className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 shadow-2xs">
+                <div className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 shadow-sm">
                   <span className="text-muted-foreground font-medium">Total students:</span>
                   {editingCount === "total" ? (
                     <input
@@ -290,7 +316,7 @@ function DiaryPage() {
                 </div>
 
                 {/* Present Count: click to enter custom number, auto-updates Absent count */}
-                <div className="flex items-center gap-1.5 rounded-md border border-primary/30 bg-card px-2.5 py-1.5 shadow-2xs">
+                <div className="flex items-center gap-1.5 rounded-xl border border-primary/30 bg-card px-3 py-1.5 shadow-sm">
                   <span className="text-muted-foreground font-medium">Present count:</span>
                   {editingCount === "present" ? (
                     <input
@@ -317,7 +343,7 @@ function DiaryPage() {
                 </div>
 
                 {/* Absent Count: automatically shows remaining (Total - Present), also clickable */}
-                <div className="flex items-center gap-1.5 rounded-md border border-destructive/30 bg-card px-2.5 py-1.5 shadow-2xs">
+                <div className="flex items-center gap-1.5 rounded-xl border border-destructive/30 bg-card px-3 py-1.5 shadow-sm">
                   <span className="text-muted-foreground font-medium">Absent count:</span>
                   {editingCount === "absent" ? (
                     <input
@@ -347,7 +373,7 @@ function DiaryPage() {
               {stu.length > 0 && manualCount && pCount !== Math.max(0, ed.total - realAbsent.length) && (
                 <button
                   type="button"
-                  className="btn-soft !py-1 !px-2 text-xs"
+                  className="btn-soft !py-1 !px-2.5 text-xs"
                   onClick={syncCountWithStudentAttendance}
                   title="तलको विद्यार्थी हाजिरी अनुसार संख्या मिलाउनुहोस्"
                 >
@@ -362,13 +388,13 @@ function DiaryPage() {
 
             {/* Individual Student Attendance Section */}
             <div className="border-t border-border/70 pt-2.5">
-              <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <div className="lbl !mb-0 text-sm font-bold text-foreground">
                   Attendance · विद्यार्थी हाजिरी
                 </div>
                 {stu.length > 0 && (
                   <span className="text-xs text-muted-foreground">
-                    अनुपस्थित विद्यार्थीको नाममा क्लिक गर्नुहोस् (विद्यार्थी प्रतिवेदनको हाजिरीमा गणना हुने · Marked absent:{" "}
+                    अनुपस्थित विद्यार्थीको नाममा क्लिक गर्नुहोस् (विद्यार्थी प्रतिवेदनमा गणना हुने · Marked absent:{" "}
                     <b className="text-destructive">{realAbsent.length}</b>)
                   </span>
                 )}
@@ -382,7 +408,7 @@ function DiaryPage() {
                       type="button"
                       className={
                         realAbsent.includes(s)
-                          ? "rounded-full bg-destructive px-2.5 py-1 text-xs text-destructive-foreground line-through"
+                          ? "rounded-full bg-destructive px-2.5 py-1 text-xs font-semibold text-destructive-foreground line-through shadow-sm"
                           : "chip"
                       }
                       onClick={() => handleToggleStudentAbsent(s)}
@@ -398,12 +424,12 @@ function DiaryPage() {
               )}
             </div>
 
-            {/* Attendance Remarks (formerly "Reasons for absence") */}
+            {/* Attendance Remarks */}
             <div className="pt-1">{area("reasons", "Remarks")}</div>
           </div>
 
           <div>
-            <div className="lbl">Class activities (short codes for monthly report)</div>
+            <div className="lbl">Class activities (short codes for monthly report) · शिक्षण क्रियाकलाप कोड</div>
             <div className="flex flex-wrap gap-1.5">
               {CODES.map(([c, l]) => (
                 <button
@@ -418,38 +444,57 @@ function DiaryPage() {
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            {area("methods", "Methods & methodology used")}
-            {area("studentActs", "Students' activities")}
-            {area("feedback", "Students' feedback")}
-            {area("evaluation", "Evaluation done")}
-
-            {/* Bottom Special Remark with "Include in monthly report?" checkbox */}
-            <div className="sm:col-span-2">
-              <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-                <label className="lbl !mb-0">Special remark</label>
-                <label className="flex cursor-pointer items-center gap-2 rounded-md border border-primary/40 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-primary"
-                    checked={!!ed.remarkInMonthly}
-                    onChange={(e) => set({ remarkInMonthly: e.target.checked })}
-                  />
-                  <span>Include in monthly report?</span>
-                </label>
+          {/* Collapsible Teaching Details Section to prevent form clutter */}
+          <div className="rounded-xl border border-border/80 bg-background/60 p-3">
+            <button
+              type="button"
+              className="flex w-full items-center justify-between text-left text-sm font-bold text-foreground"
+              onClick={() => setShowMoreDetails((v) => !v)}
+            >
+              <span>
+                {showMoreDetails ? "▼" : "▶"} शिक्षण विधि, विद्यार्थी क्रियाकलाप र मूल्याङ्कन (Methods, Activities & Evaluation)
+              </span>
+              <span className="text-xs font-normal text-primary">
+                {showMoreDetails ? "संक्षिप्त बनाउनुहोस् (Collapse)" : "विस्तृत लेख्नुहोस् (Expand)"}
+              </span>
+            </button>
+            {showMoreDetails && (
+              <div className="mt-3 grid gap-3 border-t border-border/60 pt-3 sm:grid-cols-2">
+                {area("methods", "Methods & methodology used")}
+                {area("studentActs", "Students' activities")}
+                {area("feedback", "Students' feedback")}
+                {area("evaluation", "Evaluation done")}
               </div>
-              <textarea
-                className="field min-h-16"
-                value={ed.remarks || ""}
-                placeholder="विशेष कैफियत (मासिक प्रतिवेदनको Remarks मा देखाउन दायाँको बक्समा टिक लगाउनुहोस्)"
-                onChange={(e) => set({ remarks: e.target.value })}
-              />
-            </div>
+            )}
           </div>
 
-          <div className="flex gap-2">
+          {/* Bottom Special Remark with "Include in monthly report?" checkbox */}
+          <div className="rounded-xl border border-primary/25 bg-primary/5 p-3">
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+              <label className="lbl !mb-0 text-sm font-bold text-foreground">
+                Special remark · विशेष कैफियत
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-primary/40 bg-card px-3 py-1 text-xs font-semibold text-primary shadow-sm">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-primary"
+                  checked={!!ed.remarkInMonthly}
+                  onChange={(e) => set({ remarkInMonthly: e.target.checked })}
+                />
+                <span>Include in monthly report?</span>
+              </label>
+            </div>
+            <textarea
+              className="field min-h-16"
+              value={ed.remarks || ""}
+              placeholder="विशेष कैफियत (मासिक प्रतिवेदनको Remarks कोलममा देखाउन दायाँको बक्समा टिक लगाउनुहोस्)"
+              onChange={(e) => set({ remarks: e.target.value })}
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
             <button className="btn" onClick={save}>
-              Save
+              Save · सुरक्षित गर्नुहोस्
             </button>
             <button className="btn-soft" onClick={() => setEd(null)}>
               Cancel
@@ -474,13 +519,24 @@ function DiaryPage() {
       )}
 
       <section className="panel">
-        <div className="mb-3 flex items-center gap-2">
-          <h2 className="flex-1 text-lg font-bold">Entries</h2>
-          <div className="w-64">
-            <ClassSelect all value={fc} onChange={setFc} />
+        <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-bold">
+            📖 Entries · दैनिक डायरी अभिलेखहरू ({list.length})
+          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="search"
+              placeholder="🔍 पाठ वा मिति खोज्नुहोस्..."
+              className="field !h-9 !w-48 text-xs"
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+            />
+            <div className="w-56">
+              <ClassSelect all value={fc} onChange={setFc} />
+            </div>
           </div>
         </div>
-        <ul className="divide-y divide-border">
+        <ul className="divide-y divide-border/70">
           {list.map((d) => {
             const c = data.classes.find((x) => x.id === d.classId);
             const p = presentCountOf(d);
@@ -488,21 +544,41 @@ function DiaryPage() {
             return (
               <li
                 key={d.id}
-                className="cursor-pointer py-2 text-sm hover:bg-muted/50"
+                className="cursor-pointer rounded-lg px-2 py-2.5 text-sm transition-colors hover:bg-muted/50"
                 onClick={() => openExistingEntry(d)}
               >
-                <b>
-                  <Dt d={d.date} />
-                </b>{" "}
-                · {c?.name} {c?.subject} — {d.topic || "—"}
-                <div className="text-xs text-muted-foreground">
-                  Present {p}/{d.total} (Absent {a}) · {d.lh} LH · {d.codes.join(", ")}
-                  {d.remarkInMonthly && d.remarks ? ` · Special remark: ${d.remarks}` : ""}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <b>
+                      <Dt d={d.date} />
+                    </b>{" "}
+                    · <span className="font-semibold text-primary">{c?.name}</span> · {c?.subject} —{" "}
+                    <span className="font-medium">{d.topic || "—"}</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                    <span className="chip !py-0.5">
+                      Present: <b className="text-primary">{p}</b>/{d.total} (A: <b className="text-destructive">{a}</b>)
+                    </span>
+                    <span className="chip !py-0.5">{d.lh} LH</span>
+                  </div>
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  {d.codes.length > 0 && <span>क्रियाकलाप: {d.codes.join(", ")}</span>}
+                  {d.reasons && <span>· Remarks: {d.reasons}</span>}
+                  {d.remarks && (
+                    <span className={d.remarkInMonthly ? "font-semibold text-primary" : ""}>
+                      · Special remark: {d.remarks} {d.remarkInMonthly ? "(✓ Monthly Report)" : ""}
+                    </span>
+                  )}
                 </div>
               </li>
             );
           })}
-          {!list.length && <li className="py-2 text-sm text-muted-foreground">No entries yet.</li>}
+          {!list.length && (
+            <li className="py-8 text-center text-sm text-muted-foreground">
+              कुनै दैनिक डायरी इन्ट्री भेटिएन (No entries found).
+            </li>
+          )}
         </ul>
       </section>
     </Page>

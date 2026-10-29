@@ -22,9 +22,23 @@ const P: Record<string, string> = {
   out: "M9 4H5v16h4M16 8l4 4-4 4M20 12H9",
   x: "M6 6l12 12M18 6L6 18",
   dept: "M4 21V8l8-5 8 5v13M9 21v-5h6v5M9 11h.01M15 11h.01",
+  plus: "M12 5v14M5 12h14",
 };
+
 export const Icon = ({ n, size = 20 }: { n: keyof typeof P; size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={P[n]} /></svg>
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d={P[n]} />
+  </svg>
 );
 
 type Item = { to: string; ne: string; en: string; icon: keyof typeof P; who: "staff" | "all" | "admin" };
@@ -50,7 +64,9 @@ function useShell() {
   const staff = local || (signed && isStaff(c.roles));
   const admin = signed && c.roles.includes("admin");
   const visible = path === "/login" ? false : signed || local;
-  const items = ITEMS.filter((i) => (i.who === "all" ? signed || (local && i.to !== "/account") : i.who === "staff" ? staff : admin));
+  const items = ITEMS.filter((i) =>
+    i.who === "all" ? signed || (local && i.to !== "/account") : i.who === "staff" ? staff : admin
+  );
   const active = (to: string) => (to === "/" ? path === "/" : path === to || path.startsWith(to + "/"));
   return { c, path, signed, local, staff, admin, visible, items, active };
 }
@@ -60,71 +76,233 @@ export function Sidebar() {
   const { c, visible, items, active, signed } = useShell();
   const [collapsed, setCollapsed] = useState(false);
   const nav = useNavigate();
-  useEffect(() => { try { setCollapsed(localStorage.getItem("shikshak-sidebar") === "collapsed"); } catch { /* ignore */ } }, []);
-  const toggle = () => setCollapsed((v) => { const n = !v; try { localStorage.setItem("shikshak-sidebar", n ? "collapsed" : "open"); } catch { /* ignore */ } return n; });
+  useEffect(() => {
+    try {
+      setCollapsed(localStorage.getItem("shikshak-sidebar") === "collapsed");
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  const toggle = () =>
+    setCollapsed((v) => {
+      const n = !v;
+      try {
+        localStorage.setItem("shikshak-sidebar", n ? "collapsed" : "open");
+      } catch {
+        /* ignore */
+      }
+      return n;
+    });
   if (!visible) return null;
   return (
-    <aside className={`no-print sticky top-0 hidden h-screen shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] md:flex ${collapsed ? "w-[4.25rem]" : "w-64"}`} aria-label="Main navigation">
-      <div className="flex items-center gap-2 border-b border-sidebar-border px-3 py-3">
-        {!collapsed && <Link to="/" className="flex-1 leading-tight text-sidebar-foreground"><span className="block font-display text-xl">शिक्षक डायरी</span><span className="block text-[11px] font-normal tracking-wide opacity-70">Teacher's Diary</span></Link>}
-        <button onClick={toggle} className="rounded-md p-2 hover:bg-sidebar-accent" aria-label={collapsed ? "Expand menu" : "Collapse menu"} title={collapsed ? "Expand" : "Collapse"}><Icon n={collapsed ? "right" : "left"} /></button>
+    <aside
+      className={`no-print sticky top-0 hidden h-screen shrink-0 flex-col bg-sidebar text-sidebar-foreground shadow-lg transition-[width] md:flex ${
+        collapsed ? "w-[4.5rem]" : "w-64"
+      }`}
+      aria-label="Main navigation"
+    >
+      <div className="flex items-center gap-2.5 border-b border-sidebar-border px-3.5 py-3.5">
+        {!collapsed && (
+          <Link to="/" className="flex-1 leading-tight text-sidebar-foreground">
+            <span className="block font-display text-xl tracking-wide text-white">शिक्षक डायरी</span>
+            <span className="block text-[11px] font-medium tracking-wider text-sidebar-primary">
+              Teacher's Diary ERP
+            </span>
+          </Link>
+        )}
+        <button
+          onClick={toggle}
+          className="rounded-lg p-2 text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-white"
+          aria-label={collapsed ? "Expand menu" : "Collapse menu"}
+          title={collapsed ? "Expand" : "Collapse"}
+        >
+          <Icon n={collapsed ? "right" : "left"} />
+        </button>
       </div>
-      <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-3">
+
+      <nav className="flex-1 space-y-1 overflow-y-auto px-2.5 py-3">
         {items.map((i) => (
-          <Link key={i.to} to={i.to} title={`${i.ne} · ${i.en}`} className={`nav-item ${active(i.to) ? "nav-item-on" : ""} ${collapsed ? "justify-center px-0" : ""}`}>
+          <Link
+            key={i.to}
+            to={i.to}
+            title={`${i.ne} · ${i.en}`}
+            className={`nav-item ${active(i.to) ? "nav-item-on" : ""} ${
+              collapsed ? "justify-center px-0" : ""
+            }`}
+          >
             <Icon n={i.icon} />
-            {!collapsed && <span className="min-w-0 flex-1"><span className="block truncate">{i.ne}</span><span className="block truncate text-[11px] font-normal opacity-70">{i.en}</span></span>}
+            {!collapsed && (
+              <span className="min-w-0 flex-1">
+                <span className="block truncate leading-snug">{i.ne}</span>
+                <span className="block truncate text-[10px] font-normal opacity-65">{i.en}</span>
+              </span>
+            )}
           </Link>
         ))}
       </nav>
-      <div className="border-t border-sidebar-border p-2">
+
+      <div className="border-t border-sidebar-border p-2.5 space-y-2">
+        {!collapsed && (
+          <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-2.5 py-2 text-[10px] leading-snug text-sidebar-foreground/85">
+            © 2026 Shikshak Diary.<br />
+            Developed by <b>Bishnu Acharya</b>.<br />
+            All rights reserved.
+          </div>
+        )}
         {signed ? (
-          <button className={`nav-item w-full ${collapsed ? "justify-center px-0" : ""}`} title="बाहिरिनुहोस् · Sign out" onClick={async () => { if (await signOut()) nav({ to: "/login" }); }}>
-            <Icon n="out" />{!collapsed && <span>बाहिरिनुहोस् · Sign out</span>}
+          <button
+            className={`nav-item w-full ${collapsed ? "justify-center px-0" : ""}`}
+            title="बाहिरिनुहोस् · Sign out"
+            onClick={async () => {
+              if (await signOut()) nav({ to: "/login" });
+            }}
+          >
+            <Icon n="out" />
+            {!collapsed && <span>बाहिरिनुहोस् · Sign out</span>}
           </button>
         ) : (
-          <Link to="/profiles" className={`nav-item ${collapsed ? "justify-center px-0" : ""}`} title="Teacher profiles"><Icon n="user" />{!collapsed && <span>Teacher profiles</span>}</Link>
+          <Link
+            to="/profiles"
+            className={`nav-item ${collapsed ? "justify-center px-0" : ""}`}
+            title="Teacher profiles"
+          >
+            <Icon n="user" />
+            {!collapsed && <span>Teacher profiles</span>}
+          </Link>
         )}
-        {signed && !collapsed && c.me && <div className="mt-2 flex items-center gap-2 px-2 text-xs opacity-80"><Avatar name={c.me.name} path={c.me.avatar_path} size={24} /><span className="truncate">{c.me.name}</span></div>}
+        {signed && !collapsed && c.me && (
+          <div className="flex items-center gap-2 rounded-lg bg-sidebar-accent/30 px-2.5 py-1.5 text-xs">
+            <Avatar name={c.me.name} path={c.me.avatar_path} size={26} />
+            <div className="min-w-0 flex-1">
+              <div className="truncate font-semibold">{c.me.name}</div>
+              {c.me.designation && <div className="truncate text-[10px] opacity-70">{c.me.designation}</div>}
+            </div>
+          </div>
+        )}
       </div>
     </aside>
   );
 }
 
-/** Phones: app-style bottom navigation with a "More" sheet. */
+/** Phones: modern app-style bottom navigation + floating quick action button + "More" bottom sheet. */
 export function BottomNav() {
-  const { signed, local, staff, visible, items, active } = useShell();
+  const { signed, local, staff, visible, items, active, path } = useShell();
   const [more, setMore] = useState(false);
   const nav = useNavigate();
-  const path = useRouterState({ select: (s) => s.location.pathname });
-  useEffect(() => { setMore(false); }, [path]);
+  useEffect(() => {
+    setMore(false);
+  }, [path]);
   if (!visible) return null;
-  const primary = staff ? ["/", "/diary", "/sqc", "/reports"] : ["/sqc", "/account"];
+
+  const primary = staff ? ["/", "/diary", "/plans", "/department"] : ["/sqc", "/account"];
   const main = primary.map((to) => items.find((i) => i.to === to)).filter(Boolean) as Item[];
   const rest = items.filter((i) => !primary.includes(i.to));
-  const cell = (on: boolean): string => `flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${on ? "text-primary" : "text-muted-foreground"}`;
+
+  const cell = (on: boolean): string =>
+    `relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
+      on ? "text-primary" : "text-muted-foreground hover:text-foreground"
+    }`;
+
   return (
     <>
+      {/* Floating Quick Action Button on Mobile for instant Daily Diary entry */}
+      {staff && path !== "/diary" && !more && (
+        <Link
+          to="/diary"
+          className="no-print fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2.5 text-xs font-bold text-primary-foreground shadow-lg ring-2 ring-background transition-transform active:scale-95 md:hidden"
+          title="आजको दैनिक डायरी लेख्नुहोस् · Quick Daily Diary"
+        >
+          <Icon n="plus" size={16} />
+          <span>दैनिक डायरी</span>
+        </Link>
+      )}
+
       {more && (
         <div className="no-print fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true">
-          <button className="absolute inset-0 bg-foreground/40" aria-label="Close" onClick={() => setMore(false)} />
-          <div className="absolute inset-x-0 bottom-0 max-h-[75vh] overflow-y-auto rounded-t-2xl bg-card p-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-xl">
-            <div className="mb-2 flex items-center"><span className="flex-1 font-semibold">थप · More</span><button className="rounded-md p-2" onClick={() => setMore(false)} aria-label="Close"><Icon n="x" /></button></div>
-            <div className="grid grid-cols-3 gap-2">
+          <button
+            className="absolute inset-0 bg-foreground/45 backdrop-blur-[2px]"
+            aria-label="Close"
+            onClick={() => setMore(false)}
+          />
+          <div className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto rounded-t-3xl border-t border-border bg-card p-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl">
+            <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-muted-foreground/25" />
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <span className="text-base font-bold text-foreground">सबै मेनु · All Menus</span>
+                
+              </div>
+              <button
+                className="rounded-full bg-muted p-2 text-muted-foreground hover:text-foreground"
+                onClick={() => setMore(false)}
+                aria-label="Close"
+              >
+                <Icon n="x" size={18} />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-2.5">
               {rest.map((i) => (
-                <Link key={i.to} to={i.to} className={`flex min-h-20 flex-col items-center justify-center gap-1 rounded-xl border border-border p-2 text-center text-xs font-medium ${active(i.to) ? "bg-accent text-accent-foreground" : ""}`}>
-                  <Icon n={i.icon} size={22} /><span>{i.ne}</span><span className="text-[10px] font-normal text-muted-foreground">{i.en}</span>
+                <Link
+                  key={i.to}
+                  to={i.to}
+                  className={`flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border p-2.5 text-center text-xs font-semibold transition-all ${
+                    active(i.to)
+                      ? "border-primary bg-primary/10 text-primary shadow-sm"
+                      : "border-border/80 bg-muted/30 text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Icon n={i.icon} size={22} />
+                  <span className="leading-tight">{i.ne}</span>
+                  <span className="text-[10px] font-normal text-muted-foreground">{i.en}</span>
                 </Link>
               ))}
-              {!signed && local && <Link to="/profiles" className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-xl border border-border p-2 text-center text-xs font-medium"><Icon n="user" size={22} /><span>शिक्षक</span><span className="text-[10px] font-normal text-muted-foreground">Profiles</span></Link>}
-              {signed && <button className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-xl border border-destructive p-2 text-center text-xs font-medium text-destructive" onClick={async () => { if (await signOut()) { setMore(false); nav({ to: "/login" }); } }}><Icon n="out" size={22} /><span>बाहिरिनुहोस्</span><span className="text-[10px] font-normal">Sign out</span></button>}
+              {!signed && local && (
+                <Link
+                  to="/profiles"
+                  className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border border-border/80 bg-muted/30 p-2.5 text-center text-xs font-semibold"
+                >
+                  <Icon n="user" size={22} />
+                  <span>शिक्षक</span>
+                  <span className="text-[10px] font-normal text-muted-foreground">Profiles</span>
+                </Link>
+              )}
+              {signed && (
+                <button
+                  className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border border-destructive/30 bg-destructive/5 p-2.5 text-center text-xs font-semibold text-destructive"
+                  onClick={async () => {
+                    if (await signOut()) {
+                      setMore(false);
+                      nav({ to: "/login" });
+                    }
+                  }}
+                >
+                  <Icon n="out" size={22} />
+                  <span>बाहिरिनुहोस्</span>
+                  <span className="text-[10px] font-normal">Sign out</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
       )}
-      <nav className="no-print fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-card pb-[env(safe-area-inset-bottom)] md:hidden" aria-label="Main navigation">
-        {main.map((i) => <Link key={i.to} to={i.to} className={cell(active(i.to))}><Icon n={i.icon} /><span>{i.ne}</span></Link>)}
-        <button className={cell(more)} onClick={() => setMore((v) => !v)} aria-expanded={more}><Icon n="more" /><span>थप</span></button>
+
+      <nav
+        className="no-print fixed inset-x-0 bottom-0 z-30 flex border-t border-border/90 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+        aria-label="Main navigation"
+      >
+        {main.map((i) => {
+          const on = active(i.to);
+          return (
+            <Link key={i.to} to={i.to} className={cell(on)}>
+              {on && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-primary" />}
+              <Icon n={i.icon} size={20} />
+              <span>{i.ne}</span>
+            </Link>
+          );
+        })}
+        <button className={cell(more)} onClick={() => setMore((v) => !v)} aria-expanded={more}>
+          <Icon n="more" size={20} />
+          <span>थप · More</span>
+        </button>
       </nav>
     </>
   );
