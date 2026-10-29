@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Page } from "@/components/app/ui";
 import { Avatar, BG_PRESETS } from "@/components/app/auth";
 import {
@@ -15,6 +15,7 @@ import {
 } from "@/lib/cloud";
 import { resizeImage } from "@/lib/image";
 import { MIN_PASSWORD, loginOf } from "@/lib/login";
+import { refreshStorageEstimate, triggerInstallApp, usePwa } from "@/lib/pwa";
 
 export const Route = createFileRoute("/account")({
   head: () => ({
@@ -30,16 +31,25 @@ export const Route = createFileRoute("/account")({
 
 function Account() {
   const c = useCloud();
+  const pwa = usePwa();
   const [pw, setPw] = useState({ a: "", b: "" });
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [view, setView] = useState<"profile" | "password" | "theme">("profile");
 
+  useEffect(() => {
+    refreshStorageEstimate();
+  }, []);
+
   if (c.status !== "ready" || !c.me) {
     return (
       <Page title="My account · मेरो खाता" sub="Sign in to manage your account.">
         <p className="text-sm text-muted-foreground">
-          कृपया आफ्नो खाता व्यवस्थापन गर्न <a className="underline font-semibold text-primary" href="/login">लग-इन (Sign in)</a> गर्नुहोस्।
+          कृपया आफ्नो खाता व्यवस्थापन गर्न{" "}
+          <a className="underline font-semibold text-primary" href="/login">
+            लग-इन (Sign in)
+          </a>{" "}
+          गर्नुहोस्।
         </p>
       </Page>
     );
@@ -127,32 +137,48 @@ function Account() {
               </p>
             </section>
 
-            {/* Automatic Offline-to-Cloud Sync Status Card */}
-            {isStaff(c.roles) && (
-              <section className="panel md:col-span-2 border-primary/30 bg-secondary/30">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Mobile/Desktop App Install & Offline Device Space + Auto-Cloud Sync Card */}
+            <section className="panel md:col-span-2 border-primary/30 bg-secondary/30 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-11 w-11 rounded-xl shadow-sm" />
                   <div>
                     <h2 className="text-base font-bold text-primary">
-                      ☁️ Cloud & Offline Auto-Sync · स्वचालित क्लाउड सुरक्षा
+                      📲 शिक्षक डायरी एप र अफलाइन-क्लाउड अटो सिंक
                     </h2>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {isSynced
-                        ? "तपाईंको सम्पूर्ण डाटा क्लाउडमा सुरक्षित छ। अफलाइनमा काम गर्दा पनि यस डिभाइसमा स्वतः सेभ भई इन्टरनेट जोडिएपछि आफैँ क्लाउडमा सर्छ।"
-                        : "तपाईंले अफलाइनमा गर्नुभएको काम यस ब्राउजर/डिभाइसमा सुरक्षित छ। इन्टरनेट जोडिएपछि स्वतः क्लाउडमा अपलोड हुनेछ।"}
+                    <p className="text-xs text-muted-foreground">
+                      डिभाइस स्पेस प्रयोग: <b>{pwa.storageUsedKb} KB</b>{" "}
+                      {pwa.persisted ? "· (Persistent Device Storage Active ✓)" : "· (On-Device Storage Active ✓)"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {isSynced ? (
-                      <span className="chip-on">Saved in Cloud ✓</span>
-                    ) : (
-                      <button type="button" className="btn text-xs" onClick={() => void retryNow()}>
-                        🔄 Sync now · अहिले सिंक गर्नुहोस्
-                      </button>
-                    )}
-                  </div>
                 </div>
-              </section>
-            )}
+                <div className="flex flex-wrap items-center gap-2">
+                  {!pwa.isStandalone ? (
+                    <button
+                      type="button"
+                      className="btn text-xs"
+                      onClick={() => void triggerInstallApp()}
+                    >
+                      📲 Install App · एप इन्स्टल गर्नुहोस्
+                    </button>
+                  ) : (
+                    <span className="chip-on">✓ एप इन्स्टल भइसकेको छ (App Installed)</span>
+                  )}
+                  {isSynced ? (
+                    <span className="chip-on">☁️ Cloud Saved ✓</span>
+                  ) : (
+                    <button type="button" className="btn-soft text-xs" onClick={() => void retryNow()}>
+                      🔄 Sync now · अहिले सिंक गर्नुहोस्
+                    </button>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {isSynced
+                  ? "तपाईंको सम्पूर्ण डाटा क्लाउडमा सुरक्षित छ। इन्टरनेट नभएको बेला (अफलाइनमा) काम गर्दा यही मोबाइल वा कम्प्युटरको स्पेसमा सुरक्षित रहन्छ र अनलाइन हुनेबित्तिकै स्वतः क्लाउडमा जान्छ।"
+                  : "तपाईंले अफलाइनमा गर्नुभएको काम यस मोबाइल/कम्प्युटरको स्पेसमा सुरक्षित छ। इन्टरनेट जोडिएपछि स्वतः क्लाउडमा अपलोड हुनेछ।"}
+              </p>
+            </section>
 
             {isStaff(c.roles) && listUnsaved(c.userId).length > 0 && (
               <section className="panel md:col-span-2">

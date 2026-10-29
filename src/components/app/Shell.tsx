@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Avatar } from "@/components/app/auth";
 import { isStaff, signOut, useCloud } from "@/lib/cloud";
+import { closeInstallHelp, triggerInstallApp, usePwa } from "@/lib/pwa";
 
 // Simple inline icons (no extra package needed)
 const P: Record<string, string> = {
@@ -23,6 +24,7 @@ const P: Record<string, string> = {
   x: "M6 6l12 12M18 6L6 18",
   dept: "M4 21V8l8-5 8 5v13M9 21v-5h6v5M9 11h.01M15 11h.01",
   plus: "M12 5v14M5 12h14",
+  download: "M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2",
 };
 
 export const Icon = ({ n, size = 20 }: { n: keyof typeof P; size?: number }) => (
@@ -71,9 +73,10 @@ function useShell() {
   return { c, path, signed, local, staff, admin, visible, items, active };
 }
 
-/** Desktop: collapsible left sidebar. */
+/** Desktop: collapsible left sidebar with original Shikshak Diary logo and 1-click Install App button. */
 export function Sidebar() {
   const { c, visible, items, active, signed } = useShell();
+  const pwa = usePwa();
   const [collapsed, setCollapsed] = useState(false);
   const nav = useNavigate();
   useEffect(() => {
@@ -101,18 +104,22 @@ export function Sidebar() {
       }`}
       aria-label="Main navigation"
     >
-      <div className="flex items-center gap-2.5 border-b border-sidebar-border px-3.5 py-3.5">
-        {!collapsed && (
-          <Link to="/" className="flex-1 leading-tight text-sidebar-foreground">
-            <span className="block font-display text-xl tracking-wide text-white">शिक्षक डायरी</span>
-            <span className="block text-[11px] font-medium tracking-wider text-sidebar-primary">
-              Teacher's Diary ERP
-            </span>
-          </Link>
-        )}
+      <div className="flex items-center gap-2.5 border-b border-sidebar-border px-3 py-3">
+        <Link to="/" className="flex items-center gap-2.5 text-sidebar-foreground">
+          <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-9 w-9 shrink-0 rounded-lg shadow-sm" />
+          {!collapsed && (
+            <div className="leading-tight">
+              <span className="block font-display text-xl tracking-wide text-white">शिक्षक डायरी</span>
+              <span className="block text-[11px] font-medium tracking-wider text-sidebar-primary">
+                Teacher's Diary
+              </span>
+            </div>
+          )}
+        </Link>
+        <div className="flex-1" />
         <button
           onClick={toggle}
-          className="rounded-lg p-2 text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-white"
+          className="rounded-lg p-1.5 text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-white"
           aria-label={collapsed ? "Expand menu" : "Collapse menu"}
           title={collapsed ? "Expand" : "Collapse"}
         >
@@ -142,13 +149,30 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-sidebar-border p-2.5 space-y-2">
+        {!pwa.isStandalone && (
+          <button
+            type="button"
+            onClick={() => void triggerInstallApp()}
+            className={`nav-item w-full bg-sidebar-accent/70 font-semibold text-white ${
+              collapsed ? "justify-center px-0" : ""
+            }`}
+            title="कम्प्युटर वा मोबाइलमा एप इन्स्टल गर्नुहोस् · Install App"
+          >
+            <Icon n="download" />
+            {!collapsed && <span>📲 एप इन्स्टल (Install App)</span>}
+          </button>
+        )}
+
         {!collapsed && (
           <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-2.5 py-2 text-[10px] leading-snug text-sidebar-foreground/85">
-            © 2026 Shikshak Diary.<br />
-            Developed by <b>Bishnu Acharya</b>.<br />
+            © 2026 Shikshak Diary.
+            <br />
+            Developed by <b>Bishnu Acharya</b>.
+            <br />
             All rights reserved.
           </div>
         )}
+
         {signed ? (
           <button
             className={`nav-item w-full ${collapsed ? "justify-center px-0" : ""}`}
@@ -187,6 +211,7 @@ export function Sidebar() {
 /** Phones: modern app-style bottom navigation + floating quick action button + "More" bottom sheet. */
 export function BottomNav() {
   const { signed, local, staff, visible, items, active, path } = useShell();
+  const pwa = usePwa();
   const [more, setMore] = useState(false);
   const nav = useNavigate();
   useEffect(() => {
@@ -227,9 +252,9 @@ export function BottomNav() {
           <div className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto rounded-t-3xl border-t border-border bg-card p-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl">
             <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-muted-foreground/25" />
             <div className="mb-3 flex items-center justify-between">
-              <div>
+              <div className="flex items-center gap-2">
+                <img src="/icon-192.png" alt="" className="h-6 w-6 rounded-md" />
                 <span className="text-base font-bold text-foreground">सबै मेनु · All Menus</span>
-                
               </div>
               <button
                 className="rounded-full bg-muted p-2 text-muted-foreground hover:text-foreground"
@@ -247,7 +272,7 @@ export function BottomNav() {
                   className={`flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border p-2.5 text-center text-xs font-semibold transition-all ${
                     active(i.to)
                       ? "border-primary bg-primary/10 text-primary shadow-sm"
-                      : "border-border/80 bg-muted/30 text-foreground hover:bg-muted"
+                      : "border-border bg-muted/30 text-foreground hover:bg-muted"
                   }`}
                 >
                   <Icon n={i.icon} size={22} />
@@ -255,10 +280,24 @@ export function BottomNav() {
                   <span className="text-[10px] font-normal text-muted-foreground">{i.en}</span>
                 </Link>
               ))}
+              {!pwa.isStandalone && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMore(false);
+                    void triggerInstallApp();
+                  }}
+                  className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border border-primary/40 bg-primary/10 p-2.5 text-center text-xs font-semibold text-primary"
+                >
+                  <Icon n="download" size={22} />
+                  <span>एप इन्स्टल</span>
+                  <span className="text-[10px] font-normal">Install App</span>
+                </button>
+              )}
               {!signed && local && (
                 <Link
                   to="/profiles"
-                  className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border border-border/80 bg-muted/30 p-2.5 text-center text-xs font-semibold"
+                  className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-muted/30 p-2.5 text-center text-xs font-semibold"
                 >
                   <Icon n="user" size={22} />
                   <span>शिक्षक</span>
@@ -286,7 +325,7 @@ export function BottomNav() {
       )}
 
       <nav
-        className="no-print fixed inset-x-0 bottom-0 z-30 flex border-t border-border/90 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+        className="no-print fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
         aria-label="Main navigation"
       >
         {main.map((i) => {
@@ -305,6 +344,65 @@ export function BottomNav() {
         </button>
       </nav>
     </>
+  );
+}
+
+/** Modal guide shown when browser requires 1-tap menu install (e.g. iOS Safari or browsers where native prompt hasn't fired yet). */
+export function InstallHelpModal() {
+  const pwa = usePwa();
+  if (!pwa.showHelpModal) return null;
+  return (
+    <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+      <button
+        className="absolute inset-0 bg-foreground/50 backdrop-blur-[2px]"
+        aria-label="Close"
+        onClick={closeInstallHelp}
+      />
+      <div className="relative z-10 w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-xl">
+        <div className="flex items-center gap-3">
+          <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-12 w-12 rounded-xl shadow-sm" />
+          <div>
+            <h3 className="text-base font-bold text-foreground">शिक्षक डायरी एप इन्स्टल</h3>
+            <p className="text-xs text-muted-foreground">Shikshak Diary — Official App Icon</p>
+          </div>
+        </div>
+
+        {pwa.isIos ? (
+          <div className="mt-4 space-y-2 text-xs text-foreground">
+            <p className="font-semibold text-primary">iPhone / iPad मा इन्स्टल गर्ने तरिका:</p>
+            <ol className="list-decimal space-y-1.5 pl-4">
+              <li>
+                तल्लो बारमा रहेको <b>Share (⬆️)</b> आइकनमा थिच्नुहोस्।
+              </li>
+              <li>
+                तल स्क्रोल गरी <b>"Add to Home Screen"</b> मा थिच्नुहोस् र <b>Add</b> गर्नुहोस्।
+              </li>
+            </ol>
+          </div>
+        ) : (
+          <div className="mt-4 space-y-2 text-xs text-foreground">
+            <p className="font-semibold text-primary">मोबाइल वा कम्प्युटरमा इन्स्टल गर्ने तरिका:</p>
+            <ol className="list-decimal space-y-1.5 pl-4">
+              <li>
+                ब्राउजरको माथिल्लो दायाँ कुनामा रहेको <b>तीन थोप्ला (⋮)</b> वा एड्रेस बारको <b>Install (⊕)</b> आइकनमा थिच्नुहोस्।
+              </li>
+              <li>
+                <b>"Install app"</b> वा <b>"Add to Home screen"</b> छान्नुहोस्।
+              </li>
+            </ol>
+            <p className="text-[11px] text-muted-foreground pt-1">
+              इन्स्टल भएपछि होम-स्क्रिनमा <b>शिक्षक डायरी</b> को ओरिजिनल आइकन आउँछ र अफलाइनमा समेत चल्छ।
+            </p>
+          </div>
+        )}
+
+        <div className="mt-4 flex justify-end">
+          <button type="button" className="btn text-xs" onClick={closeInstallHelp}>
+            बुझियो · Close
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

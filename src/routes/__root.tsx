@@ -12,9 +12,10 @@ import { useEffect, type ReactNode } from "react";
 
 import { AppNav } from "../components/app/AppNav";
 import { AuthGate, Background } from "../components/app/auth";
-import { BottomNav, ShellFrame, Sidebar } from "../components/app/Shell";
+import { BottomNav, InstallHelpModal, ShellFrame, Sidebar } from "../components/app/Shell";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { initPwa } from "../lib/pwa";
 
 function NotFoundComponent() {
   return (
@@ -81,24 +82,34 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Shikshak Diary — Teacher's Daily Record" },
+      { title: "शिक्षक डायरी — Shikshak Diary" },
+      { name: "application-name", content: "शिक्षक डायरी" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "शिक्षक डायरी" },
+      { name: "mobile-web-app-capable", content: "yes" },
       { name: "description", content: "Teacher diary: classes, lesson plans, attendance, assessments and monthly reports." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/icon-512.png" },
       { name: "twitter:card", content: "summary" },
       { name: "theme-color", content: "#13265e" },
-      
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "icon", type: "image/svg+xml", href: "/icon.svg" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
+      { rel: "icon", type: "image/png", sizes: "512x512", href: "/icon-512.png" },
       { rel: "icon", href: "/favicon.ico", sizes: "any" },
-      { rel: "icon", type: "image/png", href: "/favicon.png" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/site.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&family=Yatra+One&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&family=Yatra+One&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -123,6 +134,9 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    initPwa();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -132,10 +146,13 @@ function RootComponent() {
         <Sidebar />
         <div className="min-w-0 flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
           <AppNav />
-          <AuthGate><Outlet /></AuthGate>
+          <AuthGate>
+            <Outlet />
+          </AuthGate>
         </div>
       </ShellFrame>
       <BottomNav />
+      <InstallHelpModal />
     </QueryClientProvider>
   );
 }

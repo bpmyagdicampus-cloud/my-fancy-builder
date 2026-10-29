@@ -4,6 +4,7 @@ import { getLoadError, setEditGuard, useTeacher } from "@/lib/store";
 import { getCloudState, isStaff, listUnsaved, openTeacher, resolveConflict, retryNow, useCloud } from "@/lib/cloud";
 import { Avatar } from "@/components/app/auth";
 import { activeYear, currentYear, isPast } from "@/lib/years";
+import { triggerInstallApp, usePwa } from "@/lib/pwa";
 
 const SAVE_LABEL: Record<string, string> = {
   dirty: "Saving locally…",
@@ -16,6 +17,7 @@ const SAVE_LABEL: Record<string, string> = {
 export function AppNav() {
   const { profile, data } = useTeacher();
   const c = useCloud();
+  const pwa = usePwa();
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export function AppNav() {
     <header className="no-print sticky top-0 z-20 border-b border-border bg-card/95 pt-[env(safe-area-inset-top)] backdrop-blur">
       <div className="flex items-center gap-2 px-3 py-2 md:px-5">
         <Link to="/" className="flex items-center gap-2 leading-none text-primary md:hidden">
+          <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-8 w-8 rounded-lg shadow-sm" />
           <div>
             <span className="block font-display text-lg">शिक्षक डायरी</span>
             <span className="block text-[10px] font-medium tracking-wide text-muted-foreground">
@@ -70,6 +73,17 @@ export function AppNav() {
         </div>
 
         <div className="flex-1" />
+
+        {!pwa.isStandalone && (
+          <button
+            type="button"
+            onClick={() => void triggerInstallApp()}
+            className="chip !border-primary/40 !bg-secondary font-semibold text-primary"
+            title="मोबाइल वा कम्प्युटरमा एप इन्स्टल गर्नुहोस् · Install App"
+          >
+            📲 <span className="hidden sm:inline">Install App · </span>एप इन्स्टल
+          </button>
+        )}
 
         {showLinks && profile && yr && (
           <Link
@@ -210,7 +224,7 @@ export function AppNav() {
       {staff && c.save === "error" && (
         <div className="flex flex-wrap items-center justify-center gap-3 bg-secondary px-4 py-1.5 text-xs font-medium text-secondary-foreground">
           <span>
-            ☁️ अफलाइन सुरक्षा: तपाईंको काम यस ब्राउजर/डिभाइसमा सुरक्षित छ। इन्टरनेट जोडिएपछि स्वतः क्लाउडमा सर्नेछ।
+            ☁️ अफलाइन सुरक्षा: तपाईंको काम यस मोबाइल/कम्प्युटरको स्पेसमा सुरक्षित छ। इन्टरनेट जोडिएपछि स्वतः क्लाउडमा सर्नेछ।
           </span>
           <button
             className="rounded border border-border bg-card px-2.5 py-0.5 font-semibold text-primary shadow-sm"
