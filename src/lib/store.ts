@@ -24,7 +24,29 @@ export type Unit = { id: string; classId: string; unit: string; topics: string; 
 export type CalEvent = { id: string; type: string; title: string; from: string; to: string };
 export type Lesson = { id: string; classId: string; date: string; from: string; to: string; title: string; level: string; objectives: string; steps: { step: string; activity: string; theory: string }[]; resources: string; assessment: string };
 export type Plan = { id: string; type: string; classId: string; date: string; title: string; content: string; status: string };
-export type Diary = { id: string; classId: string; date: string; total: number; absent: string[]; reasons: string; codes: string[]; lh: number; unitId: string; topic: string; methods: string; studentActs: string; feedback: string; evaluation: string; remarks: string };
+export type Diary = {
+  id: string;
+  classId: string;
+  date: string;
+  total: number;
+  /** Explicit Present headcount set by the teacher (used in teacher Monthly/Daily report counts). */
+  present?: number;
+  absent: string[];
+  /** Attendance remarks (shown in the Attendance section). */
+  reasons: string;
+  codes: string[];
+  lh: number;
+  unitId: string;
+  topic: string;
+  methods: string;
+  studentActs: string;
+  feedback: string;
+  evaluation: string;
+  /** Special remark at the bottom of the diary entry. */
+  remarks: string;
+  /** Whether to include the Special remark in the Monthly Performance Report Remarks column. */
+  remarkInMonthly?: boolean;
+};
 export type Assess = { id: string; classId: string; date: string; kind: string; title: string; max: number; marks: Record<string, { m: string; c: string }> };
 export type Act = { id: string; date: string; category: string; title: string; details: string };
 /** Blended learning lesson plan: before class, in class, after class. */
@@ -181,6 +203,25 @@ export function updateData(fn: (d: Data) => void, bypassGuard = false) {
 }
 
 export const studentsOf = (c?: Cls) => (c?.students || "").split("\n").map((s) => s.trim()).filter(Boolean);
+
+/** Actual student names marked absent (ignores legacy "#1" placeholder tokens). */
+export const absentNamesOf = (e?: Pick<Diary, "absent"> | null) =>
+  (e?.absent || []).filter((s) => typeof s === "string" && !s.startsWith("#"));
+
+/** Effective Present student headcount for teacher reports (Monthly / Daily report). */
+export const presentCountOf = (e?: Pick<Diary, "total" | "absent" | "present"> | null) => {
+  if (!e) return 0;
+  if (typeof e.present === "number" && Number.isFinite(e.present)) {
+    return Math.max(0, e.present);
+  }
+  return Math.max(0, (e.total || 0) - (e.absent?.length || 0));
+};
+
+/** Effective Absent student headcount for teacher reports. */
+export const absentCountOf = (e?: Pick<Diary, "total" | "absent" | "present"> | null) => {
+  if (!e) return 0;
+  return Math.max(0, (e.total || 0) - presentCountOf(e));
+};
 
 export function markBackup() { try { localStorage.setItem(BACKUP_KEY, new Date().toISOString()); } catch { /* ignore */ } }
 /** Days since the last downloaded backup, or null if no backup was ever downloaded on this device. */

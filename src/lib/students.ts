@@ -98,7 +98,7 @@ export function moveStudents(d: Data, ids: string[], toClassId: string) {
 export function missingNames(d: Data, classId: string): string[] {
   const known = new Set(d.students.filter((s) => s.classId === classId).map((s) => normName(s.name)));
   const out: string[] = [], seen = new Set<string>();
-  const add = (n: string) => { const k = normName(n); if (k && !known.has(k) && !seen.has(k)) { seen.add(k); out.push(n.trim()); } };
+  const add = (n: string) => { const k = normName(n); if (k && !k.startsWith("#") && !known.has(k) && !seen.has(k)) { seen.add(k); out.push(n.trim()); } };
   [...d.diary].filter((e) => e.classId === classId).sort((a, b) => a.date.localeCompare(b.date)).forEach((e) => e.absent.forEach(add));
   d.assess.filter((a) => a.classId === classId).forEach((a) => Object.keys(a.marks).forEach(add));
   return out;
