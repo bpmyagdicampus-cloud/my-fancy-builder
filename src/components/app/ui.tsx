@@ -15,7 +15,7 @@ export function Page({
   children: ReactNode;
 }) {
   return (
-    <main className="mx-auto w-full max-w-6xl overflow-x-hidden px-2.5 py-3 sm:px-5 sm:py-6">
+    <main className="mx-auto max-w-6xl px-3 py-4 sm:px-4 sm:py-6">
       <div className="no-print mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border/70 pb-3.5 sm:mb-5">
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-2xl tracking-tight text-primary sm:text-3xl">{title}</h1>

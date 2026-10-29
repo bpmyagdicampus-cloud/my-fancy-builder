@@ -349,5 +349,5 @@ export function BottomNav() {
 
 /** Wraps the page area so the sidebar (desktop) and bottom bar (phone) have room. */
 export function ShellFrame({ children }: { children: ReactNode }) {
-  return <div className="min-h-screen w-full overflow-x-hidden md:flex">{children}</div>;
+  return <div className="min-h-screen md:flex">{children}</div>;
 }

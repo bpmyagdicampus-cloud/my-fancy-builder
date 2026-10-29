@@ -151,145 +151,133 @@ function Home() {
   const todayLhCount = todayDiaryEntries.reduce((sum, d) => sum + (Number(d.lh) || 0), 0);
 
   return (
-    <main className="mx-auto w-full max-w-6xl overflow-x-hidden px-2.5 py-3 sm:px-5 sm:py-5">
+    <main className="mx-auto max-w-6xl px-3 py-4 sm:px-4 sm:py-6">
       {/* Hero Banner: Large Campus Name + Campus Address underneath */}
-      <section className="panel mb-4 overflow-hidden border-primary/20 bg-gradient-to-br from-secondary/80 to-card p-3.5 sm:p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <section className="panel mb-5 bg-gradient-to-br from-secondary to-card">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0 flex-1">
-            <h1 className="font-display text-xl font-bold uppercase tracking-wide text-primary sm:text-3xl">
+            <h1 className="font-display text-2xl font-bold uppercase tracking-wide text-primary sm:text-3xl">
               {profile.campus || "MYAGDI MULTIPLE CAMPUS"}
             </h1>
             {profile.address && (
-              <div className="mt-0.5 text-xs font-medium text-muted-foreground sm:text-sm">
+              <div className="text-xs font-medium text-muted-foreground sm:text-sm">
                 📍 {profile.address}
               </div>
             )}
 
             <div className="mt-2 border-t border-border/60 pt-2">
-              <div className="text-base font-bold text-foreground sm:text-xl">{profile.name}</div>
-              <div className="text-xs font-medium text-muted-foreground sm:text-sm">
+              <div className="text-lg font-bold text-foreground sm:text-xl">{profile.name}</div>
+              <div className="text-xs text-muted-foreground sm:text-sm">
                 {profile.designation}
                 {profile.dept && ` · ${profile.dept}`}
               </div>
             </div>
 
-            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-0.5 font-semibold shadow-sm">
-                📅 आज: <b className="text-primary">{fmtBs(today)}</b>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+              <span>
+                Today: <b>{fmtBs(today)}</b>
               </span>
               {todayEv.map((e) => (
-                <span key={e.id} className="chip-on !py-0.5 !text-[11px]">
-                  🎉 {e.title} ({e.type})
+                <span key={e.id} className="chip-on">
+                  {e.title} ({e.type})
                 </span>
               ))}
               {!todayEv.length && (
-                <span className="text-[11px] text-muted-foreground">· आज विशेष बिदा छैन</span>
+                <span className="text-xs text-muted-foreground">· आज कुनै विशेष कार्यक्रम/बिदा छैन</span>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
-            <Link to="/diary" className="btn col-span-2 !min-h-9 !px-3 !py-1.5 text-xs sm:col-span-1">
-              + आजको दैनिक डायरी (Daily Diary)
+          <div className="flex flex-wrap gap-2">
+            <Link to="/diary" className="btn">
+              + Today's diary
             </Link>
-            <Link to="/reports" className="btn-soft !min-h-9 !px-2.5 !py-1.5 text-xs">
-              📊 मासिक प्रतिवेदन
+            <Link to="/reports" className="btn-soft">
+              Monthly report
             </Link>
-            <Link to="/department" className="btn-soft !min-h-9 !px-2.5 !py-1.5 text-xs">
-              🏛️ विभागीय व्यवस्थापन
+            <Link to="/department" className="btn-soft">
+              विभागीय व्यवस्थापन
             </Link>
-            <Link to="/sqc" className="btn-soft col-span-2 !min-h-9 !px-2.5 !py-1.5 text-xs sm:col-span-1">
-              🛡️ SQC
+            <Link to="/sqc" className="btn-soft">
+              SQC
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Top KPI Cards + Course Progress Card with Per-Class Bar Chart */}
-      <section className="mb-4 grid grid-cols-3 gap-2 lg:grid-cols-6">
-        <Link to="/setup" className="kpi-card min-w-0 !p-2.5 sm:!p-3.5 lg:col-span-1">
-          <div className="truncate text-[11px] font-semibold text-muted-foreground">सक्रिय कक्षा</div>
-          <div className="mt-1 flex items-baseline justify-between gap-1">
-            <span className="text-xl font-extrabold text-primary sm:text-2xl">{openClasses.length}</span>
-            <span className="truncate rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-semibold text-secondary-foreground">
-              {totalStudentsCount} विद्या.
-            </span>
-          </div>
-          <div className="mt-0.5 truncate text-[10px] text-muted-foreground">सक्रिय विषयहरू</div>
-        </Link>
-
-        <Link to="/diary" className="kpi-card min-w-0 !p-2.5 sm:!p-3.5 lg:col-span-1">
-          <div className="truncate text-[11px] font-semibold text-muted-foreground">आजको अध्यापन</div>
-          <div className="mt-1 flex items-baseline justify-between gap-1">
-            <span className="text-xl font-extrabold text-foreground sm:text-2xl">{todayDiaryEntries.length}</span>
-            <span className="truncate rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-semibold text-secondary-foreground">
-              {todayLhCount} LH
-            </span>
-          </div>
-          <div className="mt-0.5 truncate text-[10px] text-muted-foreground">
-            कुल डायरी: <b>{data.diary.length}</b>
-          </div>
-        </Link>
-
-        <div className="kpi-card min-w-0 !p-2.5 sm:!p-3.5 lg:col-span-1">
-          <div className="truncate text-[11px] font-semibold text-muted-foreground">आगामी कार्य</div>
-          <div className="mt-1 flex items-baseline justify-between gap-1">
-            <span className="text-xl font-extrabold text-primary sm:text-2xl">{upcomingAnnualEvents.length}</span>
-            <span className="truncate rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-foreground">
-              {upcomingReminders.length} रिमा.
-            </span>
-          </div>
-          <div className="mt-0.5 truncate text-[10px] text-muted-foreground">पात्रो र कार्यसूची</div>
-        </div>
-
-        {/* Overall & Per-Class Course Progress Bar Chart Card */}
-        <Link to="/reports" className="kpi-card col-span-3 min-w-0 !p-3 sm:!p-3.5 lg:col-span-3">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-bold text-foreground">
-              📊 कुल कोर्स प्रगति · Course Progress
-            </span>
-            <span className="text-xs font-extrabold text-primary">
-              {overallCoursePct}% <span className="font-normal text-muted-foreground">({totalDoneLh}/{totalPlannedLh} LH)</span>
-            </span>
-          </div>
-          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${overallCoursePct}%` }} />
-          </div>
-
-          {openClasses.length > 0 && (
-            <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-border/60 pt-2">
-              {openClasses.map((c) => {
-                const done = totalLhDone(data.diary, c.id);
-                const p = pct(done, c.totalLh);
-                return (
-                  <div key={c.id} className="min-w-0">
-                    <div className="flex items-center justify-between gap-1 text-[10px]">
-                      <span className="truncate font-semibold text-foreground">
-                        {c.name} <span className="font-normal text-muted-foreground">({c.code || c.subject})</span>
-                      </span>
-                      <span className="shrink-0 font-bold text-primary">{p}%</span>
-                    </div>
-                    <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full bg-primary transition-all"
-                        style={{ width: `${Math.max(p, done > 0 ? 4 : 0)}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+      {/* 4 Uniform, Balanced KPI Cards (2x2 on mobile, 4 equal columns on desktop) */}
+      <section className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Link to="/setup" className="kpi-card flex min-w-0 flex-col justify-between">
+          <div>
+            <div className="text-xs font-semibold text-muted-foreground">सक्रिय कक्षा र विषय · Classes</div>
+            <div className="mt-1 flex items-baseline justify-between gap-2">
+              <span className="text-2xl font-extrabold text-primary">{openClasses.length}</span>
+              <span className="chip">{totalStudentsCount} विद्यार्थी</span>
             </div>
-          )}
+          </div>
+          <div className="mt-2 text-xs text-muted-foreground">कुल दर्ता भएका सक्रिय विषयहरू</div>
         </Link>
+
+        {/* Course Progress Card with Per-Class Mini Bar Charts fitting inside the same card size */}
+        <Link to="/reports" className="kpi-card flex min-w-0 flex-col justify-between">
+          <div className="flex items-baseline justify-between gap-1">
+            <span className="truncate text-xs font-semibold text-muted-foreground">कुल कोर्स प्रगति</span>
+            <span className="shrink-0 text-sm font-extrabold text-primary">
+              {overallCoursePct}% <span className="text-[11px] font-normal text-muted-foreground">({totalDoneLh}/{totalPlannedLh})</span>
+            </span>
+          </div>
+          <div className="mt-1.5 max-h-24 space-y-1 overflow-y-auto pr-0.5">
+            {openClasses.map((c) => {
+              const done = totalLhDone(data.diary, c.id);
+              const p = pct(done, c.totalLh);
+              return (
+                <div key={c.id} className="flex items-center gap-1.5 text-[11px]">
+                  <span className="w-20 shrink-0 truncate font-medium text-foreground" title={`${c.name} · ${c.subject}`}>
+                    {c.name}
+                  </span>
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{ width: `${Math.max(p, done > 0 ? 5 : 0)}%` }}
+                    />
+                  </div>
+                  <span className="w-7 shrink-0 text-right font-bold text-primary">{p}%</span>
+                </div>
+              );
+            })}
+            {!openClasses.length && <div className="text-xs text-muted-foreground">कुनै कक्षा छैन</div>}
+          </div>
+        </Link>
+
+        <Link to="/diary" className="kpi-card flex min-w-0 flex-col justify-between">
+          <div>
+            <div className="text-xs font-semibold text-muted-foreground">आजको अध्यापन · Today's Diary</div>
+            <div className="mt-1 flex items-baseline justify-between gap-2">
+              <span className="text-2xl font-extrabold text-foreground">{todayDiaryEntries.length}</span>
+              <span className="chip">{todayLhCount} LH आज</span>
+            </div>
+          </div>
+          <div className="mt-2 text-xs text-muted-foreground">
+            कुल डायरी रेकर्ड: <b>{data.diary.length}</b>
+          </div>
+        </Link>
+
+        <div className="kpi-card flex min-w-0 flex-col justify-between">
+          <div>
+            <div className="text-xs font-semibold text-muted-foreground">आगामी कार्यक्रम र कार्य · Upcoming</div>
+            <div className="mt-1 flex items-baseline justify-between gap-2">
+              <span className="text-2xl font-extrabold text-primary">{upcomingAnnualEvents.length}</span>
+              <span className="chip">{upcomingReminders.length} रिमाइन्डर</span>
+            </div>
+          </div>
+          <div className="mt-2 text-xs text-muted-foreground">क्याम्पस वार्षिक पात्रो र कार्यसूची</div>
+        </div>
       </section>
 
       {hasAlerts && actSum && (
-        <section className="panel mb-4 border-primary/40 bg-primary/5 !p-3">
-          <h2 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-primary">
-            <span>🔔</span>
-            <span>ध्यानाकर्षण तथा जिम्मेवारीहरू · Action Notifications</span>
-          </h2>
-          <div className="flex flex-wrap gap-1.5 text-xs">
+        <section className="panel mb-5 border-primary/40">
+          <h2 className="mb-2 text-base font-bold">ध्यानाकर्षण तथा जिम्मेवारीहरू · Action Notifications</h2>
+          <div className="flex flex-wrap gap-2 text-xs">
             {admin && actSum.submittedPlans > 0 && (
               <Link to="/department" className="chip-on">
                 स्वीकृतिको लागि पेस भएका वार्षिक योजना: {actSum.submittedPlans}
@@ -302,7 +290,7 @@ function Home() {
             )}
             {admin && actSum.pendingRevisions > 0 && (
               <Link to="/department" className="chip-on">
-                बजेट संशोधन अनुरोध: {actSum.pendingRevisions}
+                बजेट संशोधन अनुरोध (Pending revisions): {actSum.pendingRevisions}
               </Link>
             )}
             {admin && actSum.pendingSqcReports > 0 && (
@@ -324,22 +312,25 @@ function Home() {
         </section>
       )}
 
-      {/* Campus Annual Calendar — 2 columns per row on mobile */}
-      <section className="panel mb-4 !p-3 sm:!p-4">
-        <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 border-b border-border/80 pb-2">
-          <div className="min-w-0">
-            <h2 className="text-sm font-bold sm:text-base">
-              📅 Campus Annual Calendar · क्याम्पस वार्षिक क्यालेन्डर
+      {/* Campus Annual Calendar — 2 per row on mobile, 3 on tablet/desktop */}
+      <section className="panel mb-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2.5">
+          <div>
+            <h2 className="text-base font-bold sm:text-lg">
+              Campus Annual Calendar · क्याम्पस वार्षिक क्यालेन्डर
             </h2>
+            <p className="text-xs text-muted-foreground">
+              क्याम्पस प्रशासनद्वारा निर्धारित वार्षिक शैक्षिक कार्यक्रम, परीक्षा र बिदाहरू
+            </p>
           </div>
-          <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
             {mergedAnnualEvents.length > 0 && (
-              <div className="inline-flex rounded-md border border-border bg-muted/50 p-0.5">
+              <div className="inline-flex rounded-md border border-border bg-muted/40 p-0.5">
                 <button
                   type="button"
-                  className={`rounded px-2 py-0.5 font-semibold transition-colors ${
+                  className={`rounded px-2.5 py-1 text-xs transition-colors ${
                     !showAllYear && upcomingAnnualEvents.length > 0
-                      ? "bg-primary text-primary-foreground shadow-sm"
+                      ? "bg-primary font-semibold text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                   onClick={() => setShowAllYear(false)}
@@ -348,25 +339,25 @@ function Home() {
                 </button>
                 <button
                   type="button"
-                  className={`rounded px-2 py-0.5 font-semibold transition-colors ${
+                  className={`rounded px-2.5 py-1 text-xs transition-colors ${
                     showAllYear || upcomingAnnualEvents.length === 0
-                      ? "bg-primary text-primary-foreground shadow-sm"
+                      ? "bg-primary font-semibold text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                   onClick={() => setShowAllYear(true)}
                 >
-                  सबै ({mergedAnnualEvents.length})
+                  वर्षभरिका सबै ({mergedAnnualEvents.length})
                 </button>
               </div>
             )}
 
             {calTypes.length > 0 && (
               <select
-                className="field !min-h-7 !w-auto !px-2 !py-0.5 !text-[11px]"
+                className="field !h-8 !w-auto !py-0 !text-xs"
                 value={calFilter}
                 onChange={(e) => setCalFilter(e.target.value)}
               >
-                <option value="">सबै प्रकार ({targetAnnualEvents.length})</option>
+                <option value="">All types · सबै प्रकार ({targetAnnualEvents.length})</option>
                 {calTypes.map((t) => (
                   <option key={t.id} value={t.name}>
                     {t.name}
@@ -375,22 +366,21 @@ function Home() {
               </select>
             )}
             {admin && (
-              <Link to="/setup" className="btn-soft !min-h-7 !px-2 !py-0.5 text-[11px]">
-                Setup →
+              <Link to="/setup" className="btn-soft !px-2.5 !py-1 text-xs">
+                Manage in Setup →
               </Link>
             )}
           </div>
         </div>
 
-        {/* 2 columns per row on mobile (grid-cols-2), 3 on tablet, 4 on desktop */}
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-          {filteredAnnualEvents.slice(0, 10).map((ev) => {
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+          {filteredAnnualEvents.slice(0, 9).map((ev) => {
             const isToday = inRange(today, ev.from, ev.to || ev.from);
             const isHol = /holiday|बिदा|vacation/i.test(ev.type);
             return (
               <div
                 key={ev.id}
-                className={`min-w-0 overflow-hidden rounded-lg border p-2 text-[11px] transition-all ${
+                className={`min-w-0 rounded-lg border p-2.5 text-xs ${
                   isToday
                     ? "border-primary bg-primary/10 shadow-sm"
                     : isHol
@@ -400,7 +390,7 @@ function Home() {
               >
                 <div className="flex items-center justify-between gap-1">
                   <span
-                    className={`truncate rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                    className={`truncate rounded px-1.5 py-0.5 text-[10px] font-semibold ${
                       isHol
                         ? "bg-destructive text-destructive-foreground"
                         : "bg-secondary text-secondary-foreground"
@@ -408,12 +398,12 @@ function Home() {
                   >
                     {ev.type}
                   </span>
-                  {isToday && <span className="shrink-0 text-[10px] font-bold text-primary">आज</span>}
+                  {isToday && <span className="shrink-0 font-bold text-primary">आज</span>}
                 </div>
-                <div className="mt-1 truncate font-bold text-xs text-foreground" title={ev.title}>
+                <div className="mt-1.5 truncate font-bold text-sm text-foreground" title={ev.title}>
                   {ev.title}
                 </div>
-                <div className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                <div className="mt-0.5 truncate font-medium text-muted-foreground">
                   📅 {fmtBs(ev.from)}
                   {ev.to && ev.to !== ev.from && ` → ${fmtBs(ev.to)}`}
                 </div>
@@ -442,124 +432,80 @@ function Home() {
         )}
       </section>
 
-      {/* My Classes — Compact 2-Column Cards on Mobile (matching KPI card size) */}
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-bold sm:text-base">
-          📚 My classes — course completion · मेरा कक्षा र कोर्स प्रगति
-        </h2>
-        <Link to="/setup" className="text-xs font-semibold text-primary hover:underline">
-          + कक्षा व्यवस्थापन (Setup) →
-        </Link>
-      </div>
-      <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
+      {/* My Classes — 2 columns on mobile, 3 on desktop */}
+      <h2 className="mb-2 text-lg font-bold">My classes — course completion</h2>
+      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
         {openClasses.map((c) => {
           const done = totalLhDone(data.diary, c.id);
           const p = pct(done, c.totalLh);
           const n = data.diary.filter((e) => e.classId === c.id).length;
-          const stuCount = studentsOf(c).length;
           return (
-            <div
+            <Link
+              to="/plans"
               key={c.id}
-              className="kpi-card flex min-w-0 flex-col justify-between overflow-hidden !p-2.5 sm:!p-3.5"
+              className="panel block min-w-0 transition hover:border-primary"
             >
-              <div className="min-w-0">
-                <div className="flex items-start justify-between gap-1">
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-xs font-bold text-foreground sm:text-sm">{c.name}</div>
-                    <div className="truncate text-[11px] text-muted-foreground" title={c.subject}>
-                      {c.subject} {c.code && `(${c.code})`}
-                    </div>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-bold text-foreground">{c.name}</div>
+                  <div className="truncate text-xs text-muted-foreground sm:text-sm">
+                    {c.subject} {c.code}
                   </div>
-                  <span className="shrink-0 rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-bold text-primary">
-                    {p}%
-                  </span>
                 </div>
-
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-primary transition-all"
-                    style={{ width: `${Math.max(p, done > 0 ? 4 : 0)}%` }}
-                  />
-                </div>
-
-                <div className="mt-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
-                  <span>
-                    <b>{done}</b>/{c.totalLh} LH
-                  </span>
-                  <span>{n} classes</span>
-                  <span>{stuCount} stu</span>
-                </div>
+                <span className="chip shrink-0 font-bold text-primary">{p}%</span>
               </div>
-
-              <div className="mt-2 flex gap-1 border-t border-border/60 pt-2">
-                <Link to="/diary" className="btn-soft !min-h-7 flex-1 !px-1.5 !py-0.5 text-[10px]">
-                  + डायरी
-                </Link>
-                <Link to="/plans" className="btn-soft !min-h-7 flex-1 !px-1.5 !py-0.5 text-[10px]">
-                  योजना
-                </Link>
+              <div className="my-2 h-2 overflow-hidden rounded bg-muted">
+                <div className="h-full bg-primary" style={{ width: `${p}%` }} />
               </div>
-            </div>
+              <div className="truncate text-xs text-muted-foreground">
+                {done} / {c.totalLh} LH · {p}% · {n} classes taken
+              </div>
+            </Link>
           );
         })}
         {!openClasses.length && (
-          <div className="panel col-span-full py-6 text-center text-xs text-muted-foreground">
-            अहिलेसम्म कुनै कक्षा थपिएको छैन।{" "}
-            <Link to="/setup" className="font-semibold text-primary underline">
-              Setup बाट कक्षा र विषय थप्नुहोस् →
-            </Link>
-          </div>
+          <p className="col-span-full text-sm text-muted-foreground">
+            No classes yet — add your classes in <Link to="/setup" className="underline">Setup</Link>.
+          </p>
         )}
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <section className="panel !p-3 sm:!p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-bold">⏰ Upcoming reminders & plans · आगामी कार्यहरू</h2>
-            <Link to="/records" className="text-xs font-semibold text-primary hover:underline">
-              + थप्नुहोस्
-            </Link>
-          </div>
-          <ul className="divide-y divide-border/70 text-xs sm:text-sm">
+      <div className="grid gap-4 md:grid-cols-2">
+        <section className="panel">
+          <h2 className="mb-2 font-bold">Upcoming reminders & plans</h2>
+          <ul className="divide-y divide-border text-sm">
             {upcomingReminders.map((u, i) => (
               <li key={i} className="flex justify-between gap-2 py-1.5">
                 <span className="min-w-0 truncate">{u.t}</span>
-                <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">
+                <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">
                   <Dt d={u.d} />
                 </span>
               </li>
             ))}
             {!upcomingReminders.length && (
-              <li className="py-3 text-center text-xs text-muted-foreground">
-                कुनै पेन्डिङ रिमाइन्डर वा योजना छैन।
-              </li>
+              <li className="text-muted-foreground">Nothing pending.</li>
             )}
           </ul>
         </section>
 
-        <section className="panel !p-3 sm:!p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-bold">🏆 Research & other activities · अतिरिक्त क्रियाकलाप</h2>
-            <Link to="/records" className="text-xs font-semibold text-primary hover:underline">
-              हेर्नुहोस् →
-            </Link>
-          </div>
+        <section className="panel">
+          <h2 className="mb-2 font-bold">Research & other activities recorded</h2>
           <div className="flex flex-wrap gap-1.5">
             {actCounts.map(([c, n]) => (
-              <span key={c} className="chip text-[11px]">
+              <span key={c} className="chip">
                 {c}: <b>{n}</b>
               </span>
             ))}
             {!actCounts.length && (
-              <span className="py-3 text-xs text-muted-foreground">
-                अतिरिक्त क्रियाकलाप रेकर्ड गरिएको छैन — <Link to="/records" className="underline">Records</Link> बाट थप्नुहोस्।
+              <span className="text-sm text-muted-foreground">
+                None yet — add in <Link to="/records" className="underline">Records</Link>.
               </span>
             )}
           </div>
         </section>
       </div>
 
-      <footer className="no-print mt-8 border-t border-border pt-4 text-center text-xs font-medium text-muted-foreground">
+      <footer className="no-print mt-10 border-t border-border pt-4 text-center text-xs font-medium text-muted-foreground">
         © 2026 Shikshak Diary. Developed by Bishnu Acharya. All rights reserved.
       </footer>
     </main>

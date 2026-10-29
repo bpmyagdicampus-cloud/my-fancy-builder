@@ -149,7 +149,7 @@ function RootComponent() {
       <Background />
       <ShellFrame>
         <Sidebar />
-        <div className="min-w-0 w-full flex-1 overflow-x-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
+        <div className="min-w-0 flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
           <AppNav />
           <AuthGate>
             <Outlet />
