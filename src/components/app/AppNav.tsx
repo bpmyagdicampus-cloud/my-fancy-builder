@@ -1,10 +1,12 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getLoadError, setEditGuard, useTeacher } from "@/lib/store";
 import { getCloudState, isStaff, listUnsaved, openTeacher, resolveConflict, retryNow, useCloud } from "@/lib/cloud";
 import { Avatar } from "@/components/app/auth";
 import { activeYear, currentYear, isPast } from "@/lib/years";
 import { triggerInstallApp, usePwa } from "@/lib/pwa";
+import { fmtBs, todayBs } from "@/lib/bs";
+import { dispatchToggleSidebar, Icon, useShell, type SubMenuItem } from "@/components/app/Shell";
 
 const SAVE_LABEL: Record<string, string> = {
   dirty: "Saving…",
@@ -18,12 +20,22 @@ export function AppNav() {
   const { profile, data } = useTeacher();
   const c = useCloud();
   const pwa = usePwa();
+  const nav = useNavigate();
+  const { items, active } = useShell();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [err, setErr] = useState<string | null>(null);
+  const [openMenuTo, setOpenMenuTo] = useState<string | null>(null);
+  const [menuSearch, setMenuSearch] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
 
   useEffect(() => {
     setErr(getLoadError());
   }, [profile?.id]);
+
+  useEffect(() => {
+    setOpenMenuTo(null);
+    setSearchFocused(false);
+  }, [path]);
 
   useEffect(() => {
     setEditGuard((d) => {
@@ -54,10 +66,57 @@ export function AppNav() {
   const yr = currentYear(data);
   const actYr = activeYear(data, cloudActiveName);
   const past = isPast(data, cloudActiveName);
+  const today = todayBs();
+
+  const navigateSub = (sub: SubMenuItem) => {
+    setOpenMenuTo(null);
+    setMenuSearch("");
+    setSearchFocused(false);
+    void nav({ to: sub.to as any }).then(() => {
+      if (sub.tab) {
+        try {
+          const url = new URL(window.location.href);
+          url.searchParams.set("tab", sub.tab);
+          window.history.replaceState({}, "", url.toString());
+        } catch {
+          /* ignore */
+        }
+        window.dispatchEvent(new CustomEvent("shikshak-select-tab", { detail: sub.tab }));
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("shikshak-select-tab", { detail: sub.tab }));
+        }, 40);
+      }
+    });
+  };
+
+  // All searchable menu/sub-menu destinations for the quick Search Menu bar
+  const allSearchItems: SubMenuItem[] = items.flatMap((m) =>
+    m.subs
+      ? m.subs
+      : [{ labelNe: m.ne, labelEn: m.en, to: m.to }]
+  );
+  const filteredSearch = menuSearch.trim()
+    ? allSearchItems.filter(
+        (s) =>
+          s.labelNe.toLowerCase().includes(menuSearch.trim().toLowerCase()) ||
+          s.labelEn.toLowerCase().includes(menuSearch.trim().toLowerCase())
+      )
+    : [];
 
   return (
-    <header className="no-print sticky top-0 z-20 w-full border-b border-border bg-card/95 pt-[env(safe-area-inset-top)] backdrop-blur">
-      <div className="flex items-center gap-1.5 px-3 py-2 sm:gap-2 md:px-5">
+    <header className="no-print sticky top-0 z-30 w-full shrink-0 border-b border-border bg-card shadow-sm">
+      {/* Top Tier: Campus Name, Academic Year, Today's Date, Quick Search & User Account */}
+      <div className="flex items-center gap-1.5 px-3 py-1.5 sm:gap-2.5 md:px-4">
+        {/* Desktop Sidebar Toggle Button (Always visible so user can open/close sidebar anytime) */}
+        <button
+          type="button"
+          onClick={dispatchToggleSidebar}
+          className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/60 text-foreground transition hover:bg-muted md:inline-flex"
+          title="Open / Close Sidebar · साइडबार खोल्ने वा सानो बनाउने"
+        >
+          <Icon n="menu" size={17} />
+        </button>
+
         {/* Mobile Logo & Title */}
         <Link to="/" className="flex shrink-0 items-center gap-2 leading-none text-primary md:hidden">
           <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-8 w-8 shrink-0 rounded-lg shadow-sm" />
@@ -69,20 +128,57 @@ export function AppNav() {
           </div>
         </Link>
 
-        {/* Desktop Campus Name Display on Left of Top Bar */}
+        {/* Desktop Campus Name & Today's Date Badges (Paathshala-inspired top bar) */}
         <div className="hidden min-w-0 items-center gap-2 md:flex">
-          <span className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-secondary/70 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-secondary/70 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-primary"
+          >
             <span>🏛️</span>
-            <span className="truncate">{profile?.campus || "MYAGDI MULTIPLE CAMPUS"}</span>
-          </span>
+            <span className="max-w-64 truncate">{profile?.campus || "MYAGDI MULTIPLE CAMPUS"}</span>
+          </Link>
           {profile?.address && (
-            <span className="truncate text-xs font-medium text-muted-foreground">
+            <span className="hidden truncate text-xs font-medium text-muted-foreground lg:inline">
               📍 {profile.address}
             </span>
           )}
+          <span className="hidden items-center gap-1 rounded-md border border-border bg-muted/50 px-2 py-1 text-xs font-medium text-muted-foreground xl:inline-flex">
+            🗓️ {fmtBs(today)}
+          </span>
         </div>
 
         <div className="flex-1" />
+
+        {/* Desktop Quick Menu Search (Paathshala-style "Search menu...") */}
+        <div className="relative hidden w-48 lg:block xl:w-56">
+          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-1 text-xs">
+            <Icon n="search" size={14} />
+            <input
+              type="search"
+              placeholder="Search menu · मेनु खोज्नुहोस्..."
+              className="w-full bg-transparent text-xs outline-none"
+              value={menuSearch}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 180)}
+              onChange={(e) => setMenuSearch(e.target.value)}
+            />
+          </div>
+          {searchFocused && filteredSearch.length > 0 && (
+            <div className="absolute left-0 right-0 top-9 z-50 max-h-64 overflow-y-auto rounded-xl border border-border bg-card p-1.5 shadow-xl">
+              {filteredSearch.map((s, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onMouseDown={() => navigateSub(s)}
+                  className="flex w-full flex-col rounded-lg px-2.5 py-1.5 text-left text-xs transition hover:bg-secondary"
+                >
+                  <span className="font-semibold text-foreground">{s.labelNe}</span>
+                  <span className="text-[10px] text-muted-foreground">{s.labelEn}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {pwa.canInstall && !pwa.isStandalone && (
           <button
@@ -105,7 +201,7 @@ export function AppNav() {
             }`}
             title="Academic year · शैक्षिक वर्ष परिवर्तन वा व्यवस्थापन गर्नुहोस्"
           >
-            📅 {yr.name}
+            📅 FY {yr.name}
             {past ? <span className="hidden sm:inline">{isAdmin ? " · inactive" : " · view only"}</span> : ""}
           </Link>
         )}
@@ -132,10 +228,10 @@ export function AppNav() {
         {signedIn ? (
           <Link
             to="/account"
-            className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-border bg-background py-0.5 pl-0.5 pr-1 sm:pr-3 text-xs font-semibold shadow-sm transition hover:bg-muted sm:text-sm"
+            className="flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-border bg-background py-0.5 pl-0.5 pr-1 sm:pr-3 text-xs font-semibold shadow-sm transition hover:bg-muted"
             title="My account & Sign out · मेरो खाता र बाहिरिनुहोस्"
           >
-            <Avatar name={c.me?.name} path={c.me?.avatar_path} size={30} />
+            <Avatar name={c.me?.name} path={c.me?.avatar_path} size={28} />
             <span className="hidden max-w-36 truncate sm:inline">{c.me?.name || c.email}</span>
           </Link>
         ) : (
@@ -145,8 +241,63 @@ export function AppNav() {
         )}
       </div>
 
+      {/* Second Tier (Desktop Only): Paathshala-Style Horizontal Menu Bar with Dropdown Sub-Menus */}
+      {showLinks && (
+        <nav
+          className="hidden items-center gap-1 border-t border-primary/20 bg-primary px-3 py-1 text-primary-foreground md:flex"
+          aria-label="Desktop horizontal navigation with sub-menus"
+        >
+          {items.map((item) => {
+            const isOn = active(item.to);
+            const hasSubs = !!item.subs && item.subs.length > 0;
+            const isOpen = openMenuTo === item.to;
+
+            return (
+              <div
+                key={item.to}
+                className="relative"
+                onMouseEnter={() => hasSubs && setOpenMenuTo(item.to)}
+                onMouseLeave={() => hasSubs && setOpenMenuTo((prev) => (prev === item.to ? null : prev))}
+              >
+                <Link
+                  to={item.to}
+                  onClick={() => setOpenMenuTo(null)}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+                    isOn
+                      ? "bg-white/20 text-white shadow-sm"
+                      : "text-primary-foreground/90 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  <Icon n={item.icon} size={15} />
+                  <span className="whitespace-nowrap">{item.ne}</span>
+                  {hasSubs && <Icon n="chevDown" size={13} />}
+                </Link>
+
+                {hasSubs && isOpen && (
+                  <div className="absolute left-0 top-full z-50 pt-1">
+                    <div className="w-60 rounded-xl border border-border bg-card p-1.5 text-foreground shadow-xl">
+                      {item.subs!.map((sub, sIdx) => (
+                        <button
+                          key={sIdx}
+                          type="button"
+                          onClick={() => navigateSub(sub)}
+                          className="flex w-full flex-col rounded-lg px-3 py-1.5 text-left text-xs transition hover:bg-secondary"
+                        >
+                          <span className="font-semibold text-foreground">{sub.labelNe}</span>
+                          <span className="text-[10px] text-muted-foreground">{sub.labelEn}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </nav>
+      )}
+
       {viewingOther && (
-        <div className="flex flex-wrap items-center justify-center gap-3 bg-accent px-4 py-1.5 text-xs font-medium text-accent-foreground">
+        <div className="flex flex-wrap items-center justify-center gap-3 bg-accent px-4 py-1 text-xs font-medium text-accent-foreground">
           <span>Admin view: you are viewing/editing {profile?.name ?? "another teacher"}'s diary.</span>
           <button
             className="underline font-bold"
@@ -165,7 +316,7 @@ export function AppNav() {
         c.activeYear &&
         yr &&
         yr.name.trim().toLowerCase() !== c.activeYear.name.trim().toLowerCase() && (
-          <div className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground">
+          <div className="bg-accent px-4 py-1 text-center text-xs font-medium text-accent-foreground">
             सक्रिय शैक्षिक वर्ष <b>{c.activeYear.name}</b> हो, तर तपाइँकोमा <b>{yr.name}</b> खुलेको छ।{" "}
             <Link to="/years" className="underline font-bold ml-1">
               Academic years मा गएर मिलाउनुहोस् →
@@ -174,7 +325,7 @@ export function AppNav() {
         )}
 
       {showLinks && profile && past && (
-        <div className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground">
+        <div className="bg-accent px-4 py-1 text-center text-xs font-medium text-accent-foreground">
           {isAdmin ? (
             <>
               तपाइँ अघिल्लो/निष्क्रिय शैक्षिक वर्ष ({yr?.name}) मा हुनुहुन्छ। सबै शिक्षकका लागि यसमा काम गर्न मिल्ने बनाउन{" "}
@@ -196,16 +347,16 @@ export function AppNav() {
       )}
 
       {err && (
-        <div className="bg-destructive px-4 py-2 text-center text-sm font-semibold text-destructive-foreground">
+        <div className="bg-destructive px-4 py-1.5 text-center text-xs font-semibold text-destructive-foreground">
           {err}
         </div>
       )}
 
       {staff && c.save === "conflict" && (
-        <div className="flex flex-wrap items-center justify-center gap-3 bg-destructive px-4 py-2 text-sm text-destructive-foreground">
+        <div className="flex flex-wrap items-center justify-center gap-3 bg-destructive px-4 py-1.5 text-xs text-destructive-foreground">
           <span>{c.saveMsg} Which copy do you want to keep?</span>
           <button
-            className="rounded bg-background px-2 py-1 font-semibold text-foreground"
+            className="rounded bg-background px-2 py-0.5 font-semibold text-foreground"
             onClick={() =>
               confirm("Keep THIS device's copy and overwrite the cloud copy?") && void resolveConflict("keep-mine")
             }
@@ -213,7 +364,7 @@ export function AppNav() {
             Keep this device's copy
           </button>
           <button
-            className="rounded bg-background px-2 py-1 font-semibold text-foreground"
+            className="rounded bg-background px-2 py-0.5 font-semibold text-foreground"
             onClick={() =>
               confirm("Use the cloud copy? This device's copy will be downloaded as a file first.") &&
               void resolveConflict("use-cloud")
@@ -225,7 +376,7 @@ export function AppNav() {
       )}
 
       {staff && c.save === "error" && (
-        <div className="flex flex-wrap items-center justify-center gap-3 bg-secondary px-4 py-1.5 text-xs font-medium text-secondary-foreground">
+        <div className="flex flex-wrap items-center justify-center gap-3 bg-secondary px-4 py-1 text-xs font-medium text-secondary-foreground">
           <span>
             ☁️ अफलाइन सुरक्षा: तपाईंको काम यस मोबाइल/कम्प्युटरको स्पेसमा सुरक्षित छ। इन्टरनेट जोडिएपछि स्वतः क्लाउडमा सर्नेछ।
           </span>
@@ -239,7 +390,7 @@ export function AppNav() {
       )}
 
       {staff && listUnsaved(c.userId).length > 0 && (
-        <div className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground">
+        <div className="bg-accent px-4 py-1 text-center text-xs font-medium text-accent-foreground">
           A copy of earlier UNSAVED work is stored on this device.{" "}
           <Link to="/account" className="underline">
             Open My account

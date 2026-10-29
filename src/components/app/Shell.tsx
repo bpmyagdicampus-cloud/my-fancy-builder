@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Avatar } from "@/components/app/auth";
 import { isStaff, signOut, useCloud } from "@/lib/cloud";
 import { triggerInstallApp, usePwa } from "@/lib/pwa";
@@ -25,6 +25,9 @@ const P: Record<string, string> = {
   dept: "M4 21V8l8-5 8 5v13M9 21v-5h6v5M9 11h.01M15 11h.01",
   plus: "M12 5v14M5 12h14",
   download: "M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2",
+  menu: "M4 6h16M4 12h16M4 18h16",
+  chevDown: "M6 9l6 6 6-6",
+  search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35",
 };
 
 export const Icon = ({ n, size = 20 }: { n: keyof typeof P; size?: number }) => (
@@ -43,22 +46,126 @@ export const Icon = ({ n, size = 20 }: { n: keyof typeof P; size?: number }) => 
   </svg>
 );
 
-type Item = { to: string; ne: string; en: string; icon: keyof typeof P; who: "staff" | "all" | "admin" };
-const ITEMS: Item[] = [
+export type SubMenuItem = { labelNe: string; labelEn: string; to: string; tab?: string };
+export type MenuItem = {
+  to: string;
+  ne: string;
+  en: string;
+  icon: keyof typeof P;
+  who: "staff" | "all" | "admin";
+  subs?: SubMenuItem[];
+};
+
+export const MENU_ITEMS: MenuItem[] = [
   { to: "/", ne: "गृह", en: "Home", icon: "home", who: "staff" },
-  { to: "/diary", ne: "दैनिक डायरी", en: "Daily Diary", icon: "book", who: "staff" },
-  { to: "/plans", ne: "योजना", en: "Plans", icon: "plan", who: "staff" },
-  { to: "/records", ne: "अभिलेख", en: "Records", icon: "folder", who: "staff" },
-  { to: "/reports", ne: "प्रतिवेदन", en: "Reports", icon: "chart", who: "staff" },
-  { to: "/sqc", ne: "SQC", en: "Student Quality Control", icon: "shield", who: "all" },
-  { to: "/department", ne: "विभागीय व्यवस्थापन", en: "Department Management", icon: "dept", who: "staff" },
+  {
+    to: "/diary",
+    ne: "दैनिक डायरी",
+    en: "Daily Diary",
+    icon: "book",
+    who: "staff",
+    subs: [
+      { labelNe: "दैनिक डायरी र हाजिरी", labelEn: "Daily Diary & Attendance", to: "/diary" },
+      { labelNe: "विद्यार्थी व्यवस्थापन", labelEn: "Manage Students", to: "/students" },
+    ],
+  },
+  {
+    to: "/plans",
+    ne: "योजना",
+    en: "Plans",
+    icon: "plan",
+    who: "staff",
+    subs: [
+      { labelNe: "वार्षिक / एकाइ योजना", labelEn: "Annual / Unit Plan", to: "/plans", tab: "annual" },
+      { labelNe: "मासिक र दैनिक योजना", labelEn: "Monthly & Daily Plans", to: "/plans", tab: "plans" },
+      { labelNe: "पाठ योजना (Lesson Plan)", labelEn: "Lesson Plans", to: "/plans", tab: "lesson" },
+      { labelNe: "मिश्रित पाठ योजना", labelEn: "Blended Lesson Plans", to: "/plans", tab: "blended" },
+    ],
+  },
+  {
+    to: "/records",
+    ne: "अभिलेख",
+    en: "Records",
+    icon: "folder",
+    who: "staff",
+    subs: [
+      { labelNe: "विद्यार्थी मूल्याङ्कन र परीक्षा", labelEn: "Student Assessments & Exams", to: "/records", tab: "assess" },
+      { labelNe: "अनुसन्धान र अतिरिक्त क्रियाकलाप", labelEn: "Research & Other Activities", to: "/records", tab: "acts" },
+      { labelNe: "रिमाइन्डर र कार्यहरू", labelEn: "Reminders", to: "/records", tab: "rem" },
+      { labelNe: "शिक्षक बिदा अभिलेख", labelEn: "Leave Record", to: "/records", tab: "leave" },
+    ],
+  },
+  {
+    to: "/reports",
+    ne: "प्रतिवेदन",
+    en: "Reports",
+    icon: "chart",
+    who: "staff",
+    subs: [
+      { labelNe: "मासिक कार्यसम्पादन प्रतिवेदन", labelEn: "Monthly Performance Report", to: "/reports", tab: "month" },
+      { labelNe: "दैनिक प्रतिवेदन", labelEn: "Daily Activity Report", to: "/reports", tab: "day" },
+      { labelNe: "विद्यार्थी हाजिरी र प्रगति", labelEn: "Student Attendance & Marks Report", to: "/reports", tab: "student" },
+      { labelNe: "योजना र प्रगति तुलना", labelEn: "Plan vs Actual Progress", to: "/reports", tab: "progress" },
+    ],
+  },
+  {
+    to: "/department",
+    ne: "विभागीय व्यवस्थापन",
+    en: "Department",
+    icon: "dept",
+    who: "staff",
+    subs: [
+      { labelNe: "विभागीय वार्षिक योजना", labelEn: "Department Plans", to: "/department", tab: "plans" },
+      { labelNe: "विभागीय गतिविधिहरू", labelEn: "Department Activities", to: "/department", tab: "activities" },
+      { labelNe: "बजेट तथा खर्च", labelEn: "Budget & Expenses", to: "/department", tab: "budget" },
+      { labelNe: "शैक्षिक क्यालेन्डर (कक्षागत)", labelEn: "Class Academic Calendar", to: "/department", tab: "calendar" },
+      { labelNe: "विभागीय प्रतिवेदन", labelEn: "Department Reports", to: "/department", tab: "reports" },
+    ],
+  },
+  {
+    to: "/sqc",
+    ne: "SQC",
+    en: "Student Quality Control",
+    icon: "shield",
+    who: "all",
+    subs: [
+      { labelNe: "SQC प्रतिवेदन सूची", labelEn: "SQC Reports List", to: "/sqc", tab: "list" },
+      { labelNe: "नयाँ SQC रिपोर्ट", labelEn: "New SQC Report", to: "/sqc", tab: "new" },
+      { labelNe: "SQC सारांश", labelEn: "SQC Summary", to: "/sqc", tab: "summary" },
+      { labelNe: "SQC सेटअप", labelEn: "SQC Setup", to: "/sqc", tab: "setup" },
+    ],
+  },
+  {
+    to: "/setup",
+    ne: "सेटअप",
+    en: "Setups",
+    icon: "sliders",
+    who: "staff",
+    subs: [
+      { labelNe: "कक्षा र विषय व्यवस्थापन", labelEn: "Classes & Subjects", to: "/setup", tab: "classes" },
+      { labelNe: "शिक्षक विवरण", labelEn: "Teachers Details", to: "/setup", tab: "teachers" },
+      { labelNe: "क्याम्पस वार्षिक क्यालेन्डर", labelEn: "Campus Annual Calendar", to: "/setup", tab: "calendar" },
+      { labelNe: "प्रोफाइल र क्याम्पस संरचना", labelEn: "Profile & Campus Setup", to: "/setup", tab: "campus" },
+      { labelNe: "विद्यार्थी अपग्रेड र तान्ने", labelEn: "Upgrade & Pull Students", to: "/students" },
+      { labelNe: "शैक्षिक वर्ष व्यवस्थापन", labelEn: "Academic Years", to: "/years" },
+    ],
+  },
   { to: "/years", ne: "शैक्षिक वर्ष", en: "Academic years", icon: "cal", who: "staff" },
-  { to: "/setup", ne: "सेटअप", en: "Setup", icon: "sliders", who: "staff" },
-  { to: "/admin", ne: "प्रशासन", en: "Admin", icon: "admin", who: "admin" },
+  {
+    to: "/admin",
+    ne: "प्रशासन",
+    en: "Admin",
+    icon: "admin",
+    who: "admin",
+    subs: [
+      { labelNe: "प्रयोगकर्ता र खाता व्यवस्थापन", labelEn: "User Accounts & Roles", to: "/admin" },
+      { labelNe: "शैक्षिक वर्ष नियन्त्रण", labelEn: "Academic Year Control", to: "/years" },
+    ],
+  },
   { to: "/account", ne: "मेरो खाता", en: "My account", icon: "user", who: "all" },
 ];
 
-function useShell() {
+export function useShell() {
   const c = useCloud();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const signed = c.status === "ready" && !!c.userId && !!c.me && c.roles.length > 0 && !c.loadError;
@@ -66,26 +173,43 @@ function useShell() {
   const staff = local || (signed && isStaff(c.roles));
   const admin = signed && c.roles.includes("admin");
   const visible = path === "/login" ? false : signed || local;
-  const items = ITEMS.filter((i) =>
+  const items = MENU_ITEMS.filter((i) =>
     i.who === "all" ? signed || (local && i.to !== "/account") : i.who === "staff" ? staff : admin
   );
   const active = (to: string) => (to === "/" ? path === "/" : path === to || path.startsWith(to + "/"));
   return { c, path, signed, local, staff, admin, visible, items, active };
 }
 
-/** Desktop: collapsible left sidebar with original Shikshak Diary logo. */
+/** Helper to trigger global sidebar toggle from anywhere (e.g. AppNav button or Sidebar button). */
+export function dispatchToggleSidebar() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("shikshak-toggle-sidebar"));
+  }
+}
+
+/**
+ * Desktop: Fixed, Gemini-style Open/Close + Mouse-Draggable Resizable Left Sidebar.
+ * Never scrolls away when scrolling the center content.
+ */
 export function Sidebar() {
   const { c, visible, items, active, signed } = useShell();
   const pwa = usePwa();
   const [collapsed, setCollapsed] = useState(false);
+  const [width, setWidth] = useState(248);
+  const draggingRef = useRef(false);
   const nav = useNavigate();
+
   useEffect(() => {
     try {
-      setCollapsed(localStorage.getItem("shikshak-sidebar") === "collapsed");
+      const savedMode = localStorage.getItem("shikshak-sidebar");
+      if (savedMode === "collapsed") setCollapsed(true);
+      const savedWidth = Number(localStorage.getItem("shikshak-sidebar-w"));
+      if (savedWidth >= 180 && savedWidth <= 340) setWidth(savedWidth);
     } catch {
       /* ignore */
     }
   }, []);
+
   const toggle = () =>
     setCollapsed((v) => {
       const n = !v;
@@ -96,38 +220,89 @@ export function Sidebar() {
       }
       return n;
     });
+
+  useEffect(() => {
+    const onGlobalToggle = () => toggle();
+    window.addEventListener("shikshak-toggle-sidebar", onGlobalToggle);
+    return () => window.removeEventListener("shikshak-toggle-sidebar", onGlobalToggle);
+  }, []);
+
+  // Mouse drag-to-resize handler
+  const startDrag = (e: React.MouseEvent) => {
+    e.preventDefault();
+    draggingRef.current = true;
+    const onMove = (ev: MouseEvent) => {
+      if (!draggingRef.current) return;
+      const newW = ev.clientX;
+      if (newW < 115) {
+        setCollapsed(true);
+        try {
+          localStorage.setItem("shikshak-sidebar", "collapsed");
+        } catch {
+          /* ignore */
+        }
+      } else {
+        const clamped = Math.max(180, Math.min(340, newW));
+        setCollapsed(false);
+        setWidth(clamped);
+        try {
+          localStorage.setItem("shikshak-sidebar", "open");
+          localStorage.setItem("shikshak-sidebar-w", String(clamped));
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+    const onUp = () => {
+      draggingRef.current = false;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+
   if (!visible) return null;
+
+  const sidebarStyle = collapsed ? { width: "4.25rem" } : { width: `${width}px` };
+
   return (
     <aside
-      className={`no-print sticky top-0 hidden h-screen shrink-0 flex-col bg-sidebar text-sidebar-foreground shadow-lg transition-[width] md:flex ${
-        collapsed ? "w-[4.5rem]" : "w-64"
-      }`}
+      style={sidebarStyle}
+      className="no-print relative hidden h-screen shrink-0 select-none flex-col bg-sidebar text-sidebar-foreground shadow-lg md:flex"
       aria-label="Main navigation"
     >
-      <div className="flex items-center gap-2.5 border-b border-sidebar-border px-3 py-3">
-        <Link to="/" className="flex items-center gap-2.5 text-sidebar-foreground">
-          <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-9 w-9 shrink-0 rounded-lg shadow-sm" />
-          {!collapsed && (
-            <div className="leading-tight">
-              <span className="block font-display text-xl tracking-wide text-white">शिक्षक डायरी</span>
-              <span className="block text-[11px] font-medium tracking-wider text-sidebar-primary">
+      {/* Top Header of Sidebar: Gemini-style always-visible Open/Close button */}
+      <div
+        className={`flex items-center border-b border-sidebar-border py-2.5 ${
+          collapsed ? " flex-col justify-center gap-2 px-1.5" : "gap-2.5 px-3"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={toggle}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent/60 text-white transition hover:bg-sidebar-accent"
+          aria-label={collapsed ? "Open sidebar · साइडबार खोल्नुहोस्" : "Close sidebar · साइडबार सानो बनाउनुहोस्"}
+          title={collapsed ? "Open sidebar · मेनु खोल्नुहोस्" : "Collapse sidebar · मेनु सानो बनाउनुहोस्"}
+        >
+          <Icon n="menu" size={19} />
+        </button>
+
+        {!collapsed && (
+          <Link to="/" className="flex min-w-0 flex-1 items-center gap-2 text-sidebar-foreground">
+            <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-8 w-8 shrink-0 rounded-lg shadow-sm" />
+            <div className="min-w-0 leading-tight">
+              <span className="block truncate font-display text-lg tracking-wide text-white">शिक्षक डायरी</span>
+              <span className="block truncate text-[10px] font-medium tracking-wider text-sidebar-primary">
                 Teacher's Diary
               </span>
             </div>
-          )}
-        </Link>
-        <div className="flex-1" />
-        <button
-          onClick={toggle}
-          className="rounded-lg p-1.5 text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-white"
-          aria-label={collapsed ? "Expand menu" : "Collapse menu"}
-          title={collapsed ? "Expand" : "Collapse"}
-        >
-          <Icon n={collapsed ? "right" : "left"} />
-        </button>
+          </Link>
+        )}
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-2.5 py-3">
+      {/* Scrollable menu items inside fixed sidebar */}
+      <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-2.5">
         {items.map((i) => (
           <Link
             key={i.to}
@@ -148,7 +323,8 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="border-t border-sidebar-border p-2.5 space-y-2">
+      {/* Bottom Footer of Sidebar */}
+      <div className="border-t border-sidebar-border p-2 space-y-1.5">
         {pwa.canInstall && !pwa.isStandalone && (
           <button
             type="button"
@@ -159,17 +335,15 @@ export function Sidebar() {
             title="कम्प्युटर वा मोबाइलमा एप इन्स्टल गर्नुहोस् · Install App"
           >
             <Icon n="download" />
-            {!collapsed && <span>📲 एप इन्स्टल (Install App)</span>}
+            {!collapsed && <span>📲 एप इन्स्टल</span>}
           </button>
         )}
 
         {!collapsed && (
-          <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-2.5 py-2 text-[10px] leading-snug text-sidebar-foreground/85">
+          <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-2.5 py-1.5 text-[10px] leading-snug text-sidebar-foreground/85">
             © 2026 Shikshak Diary.
             <br />
             Developed by <b>Bishnu Acharya</b>.
-            <br />
-            All rights reserved.
           </div>
         )}
 
@@ -194,9 +368,10 @@ export function Sidebar() {
             {!collapsed && <span>Teacher profiles</span>}
           </Link>
         )}
+
         {signed && !collapsed && c.me && (
-          <div className="flex items-center gap-2 rounded-lg bg-sidebar-accent/30 px-2.5 py-1.5 text-xs">
-            <Avatar name={c.me.name} path={c.me.avatar_path} size={26} />
+          <div className="flex items-center gap-2 rounded-lg bg-sidebar-accent/30 px-2 py-1 text-xs">
+            <Avatar name={c.me.name} path={c.me.avatar_path} size={24} />
             <div className="min-w-0 flex-1">
               <div className="truncate font-semibold">{c.me.name}</div>
               {c.me.designation && <div className="truncate text-[10px] opacity-70">{c.me.designation}</div>}
@@ -204,11 +379,18 @@ export function Sidebar() {
           </div>
         )}
       </div>
+
+      {/* Mouse Drag Handle on the right edge to resize/collapse/expand sidebar */}
+      <div
+        onMouseDown={startDrag}
+        title="तानेर साइडबार घटाउन वा बढाउन सकिन्छ (Drag to resize sidebar)"
+        className="absolute top-0 right-0 z-40 h-full w-1.5 cursor-col-resize transition-colors hover:bg-sidebar-primary/80"
+      />
     </aside>
   );
 }
 
-/** Phones: modern app-style bottom navigation + floating quick action button + "More" bottom sheet. */
+/** Phones: Fixed app-style bottom navigation + floating quick action button + "More" bottom sheet. */
 export function BottomNav() {
   const { signed, local, staff, visible, items, active, path } = useShell();
   const pwa = usePwa();
@@ -220,7 +402,7 @@ export function BottomNav() {
   if (!visible) return null;
 
   const primary = staff ? ["/", "/diary", "/plans", "/department"] : ["/sqc", "/account"];
-  const main = primary.map((to) => items.find((i) => i.to === to)).filter(Boolean) as Item[];
+  const main = primary.map((to) => items.find((i) => i.to === to)).filter(Boolean) as MenuItem[];
   const rest = items.filter((i) => !primary.includes(i.to));
 
   const cell = (on: boolean): string =>
@@ -230,7 +412,6 @@ export function BottomNav() {
 
   return (
     <>
-      {/* Floating Quick Action Button on Mobile for instant Daily Diary entry */}
       {staff && path !== "/diary" && !more && (
         <Link
           to="/diary"
@@ -347,7 +528,10 @@ export function BottomNav() {
   );
 }
 
-/** Wraps the page area so the sidebar (desktop) and bottom bar (phone) have room. */
+/**
+ * Locks the desktop viewport to h-screen overflow-hidden so the Sidebar and Top Menu stay 100% FIXED
+ * while only the inner content area scrolls.
+ */
 export function ShellFrame({ children }: { children: ReactNode }) {
-  return <div className="min-h-screen md:flex">{children}</div>;
+  return <div className="print-scroll-reset min-h-screen md:flex md:h-screen md:overflow-hidden">{children}</div>;
 }

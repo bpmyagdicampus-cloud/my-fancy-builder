@@ -149,11 +149,13 @@ function RootComponent() {
       <Background />
       <ShellFrame>
         <Sidebar />
-        <div className="min-w-0 flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
+        <div className="min-w-0 flex-1 flex flex-col md:h-screen md:overflow-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
           <AppNav />
-          <AuthGate>
-            <Outlet />
-          </AuthGate>
+          <div className="flex-1 md:overflow-y-auto">
+            <AuthGate>
+              <Outlet />
+            </AuthGate>
+          </div>
         </div>
       </ShellFrame>
       <BottomNav />

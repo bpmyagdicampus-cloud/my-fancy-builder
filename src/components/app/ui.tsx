@@ -40,6 +40,27 @@ export function Tabs<T extends string>({
   onChange: (v: T) => void;
   items: [T, string][];
 }) {
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      const urlTab = url.searchParams.get("tab");
+      if (urlTab && items.some(([k]) => k === urlTab) && urlTab !== value) {
+        onChange(urlTab as T);
+      }
+    } catch {
+      /* ignore */
+    }
+
+    const handler = (e: Event) => {
+      const targetTab = (e as CustomEvent).detail;
+      if (targetTab && items.some(([k]) => k === targetTab)) {
+        onChange(targetTab as T);
+      }
+    };
+    window.addEventListener("shikshak-select-tab", handler);
+    return () => window.removeEventListener("shikshak-select-tab", handler);
+  }, [items, onChange, value]);
+
   return (
     <div className="no-print tabs-bar mb-4" role="tablist">
       {items.map(([k, l]) => (
@@ -49,7 +70,16 @@ export function Tabs<T extends string>({
           role="tab"
           aria-selected={value === k}
           className={value === k ? "tab-on" : "tab"}
-          onClick={() => onChange(k)}
+          onClick={() => {
+            onChange(k);
+            try {
+              const url = new URL(window.location.href);
+              url.searchParams.set("tab", k);
+              window.history.replaceState({}, "", url.toString());
+            } catch {
+              /* ignore */
+            }
+          }}
         >
           {l}
         </button>

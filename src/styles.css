@@ -153,6 +153,7 @@
   body { background: white; color: black; }
   .panel { border: 0; box-shadow: none; padding: 0; }
   .print-only { display: block !important; }
+  .print-scroll-reset { height: auto !important; overflow: visible !important; display: block !important; }
   @page { size: A4; margin: 12mm; }
 }
 .print-only { display: none; }
