@@ -748,3 +748,278 @@ export async function loadActionSummary(userId: string, isAdmin: boolean, headDe
   }
   return out;
 }
+
+// =========================================================================
+// BATCH 7: CAMPUS ANNUAL CALENDAR & CLASS-WISE ACADEMIC CALENDARS (Matrix)
+// =========================================================================
+
+export type CampusCalType = {
+  id: string;
+  name: string;
+  color: string;
+  is_holiday: boolean;
+};
+
+export const DEFAULT_CAL_TYPES_LIST: { name: string; color: string; is_holiday: boolean }[] = [
+  { name: "Regular classes", color: "slate", is_holiday: false },
+  { name: "First-Term Examination", color: "amber", is_holiday: false },
+  { name: "Second-Term Examination", color: "amber", is_holiday: false },
+  { name: "Third-Term Examination", color: "amber", is_holiday: false },
+  { name: "Final / Board Exam", color: "rose", is_holiday: false },
+  { name: "Dashain–Tihar holiday", color: "red", is_holiday: true },
+  { name: "Winter holiday", color: "sky", is_holiday: true },
+  { name: "Summer holiday", color: "orange", is_holiday: true },
+  { name: "Public holiday", color: "red", is_holiday: true },
+  { name: "Course Orientation", color: "blue", is_holiday: false },
+  { name: "Result & Prize Distribution", color: "emerald", is_holiday: false },
+  { name: "Remedial Classes", color: "purple", is_holiday: false },
+  { name: "Guest Lecture", color: "teal", is_holiday: false },
+  { name: "Event / Activity", color: "blue", is_holiday: false },
+];
+
+export async function loadCalTypes(): Promise<CampusCalType[]> {
+  try {
+    const { data, error } = await sb.from("campus_cal_types").select("*").order("name");
+    if (!error && Array.isArray(data) && data.length > 0) {
+      return data as CampusCalType[];
+    }
+  } catch {
+    /* fallback below */
+  }
+  return DEFAULT_CAL_TYPES_LIST.map((t, idx) => ({ id: `default-${idx}`, ...t }));
+}
+
+export async function addCalType(name: string, color = "blue", is_holiday = false): Promise<R<CampusCalType>> {
+  const n = name.trim();
+  if (!n) return { ok: false, error: "Type name is required." };
+  return run(
+    sb.from("campus_cal_types").insert({ name: n, color, is_holiday }).select("*").single(),
+    (d) => d as CampusCalType
+  );
+}
+
+export async function deleteCalType(id: string): Promise<R<boolean>> {
+  return run(sb.from("campus_cal_types").delete().eq("id", id), () => true);
+}
+
+export type CampusAnnualEvent = {
+  id: string;
+  title: string;
+  event_type: string;
+  from_date: string;
+  to_date: string | null;
+  description: string;
+  created_at?: string;
+};
+
+export async function loadCampusAnnualEvents(): Promise<CampusAnnualEvent[]> {
+  try {
+    const { data, error } = await sb.from("campus_annual_calendar").select("*").order("from_date", { ascending: true });
+    if (!error && Array.isArray(data)) {
+      return data as CampusAnnualEvent[];
+    }
+  } catch {
+    /* ignore */
+  }
+  return [];
+}
+
+export async function saveCampusAnnualEvent(ev: Omit<CampusAnnualEvent, "id"> & { id?: string }): Promise<R<CampusAnnualEvent>> {
+  const payload = {
+    title: ev.title.trim(),
+    event_type: ev.event_type || "Event",
+    from_date: ev.from_date,
+    to_date: ev.to_date || null,
+    description: ev.description?.trim() || "",
+    updated_at: new Date().toISOString(),
+  };
+  return ev.id
+    ? run(sb.from("campus_annual_calendar").update(payload).eq("id", ev.id).select("*").single(), (d) => d as CampusAnnualEvent)
+    : run(sb.from("campus_annual_calendar").insert(payload).select("*").single(), (d) => d as CampusAnnualEvent);
+}
+
+export async function deleteCampusAnnualEvent(id: string): Promise<R<boolean>> {
+  return run(sb.from("campus_annual_calendar").delete().eq("id", id), () => true);
+}
+
+// -------------------------------------------------------------
+// Matrix Class-wise Academic Calendar (Matching the photo)
+// -------------------------------------------------------------
+
+export type CalendarMonthCol = {
+  m0: number;       // 0-indexed month (0 = Baishakh, 6 = Kartik, 11 = Chaitra)
+  bsMonth: number;  // 1-12
+  nameEn: string;
+  nameNe: string;
+};
+
+export type CalendarParticularRow = {
+  id: string;
+  title: string;
+  type: "monthly" | "span";
+  values: Record<string, string>; // month key (e.g. "m-6" or "Kartik") -> "11th" or "16"
+  spanText: string;               // for merged text spanning across months
+  remarks: string;                // auto-sum or custom remark
+  isTotalDays?: boolean;
+  isTeachingDays?: boolean;
+};
+
+export type ClassAcademicCalendar = {
+  id: string;
+  department_id: string;
+  academic_year: string;
+  class_id: string;
+  class_name: string;
+  start_month: number; // 7 = Kartik, 1 = Baishakh
+  end_month: number;   // 4 = Shrawan, 12 = Chaitra
+  months: CalendarMonthCol[];
+  particulars: CalendarParticularRow[];
+  status: "draft" | "submitted" | "approved";
+  approval_note: string;
+  prepared_name: string;
+  approved_name: string;
+  approved_at: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export const BS_MONTH_INFO: { m0: number; bsMonth: number; en: string; ne: string }[] = [
+  { m0: 0, bsMonth: 1, en: "Baishakh", ne: "बैशाख" },
+  { m0: 1, bsMonth: 2, en: "Jestha", ne: "जेठ" },
+  { m0: 2, bsMonth: 3, en: "Asad", ne: "असार" },
+  { m0: 3, bsMonth: 4, en: "Shrawan", ne: "साउन" },
+  { m0: 4, bsMonth: 5, en: "Bhadra", ne: "भदौ" },
+  { m0: 5, bsMonth: 6, en: "Ashwin", ne: "असोज" },
+  { m0: 6, bsMonth: 7, en: "Kartik", ne: "कार्तिक" },
+  { m0: 7, bsMonth: 8, en: "Mangshir", ne: "मंसिर" },
+  { m0: 8, bsMonth: 9, en: "Poush", ne: "पुस" },
+  { m0: 9, bsMonth: 10, en: "Magh", ne: "माघ" },
+  { m0: 10, bsMonth: 11, en: "Falgun", ne: "फागुन" },
+  { m0: 11, bsMonth: 12, en: "Chaitra", ne: "चैत" },
+];
+
+/** Builds an ordered sequence of months from startMonth (e.g. 7 Kartik) to endMonth (e.g. 4 Shrawan). */
+export function buildAcademicMonths(startMonth = 7, endMonth = 4): CalendarMonthCol[] {
+  const result: CalendarMonthCol[] = [];
+  let cur = startMonth;
+  for (let i = 0; i < 12; i++) {
+    const idx0 = (cur - 1) % 12;
+    const info = BS_MONTH_INFO[idx0]!;
+    result.push({ m0: info.m0, bsMonth: info.bsMonth, nameEn: info.en, nameNe: info.ne });
+    if (cur === endMonth) break;
+    cur = cur === 12 ? 1 : cur + 1;
+  }
+  return result;
+}
+
+export const DEFAULT_MATRIX_PARTICULARS: Omit<CalendarParticularRow, "id">[] = [
+  { title: "Total Working Days", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: true, isTeachingDays: false },
+  { title: "Net Teaching Days", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: true },
+  { title: "Classes Start", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Course Orientation", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "First-Term Examination", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Result Publication, Analysis and Prize Distribution of 1st Term", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Winter Vacation", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Second-Term Examination", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Result Publication, Analysis and Prize Distribution of 2nd Term", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Remedial Classes Start as Needed", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Guest Lecture", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Third-Term Examination", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Result Publication, Analysis and Prize Distribution of 3rd Term", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Field Work / Project Work / Practical Orientation as needed", type: "span", values: {}, spanText: "Within 2 weeks of TU Board Exam Completion", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Scholarship Distribution", type: "span", values: {}, spanText: "Notice after completion of TU Board Exam Form Filled up", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "TU Board Examination", type: "span", values: {}, spanText: "As per TU Notice", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Practical Examination (if any)", type: "span", values: {}, spanText: "Within 15 days of Completion of TU Board Examination", remarks: "", isTotalDays: false, isTeachingDays: false },
+];
+
+export function calcRowAutoSum(row: CalendarParticularRow, months: CalendarMonthCol[]): number {
+  let sum = 0;
+  for (const m of months) {
+    const v = Number(row.values[String(m.bsMonth)] ?? row.values[m.nameEn] ?? 0);
+    if (!isNaN(v)) sum += v;
+  }
+  return sum;
+}
+
+export async function loadClassCalendar(deptId: string, year: string, classId: string): Promise<R<ClassAcademicCalendar | null>> {
+  try {
+    const { data, error } = await sb
+      .from("dm_academic_calendars")
+      .select("*")
+      .eq("department_id", deptId)
+      .eq("academic_year", year)
+      .eq("class_id", classId)
+      .maybeSingle();
+    if (error) return { ok: false, error: niceDmError(error) };
+    return { ok: true, data: (data as ClassAcademicCalendar) ?? null };
+  } catch (e) {
+    return { ok: false, error: `No connection (${e instanceof Error ? e.message : e}).` };
+  }
+}
+
+export async function loadAllClassCalendars(deptId: string, year: string): Promise<ClassAcademicCalendar[]> {
+  try {
+    const { data, error } = await sb
+      .from("dm_academic_calendars")
+      .select("*")
+      .eq("department_id", deptId)
+      .eq("academic_year", year)
+      .order("class_name");
+    if (!error && Array.isArray(data)) {
+      return data as ClassAcademicCalendar[];
+    }
+  } catch {
+    /* ignore */
+  }
+  return [];
+}
+
+export async function saveClassCalendar(cal: Omit<ClassAcademicCalendar, "id"> & { id?: string }): Promise<R<ClassAcademicCalendar>> {
+  const payload = {
+    department_id: cal.department_id,
+    academic_year: cal.academic_year,
+    class_id: cal.class_id,
+    class_name: cal.class_name,
+    start_month: cal.start_month,
+    end_month: cal.end_month,
+    months: cal.months,
+    particulars: cal.particulars,
+    status: cal.status || "draft",
+    approval_note: cal.approval_note || "",
+    prepared_name: cal.prepared_name || "",
+    approved_name: cal.approved_name || "",
+    updated_at: new Date().toISOString(),
+  };
+
+  return cal.id
+    ? run(
+        sb.from("dm_academic_calendars").update(payload).eq("id", cal.id).select("*").single(),
+        (d) => d as ClassAcademicCalendar
+      )
+    : run(
+        sb.from("dm_academic_calendars").insert(payload).select("*").single(),
+        (d) => d as ClassAcademicCalendar
+      );
+}
+
+export async function setClassCalendarStatus(
+  id: string,
+  status: "draft" | "submitted" | "approved",
+  approval_note = "",
+  approved_name = ""
+): Promise<R<boolean>> {
+  const patch: Record<string, any> = {
+    status,
+    approval_note,
+    updated_at: new Date().toISOString(),
+  };
+  if (status === "approved") {
+    patch.approved_at = new Date().toISOString();
+    if (approved_name) patch.approved_name = approved_name;
+  }
+  return run(sb.from("dm_academic_calendars").update(patch).eq("id", id), () => true);
+}
+
+export async function deleteClassCalendar(id: string): Promise<R<boolean>> {
+  return run(sb.from("dm_academic_calendars").delete().eq("id", id), () => true);
+}

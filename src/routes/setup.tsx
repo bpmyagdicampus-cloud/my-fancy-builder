@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Page, FormFields, Collection, Dt, NeedProfile, type Field } from "@/components/app/ui";
+import { Page, FormFields, Collection, Dt, NeedProfile, BsDate, type Field } from "@/components/app/ui";
 import { mutate, updateData, uid, useTeacher, studentsOf, type Cls } from "@/lib/store";
 import { weeklyOffOf } from "@/lib/migrate";
 import { CAL_TYPES } from "@/lib/constants";
@@ -11,6 +11,7 @@ import { DeptTag } from "@/components/app/ClassFields";
 import * as C from "@/lib/campus";
 import { classDataSummary, loadPeerClassSources } from "@/lib/classes";
 import { addStudents } from "@/lib/students";
+import * as D from "@/lib/dm";
 import {
   setupListTeachers,
   setupUpdateTeacher,
@@ -22,9 +23,9 @@ import {
 export const Route = createFileRoute("/setup")({
   head: () => ({ meta: [
     { title: "Setup — Shikshak Diary" },
-    { name: "description", content: "Campus, teacher, classes, students and academic calendar setup." },
+    { name: "description", content: "Campus, teacher, classes, students and annual academic calendar setup." },
     { property: "og:title", content: "Setup — Shikshak Diary" },
-    { property: "og:description", content: "Campus, teacher, classes, students and academic calendar setup." },
+    { property: "og:description", content: "Campus, teacher, classes, students and annual academic calendar setup." },
   ] }),
   component: Setup,
 });
@@ -35,7 +36,7 @@ function Setup() {
   const canEdit = cloud.status !== "ready" || cloud.roles.includes("admin");
   if (!profile) return <NeedProfile />;
   return (
-    <Page title="Setup" sub="Campus, departments, classes, students, teacher details and the academic calendar">
+    <Page title="Setup" sub="Campus, departments, classes, students, teacher details and the annual academic calendar">
       <CampusSetup />
       <TeacherDetailsSection />
       <WeeklyOff canEdit={canEdit} />
@@ -47,11 +48,335 @@ function Setup() {
         <Link to="/students" className="btn">Upgrade Students</Link>
       </section>
       <ClassesByDept />
-      <Collection k="cal" title="Campus academic calendar"
-        fields={[{ k: "type", l: "Type", t: "sel", opts: CAL_TYPES }, { k: "title", l: "Title / note" }, { k: "from", l: "From", t: "date" }, { k: "to", l: "To (blank for one day)", t: "date" }]}
-        defaults={{ to: "" }}
-        summary={(e) => <><b>{e.type}</b> {e.title && `— ${e.title}`}<div className="text-xs text-muted-foreground"><Dt d={e.from} />{e.to && e.to !== e.from && <> → <Dt d={e.to} /></>}</div></>} />
+      <CampusAnnualCalendarSection canEdit={canEdit} />
     </Page>
+  );
+}
+
+/**
+ * Requirement: Campus Annual Calendar with customizable event types (Admin can add/edit/delete types),
+ * events synchronized to cloud and prominently displayed on everyone's Home page.
+ */
+function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
+  const { data } = useTeacher();
+  const [types, setTypes] = useState<D.CampusCalType[]>([]);
+  const [cloudEvents, setCloudEvents] = useState<D.CampusAnnualEvent[]>([]);
+  const [showTypeEditor, setShowTypeEditor] = useState(false);
+  const [newTypeName, setNewTypeName] = useState("");
+  const [newTypeHoliday, setNewTypeHoliday] = useState(false);
+  const [edEvent, setEdEvent] = useState<{ id?: string; title: string; type: string; from: string; to: string; desc: string } | null>(null);
+  const [note, setNote] = useState("");
+
+  const loadData = useCallback(async () => {
+    const [tList, evList] = await Promise.all([
+      D.loadCalTypes(),
+      D.loadCampusAnnualEvents(),
+    ]);
+    setTypes(tList);
+    setCloudEvents(evList);
+  }, []);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
+
+  const handleAddType = async () => {
+    if (!newTypeName.trim()) return;
+    const res = await D.addCalType(newTypeName.trim(), "blue", newTypeHoliday);
+    if (res.ok) {
+      setNewTypeName("");
+      setNewTypeHoliday(false);
+      setNote("New event type added · नयाँ प्रकार थपियो।");
+      await loadData();
+    } else {
+      setNote(res.error);
+    }
+  };
+
+  const handleDeleteType = async (id: string) => {
+    if (!confirm("Delete this event type?")) return;
+    const res = await D.deleteCalType(id);
+    if (res.ok) {
+      await loadData();
+    } else {
+      setNote(res.error);
+    }
+  };
+
+  const typeOptions = types.map((t) => t.name);
+  const allEvents = [
+    ...cloudEvents.map((e) => ({
+      id: e.id,
+      title: e.title,
+      type: e.event_type,
+      from: e.from_date,
+      to: e.to_date || "",
+      desc: e.description,
+      isCloud: true,
+    })),
+    ...data.cal
+      .filter((c) => !cloudEvents.some((ce) => ce.title === c.title && ce.from_date === c.from))
+      .map((c) => ({
+        id: c.id,
+        title: c.title,
+        type: c.type,
+        from: c.from,
+        to: c.to || "",
+        desc: "",
+        isCloud: false,
+      })),
+  ].sort((a, b) => a.from.localeCompare(b.from));
+
+  const saveEvent = async () => {
+    if (!edEvent || !edEvent.title.trim()) {
+      alert("Please enter the event title · कार्यक्रमको शीर्षक लेख्नुहोस्।");
+      return;
+    }
+    // 1. Save to Supabase cloud
+    await D.saveCampusAnnualEvent({
+      id: edEvent.id,
+      title: edEvent.title.trim(),
+      event_type: edEvent.type || typeOptions[0] || "Event",
+      from_date: edEvent.from,
+      to_date: edEvent.to || null,
+      description: edEvent.desc || "",
+    });
+
+    // 2. Also save to local data.cal
+    updateData((d) => {
+      const idx = d.cal.findIndex((x) => x.id === edEvent.id || (x.title === edEvent.title && x.from === edEvent.from));
+      const row = {
+        id: edEvent.id || uid(),
+        title: edEvent.title.trim(),
+        type: edEvent.type || typeOptions[0] || "Event",
+        from: edEvent.from,
+        to: edEvent.to || "",
+      };
+      if (idx >= 0) d.cal[idx] = row;
+      else d.cal.push(row);
+    });
+
+    setEdEvent(null);
+    setNote("Event saved to Campus Annual Calendar · क्याम्पस वार्षिक क्यालेन्डरमा सुरक्षित भयो।");
+    await loadData();
+  };
+
+  const deleteEvent = async (id: string, isCloud: boolean) => {
+    if (!confirm("Delete this calendar event?")) return;
+    if (isCloud) await D.deleteCampusAnnualEvent(id);
+    updateData((d) => {
+      const idx = d.cal.findIndex((x) => x.id === id);
+      if (idx >= 0) d.cal.splice(idx, 1);
+    });
+    await loadData();
+    setNote("Event deleted · कार्यक्रम हटाइयो।");
+  };
+
+  return (
+    <section className="panel no-print mb-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-bold">
+            Campus Annual Calendar · क्याम्पस वार्षिक क्यालेन्डर ({allEvents.length})
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            यहाँ राखिएका कार्यक्रम, परीक्षा र बिदाहरू सबै शिक्षक, कर्मचारी र विद्यार्थीहरूको <b>Home पेज</b>मा देखिन्छन्।
+          </p>
+        </div>
+        {canEdit && (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="btn-soft text-xs"
+              onClick={() => setShowTypeEditor((v) => !v)}
+            >
+              {showTypeEditor ? "Hide Types" : "Manage Event Types · प्रकारहरू सम्पादन"}
+            </button>
+            {!edEvent && (
+              <button
+                type="button"
+                className="btn text-xs"
+                onClick={() =>
+                  setEdEvent({
+                    title: "",
+                    type: typeOptions[0] || "Event",
+                    from: new Date().toISOString().slice(0, 10),
+                    to: "",
+                    desc: "",
+                  })
+                }
+              >
+                + Add Event · नयाँ कार्यक्रम
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {note && <p className="mb-3 rounded-md border border-primary p-2 text-sm">{note}</p>}
+
+      {/* Admin Event Types Management */}
+      {showTypeEditor && canEdit && (
+        <div className="mb-4 rounded-lg border border-primary/40 bg-secondary/30 p-3 text-xs">
+          <div className="mb-2 font-bold text-primary">
+            Custom Event Types · कार्यक्रमका प्रकारहरू ({types.length})
+          </div>
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {types.map((t) => (
+              <span key={t.id} className="chip flex items-center gap-1">
+                {t.name}
+                {t.is_holiday && <span className="text-[10px] text-destructive">(बिदा)</span>}
+                {!t.id.startsWith("default-") && (
+                  <button
+                    type="button"
+                    className="ml-1 text-destructive font-bold"
+                    title="Delete custom type"
+                    onClick={() => void handleDeleteType(t.id)}
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 border-t border-border pt-2">
+            <input
+              className="field !h-8 !py-0 text-xs !w-60"
+              placeholder="New event type (उदा. Sports Week / खेलकुद)"
+              value={newTypeName}
+              onChange={(e) => setNewTypeName(e.target.value)}
+            />
+            <label className="flex cursor-pointer items-center gap-1">
+              <input
+                type="checkbox"
+                checked={newTypeHoliday}
+                onChange={(e) => setNewTypeHoliday(e.target.checked)}
+              />
+              <span>Is holiday · बिदा हो</span>
+            </label>
+            <button type="button" className="btn !py-1 text-xs" onClick={() => void handleAddType()}>
+              + Add Type
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Event Add/Edit Form */}
+      {edEvent && canEdit && (
+        <div className="mb-4 rounded-lg border border-primary/40 bg-secondary/40 p-3 text-sm">
+          <h3 className="mb-3 font-bold">
+            {edEvent.id ? "Edit Event · कार्यक्रम सम्पादन" : "New Event · नयाँ कार्यक्रम"}
+          </h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className="lbl">Event title · कार्यक्रमको नाम *</label>
+              <input
+                className="field"
+                value={edEvent.title}
+                placeholder="उदा. हिउँदे बिदा / Winter Vacation वा क्याम्पस सभा"
+                onChange={(e) => setEdEvent({ ...edEvent, title: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="lbl">Event type · प्रकार</label>
+              <select
+                className="field"
+                value={edEvent.type}
+                onChange={(e) => setEdEvent({ ...edEvent, type: e.target.value })}
+              >
+                {typeOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="lbl">From date (BS) · सुरु मिति</label>
+              <BsDate value={edEvent.from} onChange={(v) => setEdEvent({ ...edEvent, from: v })} />
+            </div>
+            <div>
+              <label className="lbl">To date (BS, optional) · अन्तिम मिति</label>
+              <BsDate value={edEvent.to} onChange={(v) => setEdEvent({ ...edEvent, to: v })} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="lbl">Description / Remarks · थप विवरण</label>
+              <input
+                className="field"
+                value={edEvent.desc}
+                placeholder="उदा. सबै तहका विद्यार्थी तथा शिक्षकहरूका लागि"
+                onChange={(e) => setEdEvent({ ...edEvent, desc: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button type="button" className="btn" onClick={() => void saveEvent()}>
+              Save · सुरक्षित गर्नुहोस्
+            </button>
+            <button type="button" className="btn-soft" onClick={() => setEdEvent(null)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Events List */}
+      <ul className="divide-y divide-border text-sm">
+        {allEvents.map((e) => (
+          <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <b>{e.title}</b>
+                <span className="chip text-xs">{e.type}</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                <Dt d={e.from} />
+                {e.to && e.to !== e.from && (
+                  <>
+                    {" "}
+                    → <Dt d={e.to} />
+                  </>
+                )}
+                {e.desc && ` · ${e.desc}`}
+              </div>
+            </div>
+            {canEdit && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  className="btn-soft !py-0.5 !px-2 text-xs"
+                  onClick={() =>
+                    setEdEvent({
+                      id: e.id,
+                      title: e.title,
+                      type: e.type,
+                      from: e.from,
+                      to: e.to,
+                      desc: e.desc,
+                    })
+                  }
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  className="btn-danger !py-0.5 !px-2 text-xs"
+                  onClick={() => void deleteEvent(e.id, e.isCloud)}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </li>
+        ))}
+        {!allEvents.length && (
+          <li className="py-3 text-center text-sm text-muted-foreground">
+            कुनै वार्षिक कार्यक्रम राखिएको छैन। Admin ले माथिको <b>+ Add Event</b> बाट थप्न सक्नुहुन्छ।
+          </li>
+        )}
+      </ul>
+    </section>
   );
 }
 
