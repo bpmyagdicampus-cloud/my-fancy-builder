@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Page, Tabs, Collection, ClassSelect, PrintHead, Signatures, PrintBtn, Dt, NeedProfile } from "@/components/app/ui";
 import { updateData, uid, useTeacher, type Blended, type Cls, type Data, type Lesson, type Plan, type Unit } from "@/lib/store";
@@ -140,8 +140,9 @@ function Plans() {
 }
 
 /**
- * Requirement: Class Academic Calendar Banner shown inside Annual Unit Plan
+ * Robust Class Academic Calendar Banner shown inside Annual Unit Plan
  * Shows Net Teaching Days, working days, exam dates, vacation, and compares Planned LH vs Teaching Days!
+ * Fully protected against missing tables, null fields or parsing issues to never crash the page.
  */
 function ClassAcademicCalendarBanner({ c, yearName, plannedLh }: { c: Cls; yearName: string; plannedLh: number }) {
   const [cal, setCal] = useState<D.ClassAcademicCalendar | null>(null);
@@ -151,34 +152,37 @@ function ClassAcademicCalendarBanner({ c, yearName, plannedLh }: { c: Cls; yearN
   useEffect(() => {
     let active = true;
     setLoading(true);
-    // Find calendar for this class
-    D.loadClassCalendar(c.deptId || "", yearName, c.centralId || c.id).then((res) => {
-      if (!active) return;
-      if (res.ok && res.data) {
-        setCal(res.data);
-      } else {
-        // Try searching all calendars in the department matching class name
-        D.loadAllClassCalendars(c.deptId || "", yearName).then((list) => {
-          if (!active) return;
-          const matched = list.find(
-            (x) =>
-              (c.centralId && x.class_id === c.centralId) ||
-              x.class_name.trim().toLowerCase() === c.name.trim().toLowerCase()
-          );
-          setCal(matched || null);
+    const searchId = c.centralId || c.id;
+    D.loadClassCalendar(c.deptId || "", yearName, searchId)
+      .then((res) => {
+        if (!active) return;
+        if (res?.data) {
+          setCal(res.data);
           setLoading(false);
-        });
-        return;
-      }
-      setLoading(false);
-    });
+        } else {
+          D.loadAllClassCalendars(c.deptId || "", yearName)
+            .then((list) => {
+              if (!active) return;
+              const matched = (list || []).find(
+                (x) =>
+                  (c.centralId && x.class_id === c.centralId) ||
+                  (x.class_id && x.class_id === c.id) ||
+                  D.normClassName(x.class_name) === D.normClassName(c.name)
+              );
+              setCal(matched || null);
+              setLoading(false);
+            })
+            .catch(() => setLoading(false));
+        }
+      })
+      .catch(() => setLoading(false));
     return () => {
       active = false;
     };
   }, [c.id, c.centralId, c.deptId, c.name, yearName]);
 
   if (loading) return null;
-  if (!cal) {
+  if (!cal || !Array.isArray(cal.particulars) || cal.particulars.length === 0) {
     return (
       <div className="no-print mb-4 rounded-lg border border-border bg-card p-3 text-xs text-muted-foreground flex flex-wrap items-center justify-between gap-2">
         <span>
@@ -191,26 +195,29 @@ function ClassAcademicCalendarBanner({ c, yearName, plannedLh }: { c: Cls; yearN
     );
   }
 
-  // Extract key milestone dates and net teaching days
-  const teachingDaysRow = cal.particulars.find((p) => p.isTeachingDays);
-  const workingDaysRow = cal.particulars.find((p) => p.isTotalDays);
-  const startRow = cal.particulars.find((p) => /start|सुरु/i.test(p.title));
-  const exam1Row = cal.particulars.find((p) => /1st|first|प्रथम/i.test(p.title) && /exam|परीक्षा/i.test(p.title));
-  const exam2Row = cal.particulars.find((p) => /2nd|second|दोस्रो/i.test(p.title) && /exam|परीक्षा/i.test(p.title));
-  const exam3Row = cal.particulars.find((p) => /3rd|third|तेस्रो/i.test(p.title) && /exam|परीक्षा/i.test(p.title));
-  const vacRow = cal.particulars.find((p) => /vacation|holiday|बिदा/i.test(p.title));
-  const boardRow = cal.particulars.find((p) => /board|final|बोर्ड/i.test(p.title));
+  const parts = cal.particulars;
+  const teachingDaysRow = parts.find((p) => p.isTeachingDays);
+  const workingDaysRow = parts.find((p) => p.isTotalDays);
+  const startRow = parts.find((p) => /start|classes start|सुरु/i.test(p.title));
+  const exam1Row = parts.find((p) => /1st|first|प्रथम/i.test(p.title) && /exam|परीक्षा/i.test(p.title));
+  const exam2Row = parts.find((p) => /2nd|second|दोस्रो/i.test(p.title) && /exam|परीक्षा/i.test(p.title));
+  const exam3Row = parts.find((p) => /3rd|third|तेस्रो/i.test(p.title) && /exam|परीक्षा/i.test(p.title));
+  const vacRow = parts.find((p) => /vacation|holiday|हिउँदे|बिदा/i.test(p.title));
+  const boardRow = parts.find((p) => /board|final|बोर्ड/i.test(p.title));
 
   const netTeachingDays = Number(teachingDaysRow?.remarks) || 0;
   const totalWorkingDays = Number(workingDaysRow?.remarks) || 0;
 
   const extractMilestoneText = (row?: D.CalendarParticularRow) => {
     if (!row) return "—";
-    if (row.type === "span" && row.spanText) return row.spanText;
-    const entries = Object.entries(row.values).filter(([, v]) => Boolean(v?.trim()));
+    if (row.type === "span") return row.spanText || "—";
+    if (!row.values || typeof row.values !== "object") return "—";
+    const entries = Object.entries(row.values).filter(([, v]) => Boolean(v && String(v).trim()));
     if (!entries.length) return "—";
     return entries.map(([m, v]) => `${D.BS_MONTH_INFO.find((x) => String(x.bsMonth) === m)?.ne || m}: ${v}`).join(", ");
   };
+
+  const calMonths = Array.isArray(cal.months) && cal.months.length > 0 ? cal.months : D.buildAcademicMonths(cal.start_month || 7, cal.end_month || 4);
 
   return (
     <div className="no-print mb-4 rounded-xl border border-primary/40 bg-secondary/30 p-3.5 text-xs shadow-sm">
@@ -234,7 +241,7 @@ function ClassAcademicCalendarBanner({ c, yearName, plannedLh }: { c: Cls; yearN
 
       <div className="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="rounded-lg border border-border bg-card p-2">
-          <div className="text-muted-foreground text-[11px]">Net Teaching Days · पढाउने दिन</div>
+          <div className="text-muted-foreground text-[11px]">Net Teaching Days · खुद पढाउने दिन</div>
           <div className="text-base font-bold text-primary">{netTeachingDays || "—"} days</div>
           <div className="text-[10px] text-muted-foreground">
             Planned Units: <b>{plannedLh} LH</b> / {c.totalLh} LH
@@ -242,10 +249,10 @@ function ClassAcademicCalendarBanner({ c, yearName, plannedLh }: { c: Cls; yearN
         </div>
 
         <div className="rounded-lg border border-border bg-card p-2">
-          <div className="text-muted-foreground text-[11px]">Total Working Days · कार्यदिन</div>
+          <div className="text-muted-foreground text-[11px]">Total Working Days · कुल कार्यदिन</div>
           <div className="text-base font-bold">{totalWorkingDays || "—"} days</div>
           <div className="text-[10px] text-muted-foreground truncate">
-            Classes Start: {extractMilestoneText(startRow)}
+            कक्षा आरम्भ: {extractMilestoneText(startRow)}
           </div>
         </div>
 
@@ -287,30 +294,34 @@ function ClassAcademicCalendarBanner({ c, yearName, plannedLh }: { c: Cls; yearN
               <table className="rtable w-full text-xs">
                 <thead>
                   <tr>
-                    <th className="p-2 text-left">Particulars \ Months</th>
-                    {cal.months.map((m) => (
+                    <th className="p-2 text-left">Particulars \ Months (विवरण \ महिना)</th>
+                    {calMonths.map((m) => (
                       <th key={m.bsMonth} className="p-2 text-center">
                         <div>{m.nameEn}</div>
                         <div className="text-[10px] font-normal text-muted-foreground">{m.nameNe}</div>
                       </th>
                     ))}
-                    <th className="p-2 text-center">Remarks</th>
+                    <th className="p-2 text-center">Remarks (कैफियत)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {cal.particulars.map((row) => {
+                  {parts.map((row) => {
                     const isHighlight = row.isTotalDays || row.isTeachingDays;
+                    const [enTitle, neTitle] = (row.title || "").split(" · ");
                     return (
                       <tr key={row.id} className={isHighlight ? "bg-muted/40 font-semibold" : ""}>
-                        <td className="p-2 align-middle">{row.title}</td>
+                        <td className="p-2 align-middle">
+                          <div className="font-semibold">{enTitle || row.title}</div>
+                          {neTitle && <div className="text-[10px] text-muted-foreground font-normal">{neTitle}</div>}
+                        </td>
                         {row.type === "span" ? (
-                          <td colSpan={cal.months.length} className="p-2 text-center italic text-muted-foreground">
+                          <td colSpan={calMonths.length} className="p-2 text-center italic text-muted-foreground">
                             {row.spanText || "—"}
                           </td>
                         ) : (
-                          cal.months.map((m) => (
+                          calMonths.map((m) => (
                             <td key={m.bsMonth} className="p-1.5 text-center align-middle">
-                              {row.values[String(m.bsMonth)] ?? row.values[m.nameEn] ?? "—"}
+                              {row.values?.[String(m.bsMonth)] ?? row.values?.[m.nameEn] ?? "—"}
                             </td>
                           ))
                         )}
@@ -323,8 +334,8 @@ function ClassAcademicCalendarBanner({ c, yearName, plannedLh }: { c: Cls; yearN
             </div>
 
             <div className="mt-4 flex items-center justify-between border-t border-border pt-2 text-xs text-muted-foreground">
-              <span>Prepared by: {cal.prepared_name || "Head of Department"}</span>
-              <span>Approved by: {cal.approved_name || "Campus Chief"}</span>
+              <span>Prepared by: <b>{cal.prepared_name || "Head of Department"}</b></span>
+              <span>Approved by: <b>{cal.approved_name || "Campus Chief"}</b></span>
             </div>
           </div>
         </div>
@@ -378,7 +389,6 @@ function PrevPlan() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [choice, setChoice] = useState("");
-  const current = data.plans;
   const archives = Object.entries(data.archive ?? {}).reverse();
   const sources: { yr: string; p: Plan }[] = [];
   for (const [yr, a] of archives) {

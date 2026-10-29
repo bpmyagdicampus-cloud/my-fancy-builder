@@ -133,7 +133,7 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
       return;
     }
     // 1. Save to Supabase cloud
-    await D.saveCampusAnnualEvent({
+    const cloudRes = await D.saveCampusAnnualEvent({
       id: edEvent.id,
       title: edEvent.title.trim(),
       event_type: edEvent.type || typeOptions[0] || "Event",
@@ -157,7 +157,11 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
     });
 
     setEdEvent(null);
-    setNote("Event saved to Campus Annual Calendar · क्याम्पस वार्षिक क्यालेन्डरमा सुरक्षित भयो।");
+    if (cloudRes.ok) {
+      setNote("Event saved to Campus Annual Calendar · क्याम्पस वार्षिक क्यालेन्डरमा सुरक्षित भयो (सबै प्रयोगकर्ताको Home मा देखिन्छ)।");
+    } else {
+      setNote("Event saved locally. (Note: To share it on other users' Home pages, please run docs/phase6/44_academic_calendar.sql in Lovable SQL Editor).");
+    }
     await loadData();
   };
 

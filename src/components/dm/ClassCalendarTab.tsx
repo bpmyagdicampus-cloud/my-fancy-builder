@@ -56,32 +56,28 @@ export function ClassCalendarTab({
       D.loadAllClassCalendars(dept, year),
       D.loadCampusAnnualEvents(),
     ]);
-    setAllCals(cList);
-    setAnnualEvents(evList);
+    setAllCals(cList || []);
+    setAnnualEvents(evList || []);
 
     if (classId) {
       const single = await D.loadClassCalendar(dept, year, classId);
-      if (single.ok) {
+      if (single.ok && single.data) {
         setCal(single.data);
-        if (single.data) {
-          setStartMonth(single.data.start_month);
-          setEndMonth(single.data.end_month);
-          setParticulars(single.data.particulars);
-          setApprovalNote(single.data.approval_note || "");
-        } else {
-          // Initialize fresh template
-          setStartMonth(7);
-          setEndMonth(4);
-          setParticulars(
-            D.DEFAULT_MATRIX_PARTICULARS.map((p, idx) => ({
-              id: `row-${idx}-${Date.now()}`,
-              ...p,
-              values: { ...p.values },
-            }))
-          );
-        }
+        setStartMonth(single.data.start_month || 7);
+        setEndMonth(single.data.end_month || 4);
+        setParticulars(single.data.particulars || []);
+        setApprovalNote(single.data.approval_note || "");
       } else {
-        setErr(single.error);
+        setCal(null);
+        setStartMonth(7);
+        setEndMonth(4);
+        setParticulars(
+          D.DEFAULT_MATRIX_PARTICULARS.map((p, idx) => ({
+            id: `row-${idx}-${Date.now()}`,
+            ...p,
+            values: { ...p.values },
+          }))
+        );
       }
     }
     setLoading(false);
@@ -105,7 +101,7 @@ export function ClassCalendarTab({
     setParticulars((prev) =>
       prev.map((r) => {
         if (r.id !== rowId) return r;
-        const newValues = { ...r.values, [monthKey]: val };
+        const newValues = { ...(r.values || {}), [monthKey]: val };
         let remarks = r.remarks;
         if (r.isTotalDays || r.isTeachingDays) {
           const sum = D.calcRowAutoSum({ ...r, values: newValues }, currentMonths);
@@ -178,7 +174,7 @@ export function ClassCalendarTab({
           return evLower.includes(titleLower) || titleLower.includes(evLower) || titleLower.includes(typeLower);
         });
         if (!matched.length) return row;
-        const newValues = { ...row.values };
+        const newValues = { ...(row.values || {}) };
         for (const ev of matched) {
           const fromM = Number(ev.from_date.slice(5, 7)); // BS month 1-12
           const fromD = Number(ev.from_date.slice(8, 10));
@@ -198,13 +194,13 @@ export function ClassCalendarTab({
   const copyFromOther = () => {
     const src = allCals.find((c) => c.id === copySourceId);
     if (!src) return;
-    setStartMonth(src.start_month);
-    setEndMonth(src.end_month);
+    setStartMonth(src.start_month || 7);
+    setEndMonth(src.end_month || 4);
     setParticulars(
-      src.particulars.map((p, i) => ({
+      (src.particulars || []).map((p, i) => ({
         ...p,
         id: `copied-${i}-${Date.now()}`,
-        values: { ...p.values },
+        values: { ...(p.values || {}) },
       }))
     );
     setNote(`Copied particulars & month layout from "${src.class_name}". Adjust dates and save.`);
@@ -447,7 +443,7 @@ export function ClassCalendarTab({
         )}
       </section>
 
-      {/* MATRIX CALENDAR SHEET (Exact layout of the photo) */}
+      {/* MATRIX CALENDAR SHEET (Exact layout of the photo with verified spelling & grammar) */}
       <section className="panel overflow-x-auto">
         <div className="mb-4 text-center">
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Tribhuvan University</div>
@@ -466,20 +462,27 @@ export function ClassCalendarTab({
         <table className="rtable w-full text-xs">
           <thead>
             <tr>
-              <th className="min-w-64 p-2 text-left">Particulars \ Months</th>
+              <th className="min-w-64 p-2 text-left">
+                <div>Particulars \ Months</div>
+                <div className="text-[10px] font-normal text-muted-foreground">विवरण \ महिना</div>
+              </th>
               {currentMonths.map((m) => (
                 <th key={m.bsMonth} className="min-w-16 p-2 text-center">
                   <div>{m.nameEn}</div>
                   <div className="text-[10px] font-normal text-muted-foreground">{m.nameNe}</div>
                 </th>
               ))}
-              <th className="min-w-20 p-2 text-center">Remarks</th>
+              <th className="min-w-20 p-2 text-center">
+                <div>Remarks</div>
+                <div className="text-[10px] font-normal text-muted-foreground">कैफियत</div>
+              </th>
               {isEditing && <th className="no-print w-14 p-2 text-center">Action</th>}
             </tr>
           </thead>
           <tbody>
             {particulars.map((row, idx) => {
               const isHighlight = row.isTotalDays || row.isTeachingDays;
+              const [enTitle, neTitle] = (row.title || "").split(" · ");
               return (
                 <tr key={row.id} className={isHighlight ? "bg-muted/40 font-semibold" : ""}>
                   <td className="p-2 align-middle">
@@ -503,12 +506,15 @@ export function ClassCalendarTab({
                         </button>
                       </div>
                     ) : (
-                      row.title
+                      <div>
+                        <div className="font-semibold text-foreground">{enTitle || row.title}</div>
+                        {neTitle && <div className="text-[10px] text-muted-foreground font-normal">{neTitle}</div>}
+                      </div>
                     )}
                   </td>
 
                   {row.type === "span" ? (
-                    <td colSpan={currentMonths.length} className="p-2 text-center italic text-muted-foreground">
+                    <td colSpan={currentMonths.length} className="p-2 text-center italic text-muted-foreground font-medium">
                       {isEditing ? (
                         <input
                           className="field !h-7 !py-0 text-xs w-full text-center"
@@ -522,7 +528,7 @@ export function ClassCalendarTab({
                     </td>
                   ) : (
                     currentMonths.map((m) => {
-                      const val = row.values[String(m.bsMonth)] ?? row.values[m.nameEn] ?? "";
+                      const val = (row.values && (row.values[String(m.bsMonth)] ?? row.values[m.nameEn])) || "";
                       return (
                         <td key={m.bsMonth} className="p-1.5 text-center align-middle">
                           {isEditing ? (

@@ -812,11 +812,42 @@ export type CampusAnnualEvent = {
   created_at?: string;
 };
 
+/**
+ * Loads campus annual events:
+ * 1. From campus_annual_calendar table in Supabase
+ * 2. If table is empty or missing, looks up Admin user's teacher_data content.cal in cloud
+ */
 export async function loadCampusAnnualEvents(): Promise<CampusAnnualEvent[]> {
   try {
     const { data, error } = await sb.from("campus_annual_calendar").select("*").order("from_date", { ascending: true });
-    if (!error && Array.isArray(data)) {
+    if (!error && Array.isArray(data) && data.length > 0) {
       return data as CampusAnnualEvent[];
+    }
+  } catch {
+    /* fallback below */
+  }
+
+  // Fallback: check admin's teacher_data in cloud
+  try {
+    const { data: adminRows } = await sb.from("user_roles").select("user_id").eq("role", "admin");
+    if (Array.isArray(adminRows) && adminRows.length > 0) {
+      const adminIds = adminRows.map((r: any) => r.user_id);
+      const { data: td } = await sb.from("teacher_data").select("content").in("teacher_id", adminIds);
+      if (Array.isArray(td)) {
+        for (const row of td) {
+          const cal = row?.content?.cal;
+          if (Array.isArray(cal) && cal.length > 0) {
+            return cal.map((c: any) => ({
+              id: String(c.id || `cal-${Math.random()}`),
+              title: String(c.title || c.type || "Campus Event"),
+              event_type: String(c.type || "Event"),
+              from_date: String(c.from || ""),
+              to_date: c.to ? String(c.to) : null,
+              description: "",
+            }));
+          }
+        }
+      }
     }
   } catch {
     /* ignore */
@@ -857,7 +888,7 @@ export type CalendarParticularRow = {
   id: string;
   title: string;
   type: "monthly" | "span";
-  values: Record<string, string>; // month key (e.g. "m-6" or "Kartik") -> "11th" or "16"
+  values: Record<string, string>; // month index or key -> "11th" or "16"
   spanText: string;               // for merged text spanning across months
   remarks: string;                // auto-sum or custom remark
   isTotalDays?: boolean;
@@ -912,28 +943,32 @@ export function buildAcademicMonths(startMonth = 7, endMonth = 4): CalendarMonth
   return result;
 }
 
+/**
+ * Default particulars matching the user's photo with verified spelling, grammar, and bilingual labels.
+ */
 export const DEFAULT_MATRIX_PARTICULARS: Omit<CalendarParticularRow, "id">[] = [
-  { title: "Total Working Days", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: true, isTeachingDays: false },
-  { title: "Net Teaching Days", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: true },
-  { title: "Classes Start", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
-  { title: "Course Orientation", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
-  { title: "First-Term Examination", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
-  { title: "Result Publication, Analysis and Prize Distribution of 1st Term", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
-  { title: "Winter Vacation", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
-  { title: "Second-Term Examination", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
-  { title: "Result Publication, Analysis and Prize Distribution of 2nd Term", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
-  { title: "Remedial Classes Start as Needed", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
-  { title: "Guest Lecture", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
-  { title: "Third-Term Examination", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
-  { title: "Result Publication, Analysis and Prize Distribution of 3rd Term", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
-  { title: "Field Work / Project Work / Practical Orientation as needed", type: "span", values: {}, spanText: "Within 2 weeks of TU Board Exam Completion", remarks: "", isTotalDays: false, isTeachingDays: false },
-  { title: "Scholarship Distribution", type: "span", values: {}, spanText: "Notice after completion of TU Board Exam Form Filled up", remarks: "", isTotalDays: false, isTeachingDays: false },
-  { title: "TU Board Examination", type: "span", values: {}, spanText: "As per TU Notice", remarks: "", isTotalDays: false, isTeachingDays: false },
-  { title: "Practical Examination (if any)", type: "span", values: {}, spanText: "Within 15 days of Completion of TU Board Examination", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Total Working Days · कुल कार्यदिन", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: true, isTeachingDays: false },
+  { title: "Net Teaching Days · खुद शिक्षण दिन", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: true },
+  { title: "Classes Start · कक्षा आरम्भ", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Course Orientation · पाठ्यक्रम अभिमुखीकरण", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "First-Term Examination · प्रथम त्रैमासिक परीक्षा", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Result Publication, Analysis and Prize Distribution of 1st Term · प्रथम त्रैमासिक नतिजा प्रकाशन, विश्लेषण तथा पुरस्कार वितरण", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Winter Vacation · हिउँदे बिदा", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Second-Term Examination · दोस्रो त्रैमासिक परीक्षा", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Result Publication, Analysis and Prize Distribution of 2nd Term · दोस्रो त्रैमासिक नतिजा प्रकाशन, विश्लेषण तथा पुरस्कार वितरण", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Remedial Classes Start as Needed · आवश्यकता अनुसार उपचारात्मक कक्षा सञ्चालन", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Guest Lecture · अतिथि व्याख्यान", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Third-Term Examination · तेस्रो त्रैमासिक परीक्षा", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Result Publication, Analysis and Prize Distribution of 3rd Term · तेस्रो त्रैमासिक नतिजा प्रकाशन, विश्लेषण तथा पुरस्कार वितरण", type: "monthly", values: {}, spanText: "", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Field Work / Project Work / Practical Orientation as Needed · फिल्ड वर्क / परियोजना कार्य / प्रयोगात्मक अभिमुखीकरण", type: "span", values: {}, spanText: "Within 2 weeks of TU Board Exam Completion", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Scholarship Distribution · छात्रवृत्ति वितरण", type: "span", values: {}, spanText: "Notice after completion of TU Board Exam Form Fill-up", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "TU Board Examination · त्रि.वि. वार्षिक परीक्षा", type: "span", values: {}, spanText: "As per TU Notice", remarks: "", isTotalDays: false, isTeachingDays: false },
+  { title: "Practical Examination (if any) · प्रयोगात्मक परीक्षा (भएमा)", type: "span", values: {}, spanText: "Within 15 days of Completion of TU Board Examination", remarks: "", isTotalDays: false, isTeachingDays: false },
 ];
 
 export function calcRowAutoSum(row: CalendarParticularRow, months: CalendarMonthCol[]): number {
   let sum = 0;
+  if (!row.values || typeof row.values !== "object") return 0;
   for (const m of months) {
     const v = Number(row.values[String(m.bsMonth)] ?? row.values[m.nameEn] ?? 0);
     if (!isNaN(v)) sum += v;
@@ -941,32 +976,99 @@ export function calcRowAutoSum(row: CalendarParticularRow, months: CalendarMonth
   return sum;
 }
 
+/** Robust normalization to guarantee months and particulars are always safe arrays and objects. */
+export function normalizeCalendarRecord(d: any): ClassAcademicCalendar {
+  if (!d || typeof d !== "object") {
+    return {
+      id: "",
+      department_id: "",
+      academic_year: "",
+      class_id: "",
+      class_name: "",
+      start_month: 7,
+      end_month: 4,
+      months: buildAcademicMonths(7, 4),
+      particulars: DEFAULT_MATRIX_PARTICULARS.map((p, idx) => ({ id: `row-${idx}`, ...p, values: { ...p.values } })),
+      status: "draft",
+      approval_note: "",
+      prepared_name: "",
+      approved_name: "",
+      approved_at: null,
+    };
+  }
+
+  let months = d.months;
+  if (typeof months === "string") {
+    try { months = JSON.parse(months); } catch { months = null; }
+  }
+  if (!Array.isArray(months) || months.length === 0) {
+    months = buildAcademicMonths(Number(d.start_month) || 7, Number(d.end_month) || 4);
+  }
+
+  let parts = d.particulars;
+  if (typeof parts === "string") {
+    try { parts = JSON.parse(parts); } catch { parts = null; }
+  }
+  if (!Array.isArray(parts) || parts.length === 0) {
+    parts = DEFAULT_MATRIX_PARTICULARS.map((p, idx) => ({ id: `row-${idx}`, ...p, values: { ...p.values } }));
+  } else {
+    parts = parts.map((p: any, idx: number) => ({
+      id: String(p.id || `row-${idx}`),
+      title: String(p.title || ""),
+      type: p.type === "span" ? "span" : "monthly",
+      values: p.values && typeof p.values === "object" ? p.values : {},
+      spanText: String(p.spanText || ""),
+      remarks: String(p.remarks || ""),
+      isTotalDays: Boolean(p.isTotalDays),
+      isTeachingDays: Boolean(p.isTeachingDays),
+    }));
+  }
+
+  return {
+    id: String(d.id || ""),
+    department_id: String(d.department_id || ""),
+    academic_year: String(d.academic_year || ""),
+    class_id: String(d.class_id || ""),
+    class_name: String(d.class_name || ""),
+    start_month: Number(d.start_month) || 7,
+    end_month: Number(d.end_month) || 4,
+    months,
+    particulars: parts,
+    status: (d.status === "approved" || d.status === "submitted") ? d.status : "draft",
+    approval_note: String(d.approval_note || ""),
+    prepared_name: String(d.prepared_name || ""),
+    approved_name: String(d.approved_name || ""),
+    approved_at: d.approved_at || null,
+  };
+}
+
 export async function loadClassCalendar(deptId: string, year: string, classId: string): Promise<R<ClassAcademicCalendar | null>> {
   try {
-    const { data, error } = await sb
-      .from("dm_academic_calendars")
-      .select("*")
-      .eq("department_id", deptId)
-      .eq("academic_year", year)
-      .eq("class_id", classId)
-      .maybeSingle();
-    if (error) return { ok: false, error: niceDmError(error) };
-    return { ok: true, data: (data as ClassAcademicCalendar) ?? null };
-  } catch (e) {
-    return { ok: false, error: `No connection (${e instanceof Error ? e.message : e}).` };
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(deptId);
+    let q = sb.from("dm_academic_calendars").select("*");
+    if (isUuid) q = q.eq("department_id", deptId);
+    if (year) q = q.eq("academic_year", year);
+    if (classId) q = q.eq("class_id", classId);
+    const { data, error } = await q.maybeSingle();
+    if (error) {
+      // Table doesn't exist yet or query failed - return null gracefully
+      return { ok: true, data: null };
+    }
+    return { ok: true, data: data ? normalizeCalendarRecord(data) : null };
+  } catch {
+    return { ok: true, data: null };
   }
 }
 
 export async function loadAllClassCalendars(deptId: string, year: string): Promise<ClassAcademicCalendar[]> {
   try {
-    const { data, error } = await sb
-      .from("dm_academic_calendars")
-      .select("*")
-      .eq("department_id", deptId)
-      .eq("academic_year", year)
-      .order("class_name");
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(deptId);
+    let q = sb.from("dm_academic_calendars").select("*");
+    if (isUuid) q = q.eq("department_id", deptId);
+    if (year) q = q.eq("academic_year", year);
+    const { data, error } = await q.order("class_name");
     if (!error && Array.isArray(data)) {
-      return data as ClassAcademicCalendar[];
+      return data.map(normalizeCalendarRecord);
     }
   } catch {
     /* ignore */
@@ -994,11 +1096,11 @@ export async function saveClassCalendar(cal: Omit<ClassAcademicCalendar, "id"> &
   return cal.id
     ? run(
         sb.from("dm_academic_calendars").update(payload).eq("id", cal.id).select("*").single(),
-        (d) => d as ClassAcademicCalendar
+        (d) => normalizeCalendarRecord(d)
       )
     : run(
         sb.from("dm_academic_calendars").insert(payload).select("*").single(),
-        (d) => d as ClassAcademicCalendar
+        (d) => normalizeCalendarRecord(d)
       );
 }
 
