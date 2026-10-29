@@ -66,6 +66,7 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
   const [newTypeHoliday, setNewTypeHoliday] = useState(false);
   const [edEvent, setEdEvent] = useState<{ id?: string; title: string; type: string; from: string; to: string; desc: string } | null>(null);
   const [note, setNote] = useState("");
+  const [syncing, setSyncing] = useState(false);
 
   const loadData = useCallback(async () => {
     const [tList, evList] = await Promise.all([
@@ -79,6 +80,35 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
   useEffect(() => {
     void loadData();
   }, [loadData]);
+
+  const missingFromCloud = (data?.cal || []).filter(
+    (c) => !cloudEvents.some((ce) => ce.title === c.title && ce.from_date === c.from)
+  );
+
+  const syncAllToCloud = async () => {
+    if (!missingFromCloud.length) return;
+    setSyncing(true);
+    setNote("क्लाउडमा सिंक हुँदैछ... कृपया पर्खनुहोस्...");
+    const synced = await D.syncLocalEventsToCloud(missingFromCloud);
+    setSyncing(false);
+    if (synced.length > 0) {
+      setNote(`${synced.length} वटा कार्यक्रम क्लाउडमा सुरक्षित भयो। अब सबै प्रयोगकर्ताको Home मा देखिन्छ।`);
+      await loadData();
+    } else {
+      setNote("क्लाउडमा सिंक गर्न सकिएन। कृपया Lovable SQL Editor मा docs/phase6/45_fix_campus_calendar_rls.sql चलाउनुहोस्।");
+    }
+  };
+
+  // Background auto-migration of local events when cloud is empty
+  useEffect(() => {
+    if (canEdit && missingFromCloud.length > 0 && cloudEvents.length === 0) {
+      void D.syncLocalEventsToCloud(missingFromCloud).then((synced) => {
+        if (synced.length > 0) {
+          void loadData();
+        }
+      });
+    }
+  }, [canEdit, missingFromCloud.length, cloudEvents.length, loadData]);
 
   const handleAddType = async () => {
     if (!newTypeName.trim()) return;
@@ -189,6 +219,17 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
         </div>
         {canEdit && (
           <div className="flex flex-wrap items-center gap-2">
+            {missingFromCloud.length > 0 && (
+              <button
+                type="button"
+                className="btn !bg-amber-600 hover:!bg-amber-700 text-white text-xs font-semibold shadow-xs"
+                disabled={syncing}
+                onClick={syncAllToCloud}
+                title="स्थानीय क्यालेन्डरका कार्यक्रमहरू Supabase Cloud मा पठाउनुहोस्"
+              >
+                {syncing ? "Syncing..." : `☁️ Sync ${missingFromCloud.length} Events to Cloud`}
+              </button>
+            )}
             <button
               type="button"
               className="btn-soft text-xs"

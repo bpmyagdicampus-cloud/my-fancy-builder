@@ -26,17 +26,31 @@ function Home() {
   const [campusEvents, setCampusEvents] = useState<D.CampusAnnualEvent[]>([]);
   const [calTypes, setCalTypes] = useState<D.CampusCalType[]>([]);
   const [calFilter, setCalFilter] = useState("");
+  const [showAllYear, setShowAllYear] = useState(false);
   const today = todayBs();
 
   const admin = cl.roles.includes("admin");
   const headDepts = lk.heads.filter((h) => h.user_id === cl.userId).map((h) => h.department_id);
 
   useEffect(() => {
-    void Promise.all([D.loadCampusAnnualEvents(), D.loadCalTypes()]).then(([evList, tList]) => {
+    void Promise.all([D.loadCampusAnnualEvents(), D.loadCalTypes()]).then(async ([evList, tList]) => {
       setCampusEvents(evList);
       setCalTypes(tList);
+
+      // If current user is admin and has local data.cal events not yet in cloud, auto-sync them!
+      if (admin && data?.cal && data.cal.length > 0) {
+        const missing = data.cal.filter(
+          (c) => !evList.some((ce) => ce.title === c.title && ce.from_date === c.from)
+        );
+        if (missing.length > 0) {
+          const synced = await D.syncLocalEventsToCloud(missing);
+          if (synced && synced.length > 0) {
+            setCampusEvents((prev) => [...prev, ...synced]);
+          }
+        }
+      }
     });
-  }, []);
+  }, [admin, data?.cal]);
 
   useEffect(() => {
     if (cl.status !== "ready" || !cl.userId) {
@@ -82,9 +96,12 @@ function Home() {
   ].sort((a, b) => a.from.localeCompare(b.from));
 
   const upcomingAnnualEvents = mergedAnnualEvents.filter((e) => (e.to || e.from) >= today);
-  const filteredAnnualEvents = calFilter
-    ? upcomingAnnualEvents.filter((e) => e.type === calFilter)
+  const targetAnnualEvents = showAllYear || upcomingAnnualEvents.length === 0
+    ? mergedAnnualEvents
     : upcomingAnnualEvents;
+  const filteredAnnualEvents = calFilter
+    ? targetAnnualEvents.filter((e) => e.type === calFilter)
+    : targetAnnualEvents;
 
   const todayEv = mergedAnnualEvents.filter((e) => inRange(today, e.from, e.to || e.from));
 
@@ -176,13 +193,32 @@ function Home() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
+            {mergedAnnualEvents.length > 0 && (
+              <div className="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
+                <button
+                  type="button"
+                  className={`px-2 py-0.5 text-[11px] rounded transition-colors ${!showAllYear && upcomingAnnualEvents.length > 0 ? "!bg-primary text-primary-foreground font-semibold shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={() => setShowAllYear(false)}
+                >
+                  आगामी ({upcomingAnnualEvents.length})
+                </button>
+                <button
+                  type="button"
+                  className={`px-2 py-0.5 text-[11px] rounded transition-colors ${showAllYear || upcomingAnnualEvents.length === 0 ? "!bg-primary text-primary-foreground font-semibold shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={() => setShowAllYear(true)}
+                >
+                  वर्षभरिका सबै ({mergedAnnualEvents.length})
+                </button>
+              </div>
+            )}
+
             {calTypes.length > 0 && (
               <select
                 className="field !h-8 !py-0 !text-xs !w-auto"
                 value={calFilter}
                 onChange={(e) => setCalFilter(e.target.value)}
               >
-                <option value="">All events · सबै प्रकार ({upcomingAnnualEvents.length})</option>
+                <option value="">All types · सबै प्रकार ({targetAnnualEvents.length})</option>
                 {calTypes.map((t) => (
                   <option key={t.id} value={t.name}>
                     {t.name}
@@ -241,9 +277,27 @@ function Home() {
           })}
         </div>
         {!filteredAnnualEvents.length && (
-          <p className="py-2 text-center text-xs text-muted-foreground">
-            आगामी कुनै कार्यक्रम भेटिएन। {admin ? "Setup मा गएर वार्षिक कार्यक्रमहरू थप्न सक्नुहुन्छ।" : ""}
-          </p>
+          <div className="py-6 text-center text-xs text-muted-foreground">
+            {mergedAnnualEvents.length > 0 && !showAllYear ? (
+              <p>
+                आगामी मितिमा कुनै नयाँ कार्यक्रम छैन।{" "}
+                <button
+                  type="button"
+                  className="text-primary font-semibold underline ml-1"
+                  onClick={() => setShowAllYear(true)}
+                >
+                  वर्षभरिका सबै ({mergedAnnualEvents.length}) कार्यक्रम हेर्नुहोस्
+                </button>
+              </p>
+            ) : (
+              <p>
+                क्याम्पस वार्षिक क्यालेन्डरमा हाल कुनै कार्यक्रम भेटिएन।{" "}
+                {admin
+                  ? "Setup मा गएर वार्षिक कार्यक्रमहरू थप्न वा Sync गर्न सक्नुहुन्छ।"
+                  : "प्रशासनले कार्यक्रमहरू थप गरेपछि यहाँ देखिनेछ।"}
+              </p>
+            )}
+          </div>
         )}
       </section>
 

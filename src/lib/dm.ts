@@ -818,6 +818,24 @@ export type CampusAnnualEvent = {
  * 2. If table is empty or missing, looks up Admin user's teacher_data content.cal in cloud
  */
 export async function loadCampusAnnualEvents(): Promise<CampusAnnualEvent[]> {
+  // Strategy 1: Universal RPC get_campus_annual_calendar (SECURITY DEFINER, bypasses RLS)
+  try {
+    const { data, error } = await sb.rpc("get_campus_annual_calendar");
+    if (!error && Array.isArray(data) && data.length > 0) {
+      return data.map((c: any) => ({
+        id: String(c.id || `cal-${Math.random()}`),
+        title: String(c.title || c.event_type || c.type || "Campus Event"),
+        event_type: String(c.event_type || c.type || "Event"),
+        from_date: String(c.from_date || c.from || ""),
+        to_date: c.to_date ? String(c.to_date) : c.to ? String(c.to) : null,
+        description: String(c.description || ""),
+      }));
+    }
+  } catch {
+    /* try next */
+  }
+
+  // Strategy 2: Direct select from campus_annual_calendar table
   try {
     const { data, error } = await sb.from("campus_annual_calendar").select("*").order("from_date", { ascending: true });
     if (!error && Array.isArray(data) && data.length > 0) {
@@ -827,7 +845,7 @@ export async function loadCampusAnnualEvents(): Promise<CampusAnnualEvent[]> {
     /* fallback below */
   }
 
-  // Fallback: check admin's teacher_data in cloud
+  // Strategy 3: Check admin's teacher_data in cloud
   try {
     const { data: adminRows } = await sb.from("user_roles").select("user_id").eq("role", "admin");
     if (Array.isArray(adminRows) && adminRows.length > 0) {
@@ -852,7 +870,55 @@ export async function loadCampusAnnualEvents(): Promise<CampusAnnualEvent[]> {
   } catch {
     /* ignore */
   }
+
+  // Strategy 4: Fallback to any teacher_data that has a non-empty 'cal' array
+  try {
+    const { data: tdAll } = await sb.from("teacher_data").select("content").limit(20);
+    if (Array.isArray(tdAll)) {
+      for (const row of tdAll) {
+        const cal = row?.content?.cal;
+        if (Array.isArray(cal) && cal.length > 0) {
+          return cal.map((c: any) => ({
+            id: String(c.id || `cal-${Math.random()}`),
+            title: String(c.title || c.type || "Campus Event"),
+            event_type: String(c.type || "Event"),
+            from_date: String(c.from || ""),
+            to_date: c.to ? String(c.to) : null,
+            description: "",
+          }));
+        }
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+
   return [];
+}
+
+/** Synchronizes a list of local events to Supabase campus_annual_calendar */
+export async function syncLocalEventsToCloud(
+  localEvents: { title: string; type?: string; from: string; to?: string }[]
+): Promise<CampusAnnualEvent[]> {
+  const synced: CampusAnnualEvent[] = [];
+  for (const ev of localEvents) {
+    if (!ev.title?.trim() || !ev.from) continue;
+    try {
+      const res = await saveCampusAnnualEvent({
+        title: ev.title.trim(),
+        event_type: ev.type || "Event",
+        from_date: ev.from,
+        to_date: ev.to || null,
+        description: "",
+      });
+      if (res.ok && res.data) {
+        synced.push(res.data);
+      }
+    } catch {
+      /* continue */
+    }
+  }
+  return synced;
 }
 
 export async function saveCampusAnnualEvent(ev: Omit<CampusAnnualEvent, "id"> & { id?: string }): Promise<R<CampusAnnualEvent>> {

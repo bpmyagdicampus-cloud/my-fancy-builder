@@ -73,19 +73,19 @@ alter table public.campus_annual_calendar enable row level security;
 alter table public.dm_academic_calendars enable row level security;
 
 revoke all on public.campus_cal_types, public.campus_annual_calendar, public.dm_academic_calendars from anon;
-grant select on public.campus_cal_types, public.campus_annual_calendar, public.dm_academic_calendars to authenticated;
+grant select on public.campus_cal_types, public.campus_annual_calendar, public.dm_academic_calendars to anon, authenticated;
 grant insert, update, delete on public.campus_cal_types, public.campus_annual_calendar, public.dm_academic_calendars to authenticated;
 
 -- Types: readable by all authenticated users; writable by admin
 drop policy if exists campus_cal_types_read on public.campus_cal_types;
-create policy campus_cal_types_read on public.campus_cal_types for select to authenticated using (true);
+create policy campus_cal_types_read on public.campus_cal_types for select to public using (true);
 drop policy if exists campus_cal_types_write on public.campus_cal_types;
 create policy campus_cal_types_write on public.campus_cal_types for all to authenticated
   using (public.has_role(auth.uid(), 'admin')) with check (public.has_role(auth.uid(), 'admin'));
 
 -- Campus annual calendar: readable by all authenticated users (shown on Home); writable by admin
 drop policy if exists campus_annual_cal_read on public.campus_annual_calendar;
-create policy campus_annual_cal_read on public.campus_annual_calendar for select to authenticated using (true);
+create policy campus_annual_cal_read on public.campus_annual_calendar for select to public using (true);
 drop policy if exists campus_annual_cal_write on public.campus_annual_calendar;
 create policy campus_annual_cal_write on public.campus_annual_calendar for all to authenticated
   using (public.has_role(auth.uid(), 'admin')) with check (public.has_role(auth.uid(), 'admin'));
