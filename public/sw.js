@@ -1,5 +1,5 @@
 // Shikshak Diary — Offline-First PWA Service Worker
-const CACHE_NAME = "shikshak-diary-pwa-v2";
+const CACHE_NAME = "shikshak-diary-pwa-v3";
 const PRECACHE_URLS = [
   "/",
   "/login",

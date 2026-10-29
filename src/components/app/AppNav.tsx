@@ -43,7 +43,6 @@ export function AppNav() {
     return () => setEditGuard(null);
   }, []);
 
-  // Hide the top app bar on the Login screen so the login page stays clean
   if (path === "/login") return null;
 
   const signedIn = c.status === "ready" && !!c.userId;
@@ -57,8 +56,9 @@ export function AppNav() {
   const past = isPast(data, cloudActiveName);
 
   return (
-    <header className="no-print sticky top-0 z-20 border-b border-border bg-card/95 pt-[env(safe-area-inset-top)] backdrop-blur">
+    <header className="no-print sticky top-0 z-20 w-full border-b border-border bg-card/95 pt-[env(safe-area-inset-top)] backdrop-blur">
       <div className="flex items-center gap-1.5 px-3 py-2 sm:gap-2 md:px-5">
+        {/* Mobile Logo & Title */}
         <Link to="/" className="flex shrink-0 items-center gap-2 leading-none text-primary md:hidden">
           <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-8 w-8 shrink-0 rounded-lg shadow-sm" />
           <div className="whitespace-nowrap">
@@ -69,23 +69,29 @@ export function AppNav() {
           </div>
         </Link>
 
-        <div className="hidden items-center gap-2 text-xs text-muted-foreground md:flex">
-          <span className="font-semibold text-foreground">
-            © 2026 Shikshak Diary. Developed by Bishnu Acharya. All rights reserved.
+        {/* Desktop Campus Name Display on Left of Top Bar */}
+        <div className="hidden min-w-0 items-center gap-2 md:flex">
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-secondary/70 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">
+            <span>🏛️</span>
+            <span className="truncate">{profile?.campus || "MYAGDI MULTIPLE CAMPUS"}</span>
           </span>
-          {profile?.campus && <span>· {profile.campus}</span>}
+          {profile?.address && (
+            <span className="truncate text-xs font-medium text-muted-foreground">
+              📍 {profile.address}
+            </span>
+          )}
         </div>
 
         <div className="flex-1" />
 
-        {!pwa.isStandalone && (
+        {pwa.canInstall && !pwa.isStandalone && (
           <button
             type="button"
             onClick={() => void triggerInstallApp()}
             className="chip shrink-0 whitespace-nowrap !border-primary/40 !bg-secondary font-semibold text-primary"
             title="मोबाइल वा कम्प्युटरमा एप इन्स्टल गर्नुहोस् · Install App"
           >
-            📲 <span className="hidden sm:inline">Install App · </span>एप
+            📲 <span className="hidden sm:inline">Install App · </span>एप इन्स्टल
           </button>
         )}
 
@@ -127,7 +133,7 @@ export function AppNav() {
           <Link
             to="/account"
             className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-border bg-background py-0.5 pl-0.5 pr-1 sm:pr-3 text-xs font-semibold shadow-sm transition hover:bg-muted sm:text-sm"
-            title="My account · मेरो खाता"
+            title="My account & Sign out · मेरो खाता र बाहिरिनुहोस्"
           >
             <Avatar name={c.me?.name} path={c.me?.avatar_path} size={30} />
             <span className="hidden max-w-36 truncate sm:inline">{c.me?.name || c.email}</span>

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Page } from "@/components/app/ui";
 import { Avatar, BG_PRESETS } from "@/components/app/auth";
@@ -9,6 +9,7 @@ import {
   isStaff,
   listUnsaved,
   retryNow,
+  signOut,
   updateMine,
   uploadImage,
   useCloud,
@@ -21,9 +22,9 @@ export const Route = createFileRoute("/account")({
   head: () => ({
     meta: [
       { title: "My account — Shikshak Diary" },
-      { name: "description", content: "Change your photo, password and background." },
+      { name: "description", content: "Change your photo, password, background or sign out." },
       { property: "og:title", content: "My account — Shikshak Diary" },
-      { property: "og:description", content: "Change your photo, password and background." },
+      { property: "og:description", content: "Change your photo, password, background or sign out." },
     ],
   }),
   component: Account,
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/account")({
 function Account() {
   const c = useCloud();
   const pwa = usePwa();
+  const nav = useNavigate();
   const [pw, setPw] = useState({ a: "", b: "" });
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -54,6 +56,12 @@ function Account() {
       </Page>
     );
   }
+
+  const handleSignOut = async () => {
+    if (await signOut()) {
+      nav({ to: "/login" });
+    }
+  };
 
   const pick = async (kind: "avatar" | "bg", file?: File) => {
     if (!file) return;
@@ -98,7 +106,15 @@ function Account() {
   const isSynced = c.save === "idle" || c.save === "saved";
 
   return (
-    <Page title="My account · मेरो खाता" sub={`${me.name} · ID: ${loginOf(c.email)} · ${c.roles.join(", ")}`}>
+    <Page
+      title="My account · मेरो खाता"
+      sub={`${me.name} · ID: ${loginOf(c.email)} · ${c.roles.join(", ")}`}
+      actions={
+        <button type="button" className="btn-danger" onClick={() => void handleSignOut()}>
+          🚪 बाहिरिनुहोस् · Sign out
+        </button>
+      }
+    >
       {note && <p className="mb-3 rounded-md border border-primary p-2 text-sm">{note}</p>}
       <div className="no-print mb-4 flex flex-wrap gap-2">
         {tab("profile", "प्रोफाइल हेर्नुहोस्", "View profile")}
@@ -109,7 +125,12 @@ function Account() {
         {view === "profile" && (
           <>
             <section className="panel md:col-span-2">
-              <h2 className="mb-3 text-lg font-bold">Profile · प्रोफाइल</h2>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-lg font-bold">Profile · प्रोफाइल</h2>
+                <button type="button" className="btn-danger !min-h-9 !px-3 !py-1 text-xs" onClick={() => void handleSignOut()}>
+                  🚪 बाहिरिनुहोस् · Sign out
+                </button>
+              </div>
               <div className="mb-3 flex items-center gap-4">
                 <Avatar name={me.name} path={me.avatar_path} size={72} />
                 <label className="btn-soft cursor-pointer">
@@ -153,7 +174,7 @@ function Account() {
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  {!pwa.isStandalone ? (
+                  {pwa.canInstall && !pwa.isStandalone && (
                     <button
                       type="button"
                       className="btn text-xs"
@@ -161,7 +182,8 @@ function Account() {
                     >
                       📲 Install App · एप इन्स्टल गर्नुहोस्
                     </button>
-                  ) : (
+                  )}
+                  {pwa.isStandalone && (
                     <span className="chip-on">✓ एप इन्स्टल भइसकेको छ (App Installed)</span>
                   )}
                   {isSynced ? (

@@ -90,25 +90,15 @@ function Login() {
         </p>
       </div>
 
-      {/* 1-Click Mobile / Desktop App Install Card right on the Login page */}
-      {!pwa.isStandalone && (
-        <div className="rounded-xl border border-primary/30 bg-secondary/50 p-3 text-center">
-          <div className="flex items-center justify-center gap-2 text-xs font-bold text-primary">
-            <img src="/icon-192.png" alt="" className="h-5 w-5 rounded" />
-            <span>मोबाइल वा कम्प्युटरमा एपको रूपमा राख्नुहोस्</span>
-          </div>
-          <button
-            type="button"
-            className="btn mt-2 w-full text-xs"
-            onClick={() => void triggerInstallApp()}
-          >
-            📲 Install App · एप इन्स्टल गर्नुहोस्
-          </button>
-          <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
-            💡 <b>नोट:</b> एन्ड्रोइडमा Play Protect पप-अप आएमा <b>"More details ⌄"</b> मा थिचेर{" "}
-            <b>"Install anyway"</b> मा क्लिक गर्नुहोस् (वा <b>Google Chrome</b> प्रयोग गर्नुहोस्)।
-          </p>
-        </div>
+      {/* Direct 1-Click Native Install Button (shown only when browser native install prompt is ready) */}
+      {pwa.canInstall && !pwa.isStandalone && (
+        <button
+          type="button"
+          className="btn-soft w-full text-xs font-bold text-primary"
+          onClick={() => void triggerInstallApp()}
+        >
+          📲 Install App · मोबाइल/कम्प्युटरमा एप इन्स्टल गर्नुहोस्
+        </button>
       )}
 
       <footer className="mt-2 border-t border-border pt-3 text-center text-xs font-medium text-muted-foreground">

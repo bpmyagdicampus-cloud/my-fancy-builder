@@ -5,22 +5,24 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 };
 
+declare global {
+  interface Window {
+    __deferredPwaPrompt?: BeforeInstallPromptEvent | null;
+  }
+}
+
 export type PwaState = {
   canInstall: boolean;
   isStandalone: boolean;
-  isIos: boolean;
   persisted: boolean;
   storageUsedKb: number;
-  showHelpModal: boolean;
 };
 
 const INITIAL: PwaState = {
   canInstall: false,
   isStandalone: false,
-  isIos: false,
   persisted: false,
   storageUsedKb: 0,
-  showHelpModal: false,
 };
 
 let state: PwaState = INITIAL;
@@ -32,6 +34,25 @@ const set = (patch: Partial<PwaState>) => {
   state = { ...state, ...patch };
   listeners.forEach((fn) => fn());
 };
+
+// Capture beforeinstallprompt immediately at module load time as well
+if (typeof window !== "undefined") {
+  if (window.__deferredPwaPrompt) {
+    deferredPrompt = window.__deferredPwaPrompt;
+    state = { ...state, canInstall: true };
+  }
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e as BeforeInstallPromptEvent;
+    window.__deferredPwaPrompt = deferredPrompt;
+    set({ canInstall: true });
+  });
+  window.addEventListener("appinstalled", () => {
+    deferredPrompt = null;
+    window.__deferredPwaPrompt = null;
+    set({ canInstall: false, isStandalone: true });
+  });
+}
 
 export const usePwa = () =>
   useSyncExternalStore(
@@ -62,26 +83,25 @@ export function refreshStorageEstimate() {
   set({ storageUsedKb: computeLocalStorageKb() });
 }
 
-export function closeInstallHelp() {
-  set({ showHelpModal: false });
-}
-
 export function initPwa() {
-  if (initialized || typeof window === "undefined") return;
-  initialized = true;
+  if (typeof window === "undefined") return;
+
+  if (window.__deferredPwaPrompt && !deferredPrompt) {
+    deferredPrompt = window.__deferredPwaPrompt;
+  }
 
   const isStandalone =
     window.matchMedia?.("(display-mode: standalone)").matches ||
     (window.navigator as any).standalone === true;
 
-  const ua = window.navigator.userAgent || "";
-  const isIos = /iphone|ipad|ipod/i.test(ua) && !isStandalone;
-
   set({
+    canInstall: !!deferredPrompt && !isStandalone,
     isStandalone,
-    isIos,
     storageUsedKb: computeLocalStorageKb(),
   });
+
+  if (initialized) return;
+  initialized = true;
 
   // Request persistent on-device storage so offline diary data is never evicted by the OS/browser
   if (navigator.storage && typeof navigator.storage.persist === "function") {
@@ -92,30 +112,14 @@ export function initPwa() {
 
   // Register Service Worker for offline app launch & PWA install prompt
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
+    const registerSw = () => {
       void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
         /* ignore registration errors in dev */
       });
-    });
-    // Also register immediately if document is already loaded
-    if (document.readyState === "complete") {
-      void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
-        /* ignore */
-      });
-    }
+    };
+    if (document.readyState === "complete") registerSw();
+    else window.addEventListener("load", registerSw);
   }
-
-  // Capture Chrome/Edge/Android 1-click install prompt
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e as BeforeInstallPromptEvent;
-    set({ canInstall: true });
-  });
-
-  window.addEventListener("appinstalled", () => {
-    deferredPrompt = null;
-    set({ canInstall: false, isStandalone: true, showHelpModal: false });
-  });
 
   window.matchMedia?.("(display-mode: standalone)").addEventListener?.("change", (ev) => {
     set({ isStandalone: ev.matches });
@@ -123,23 +127,23 @@ export function initPwa() {
 }
 
 /**
- * Triggers 1-click native app installation if supported by the browser (Android Chrome / Desktop Chrome / Edge),
- * or opens a clear visual guide if the browser requires manual 'Add to Home Screen' / 'Install page as app'.
+ * Directly triggers the browser's native 1-click app installation dialog (no custom text popup).
  */
-export async function triggerInstallApp(): Promise<void> {
+export async function triggerInstallApp(): Promise<boolean> {
   initPwa();
-  if (deferredPrompt) {
-    try {
-      await deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      if (choice.outcome === "accepted") {
-        deferredPrompt = null;
-        set({ canInstall: false });
-      }
-      return;
-    } catch {
-      /* fall through to help modal */
+  const promptEvent = deferredPrompt || (typeof window !== "undefined" ? window.__deferredPwaPrompt : null);
+  if (!promptEvent) return false;
+  try {
+    await promptEvent.prompt();
+    const choice = await promptEvent.userChoice;
+    if (choice.outcome === "accepted") {
+      deferredPrompt = null;
+      if (typeof window !== "undefined") window.__deferredPwaPrompt = null;
+      set({ canInstall: false });
+      return true;
     }
+  } catch {
+    /* ignore */
   }
-  set({ showHelpModal: true });
+  return false;
 }

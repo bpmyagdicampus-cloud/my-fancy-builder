@@ -31,8 +31,8 @@ export const loadClasses = () => run<SqcClass[]>(sb.from("sqc_classes").select("
 export const loadSubjects = () => run<ClassTeaching[]>(sb.rpc("sqc_class_subjects"), (d) => d ?? []);
 export const loadPeriods = () => run<Period[]>(sb.from("sqc_periods").select("period_no,start_time,end_time").order("period_no"), (d) => d ?? []);
 export const loadTeachers = () => run<Teacher[]>(sb.rpc("sqc_teacher_list"), (d) => d ?? []);
-export const loadReports = () => run<Report[]>(sb.from("sqc_reports").select("*").order("report_date", { ascending: false }).limit(5000), (d) => d ?? []);
-export const loadActions = () => run<Action[]>(sb.from("sqc_actions").select("*").order("created_at", { ascending: true }).limit(10000), (d) => d ?? []);
+export const loadReports = () => run<Report[]>(sb.from("sqc_reports").select("*").order("report_date", { ascending: false }).limit(1000), (d) => d ?? []);
+export const loadActions = () => run<Action[]>(sb.from("sqc_actions").select("*").order("created_at", { ascending: true }).limit(2000), (d) => d ?? []);
 
 const FIELDS = ["class_id", "report_date", "period_no", "teacher_id", "teacher_name", "subject", "held", "arrival_time", "departure_time", "not_held_reason", "present_count", "total_count", "issues", "facilities", "requests", "suggestions"] as const;
 export function reportPayload(d: ReportDraft) {

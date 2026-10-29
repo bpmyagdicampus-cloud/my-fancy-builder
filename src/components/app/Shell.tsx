@@ -2,7 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Avatar } from "@/components/app/auth";
 import { isStaff, signOut, useCloud } from "@/lib/cloud";
-import { closeInstallHelp, triggerInstallApp, usePwa } from "@/lib/pwa";
+import { triggerInstallApp, usePwa } from "@/lib/pwa";
 
 // Simple inline icons (no extra package needed)
 const P: Record<string, string> = {
@@ -73,7 +73,7 @@ function useShell() {
   return { c, path, signed, local, staff, admin, visible, items, active };
 }
 
-/** Desktop: collapsible left sidebar with original Shikshak Diary logo and 1-click Install App button. */
+/** Desktop: collapsible left sidebar with original Shikshak Diary logo. */
 export function Sidebar() {
   const { c, visible, items, active, signed } = useShell();
   const pwa = usePwa();
@@ -149,7 +149,7 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-sidebar-border p-2.5 space-y-2">
-        {!pwa.isStandalone && (
+        {pwa.canInstall && !pwa.isStandalone && (
           <button
             type="button"
             onClick={() => void triggerInstallApp()}
@@ -234,10 +234,10 @@ export function BottomNav() {
       {staff && path !== "/diary" && !more && (
         <Link
           to="/diary"
-          className="no-print fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2.5 text-xs font-bold text-primary-foreground shadow-lg ring-2 ring-background transition-transform active:scale-95 md:hidden"
+          className="no-print fixed right-3 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-30 flex items-center gap-1 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-lg ring-2 ring-background transition-transform active:scale-95 md:hidden"
           title="आजको दैनिक डायरी लेख्नुहोस् · Quick Daily Diary"
         >
-          <Icon n="plus" size={16} />
+          <Icon n="plus" size={15} />
           <span>दैनिक डायरी</span>
         </Link>
       )}
@@ -280,7 +280,7 @@ export function BottomNav() {
                   <span className="text-[10px] font-normal text-muted-foreground">{i.en}</span>
                 </Link>
               ))}
-              {!pwa.isStandalone && (
+              {pwa.canInstall && !pwa.isStandalone && (
                 <button
                   type="button"
                   onClick={() => {
@@ -347,66 +347,7 @@ export function BottomNav() {
   );
 }
 
-/** Modal guide shown when browser requires 1-tap menu install (e.g. iOS Safari or browsers where native prompt hasn't fired yet). */
-export function InstallHelpModal() {
-  const pwa = usePwa();
-  if (!pwa.showHelpModal) return null;
-  return (
-    <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-      <button
-        className="absolute inset-0 bg-foreground/50 backdrop-blur-[2px]"
-        aria-label="Close"
-        onClick={closeInstallHelp}
-      />
-      <div className="relative z-10 w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-xl">
-        <div className="flex items-center gap-3">
-          <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-12 w-12 rounded-xl shadow-sm" />
-          <div>
-            <h3 className="text-base font-bold text-foreground">शिक्षक डायरी एप इन्स्टल</h3>
-            <p className="text-xs text-muted-foreground">Shikshak Diary — Official App Icon</p>
-          </div>
-        </div>
-
-        {pwa.isIos ? (
-          <div className="mt-4 space-y-2 text-xs text-foreground">
-            <p className="font-semibold text-primary">iPhone / iPad मा इन्स्टल गर्ने तरिका:</p>
-            <ol className="list-decimal space-y-1.5 pl-4">
-              <li>
-                तल्लो बारमा रहेको <b>Share (⬆️)</b> आइकनमा थिच्नुहोस्।
-              </li>
-              <li>
-                तल स्क्रोल गरी <b>"Add to Home Screen"</b> मा थिच्नुहोस् र <b>Add</b> गर्नुहोस्।
-              </li>
-            </ol>
-          </div>
-        ) : (
-          <div className="mt-4 space-y-2 text-xs text-foreground">
-            <p className="font-semibold text-primary">मोबाइल वा कम्प्युटरमा इन्स्टल गर्ने तरिका:</p>
-            <ol className="list-decimal space-y-1.5 pl-4">
-              <li>
-                ब्राउजरको माथिल्लो दायाँ कुनामा रहेको <b>तीन थोप्ला (⋮)</b> वा एड्रेस बारको <b>Install (⊕)</b> आइकनमा थिच्नुहोस्।
-              </li>
-              <li>
-                <b>"Install app"</b> वा <b>"Add to Home screen"</b> छान्नुहोस्।
-              </li>
-            </ol>
-            <p className="text-[11px] text-muted-foreground pt-1">
-              💡 <b>टिप:</b> यदि एन्ड्रोइडमा Play Protect पप-अप देखिएमा <b>"More details ⌄"</b> मा थिचेर <b>"Install anyway"</b> छान्नुहोस् (वा <b>Google Chrome</b> ब्राउजर प्रयोग गर्नुहोस्)।
-            </p>
-          </div>
-        )}
-
-        <div className="mt-4 flex justify-end">
-          <button type="button" className="btn text-xs" onClick={closeInstallHelp}>
-            बुझियो · Close
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /** Wraps the page area so the sidebar (desktop) and bottom bar (phone) have room. */
 export function ShellFrame({ children }: { children: ReactNode }) {
-  return <div className="min-h-screen md:flex">{children}</div>;
+  return <div className="min-h-screen w-full overflow-x-hidden md:flex">{children}</div>;
 }

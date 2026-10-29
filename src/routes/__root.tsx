@@ -12,7 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import { AppNav } from "../components/app/AppNav";
 import { AuthGate, Background } from "../components/app/auth";
-import { BottomNav, InstallHelpModal, ShellFrame, Sidebar } from "../components/app/Shell";
+import { BottomNav, ShellFrame, Sidebar } from "../components/app/Shell";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { initPwa } from "../lib/pwa";
@@ -123,6 +123,11 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="ne">
       <head>
         <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__deferredPwaPrompt=e;});`,
+          }}
+        />
       </head>
       <body>
         {children}
@@ -144,7 +149,7 @@ function RootComponent() {
       <Background />
       <ShellFrame>
         <Sidebar />
-        <div className="min-w-0 flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
+        <div className="min-w-0 w-full flex-1 overflow-x-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
           <AppNav />
           <AuthGate>
             <Outlet />
@@ -152,7 +157,6 @@ function RootComponent() {
         </div>
       </ShellFrame>
       <BottomNav />
-      <InstallHelpModal />
     </QueryClientProvider>
   );
 }
