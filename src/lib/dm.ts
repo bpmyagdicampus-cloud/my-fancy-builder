@@ -817,12 +817,26 @@ export type CampusAnnualEvent = {
  * 1. From campus_annual_calendar table in Supabase
  * 2. If table is empty or missing, looks up Admin user's teacher_data content.cal in cloud
  */
+export function deduplicateAnnualEvents(list: CampusAnnualEvent[]): CampusAnnualEvent[] {
+  const seen = new Map<string, CampusAnnualEvent>();
+  for (const item of list) {
+    if (!item || !item.title) continue;
+    const key = `${item.title.trim().toLowerCase()}|${item.from_date || ""}|${item.to_date || ""}`;
+    if (!seen.has(key)) {
+      seen.set(key, item);
+    }
+  }
+  return Array.from(seen.values()).sort((a, b) => a.from_date.localeCompare(b.from_date));
+}
+
 export async function loadCampusAnnualEvents(): Promise<CampusAnnualEvent[]> {
+  let raw: CampusAnnualEvent[] = [];
+
   // Strategy 1: Universal RPC get_campus_annual_calendar (SECURITY DEFINER, bypasses RLS)
   try {
     const { data, error } = await sb.rpc("get_campus_annual_calendar");
     if (!error && Array.isArray(data) && data.length > 0) {
-      return data.map((c: any) => ({
+      raw = data.map((c: any) => ({
         id: String(c.id || `cal-${Math.random()}`),
         title: String(c.title || c.event_type || c.type || "Campus Event"),
         event_type: String(c.event_type || c.type || "Event"),
@@ -830,6 +844,7 @@ export async function loadCampusAnnualEvents(): Promise<CampusAnnualEvent[]> {
         to_date: c.to_date ? String(c.to_date) : c.to ? String(c.to) : null,
         description: String(c.description || ""),
       }));
+      return deduplicateAnnualEvents(raw);
     }
   } catch {
     /* try next */
@@ -839,7 +854,7 @@ export async function loadCampusAnnualEvents(): Promise<CampusAnnualEvent[]> {
   try {
     const { data, error } = await sb.from("campus_annual_calendar").select("*").order("from_date", { ascending: true });
     if (!error && Array.isArray(data) && data.length > 0) {
-      return data as CampusAnnualEvent[];
+      return deduplicateAnnualEvents(data as CampusAnnualEvent[]);
     }
   } catch {
     /* fallback below */
@@ -855,7 +870,7 @@ export async function loadCampusAnnualEvents(): Promise<CampusAnnualEvent[]> {
         for (const row of td) {
           const cal = row?.content?.cal;
           if (Array.isArray(cal) && cal.length > 0) {
-            return cal.map((c: any) => ({
+            raw = cal.map((c: any) => ({
               id: String(c.id || `cal-${Math.random()}`),
               title: String(c.title || c.type || "Campus Event"),
               event_type: String(c.type || "Event"),
@@ -863,29 +878,8 @@ export async function loadCampusAnnualEvents(): Promise<CampusAnnualEvent[]> {
               to_date: c.to ? String(c.to) : null,
               description: "",
             }));
+            return deduplicateAnnualEvents(raw);
           }
-        }
-      }
-    }
-  } catch {
-    /* ignore */
-  }
-
-  // Strategy 4: Fallback to any teacher_data that has a non-empty 'cal' array
-  try {
-    const { data: tdAll } = await sb.from("teacher_data").select("content").limit(20);
-    if (Array.isArray(tdAll)) {
-      for (const row of tdAll) {
-        const cal = row?.content?.cal;
-        if (Array.isArray(cal) && cal.length > 0) {
-          return cal.map((c: any) => ({
-            id: String(c.id || `cal-${Math.random()}`),
-            title: String(c.title || c.type || "Campus Event"),
-            event_type: String(c.type || "Event"),
-            from_date: String(c.from || ""),
-            to_date: c.to ? String(c.to) : null,
-            description: "",
-          }));
         }
       }
     }
@@ -930,8 +924,26 @@ export async function saveCampusAnnualEvent(ev: Omit<CampusAnnualEvent, "id"> & 
     description: ev.description?.trim() || "",
     updated_at: new Date().toISOString(),
   };
-  return ev.id
-    ? run(sb.from("campus_annual_calendar").update(payload).eq("id", ev.id).select("*").single(), (d) => d as CampusAnnualEvent)
+
+  let targetId = ev.id;
+  if (!targetId) {
+    try {
+      const { data: existing } = await sb
+        .from("campus_annual_calendar")
+        .select("id")
+        .ilike("title", payload.title)
+        .eq("from_date", payload.from_date)
+        .maybeSingle();
+      if (existing?.id) {
+        targetId = existing.id;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return targetId
+    ? run(sb.from("campus_annual_calendar").update(payload).eq("id", targetId).select("*").single(), (d) => d as CampusAnnualEvent)
     : run(sb.from("campus_annual_calendar").insert(payload).select("*").single(), (d) => d as CampusAnnualEvent);
 }
 

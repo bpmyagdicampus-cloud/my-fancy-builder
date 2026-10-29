@@ -1,8 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Avatar } from "@/components/app/auth";
+import { useEffect, useState, type ReactNode } from "react";
 import { isStaff, signOut, useCloud } from "@/lib/cloud";
-import { triggerInstallApp, usePwa } from "@/lib/pwa";
 
 // Simple inline icons (no extra package needed)
 const P: Record<string, string> = {
@@ -180,220 +178,17 @@ export function useShell() {
   return { c, path, signed, local, staff, admin, visible, items, active };
 }
 
-/** Helper to trigger global sidebar toggle from anywhere (e.g. AppNav button or Sidebar button). */
-export function dispatchToggleSidebar() {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("shikshak-toggle-sidebar"));
-  }
-}
-
 /**
- * Desktop: Fixed, Gemini-style Open/Close + Mouse-Draggable Resizable Left Sidebar.
- * Never scrolls away when scrolling the center content.
+ * Requirement: "दुइ तर्फ मेनुबार चाहिदैन साइडको हटाउ"
+ * Desktop sidebar is removed completely. Desktop navigation is handled entirely by the clean top horizontal menu bar.
  */
 export function Sidebar() {
-  const { c, visible, items, active, signed } = useShell();
-  const pwa = usePwa();
-  const [collapsed, setCollapsed] = useState(false);
-  const [width, setWidth] = useState(248);
-  const draggingRef = useRef(false);
-  const nav = useNavigate();
-
-  useEffect(() => {
-    try {
-      const savedMode = localStorage.getItem("shikshak-sidebar");
-      if (savedMode === "collapsed") setCollapsed(true);
-      const savedWidth = Number(localStorage.getItem("shikshak-sidebar-w"));
-      if (savedWidth >= 180 && savedWidth <= 340) setWidth(savedWidth);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const toggle = () =>
-    setCollapsed((v) => {
-      const n = !v;
-      try {
-        localStorage.setItem("shikshak-sidebar", n ? "collapsed" : "open");
-      } catch {
-        /* ignore */
-      }
-      return n;
-    });
-
-  useEffect(() => {
-    const onGlobalToggle = () => toggle();
-    window.addEventListener("shikshak-toggle-sidebar", onGlobalToggle);
-    return () => window.removeEventListener("shikshak-toggle-sidebar", onGlobalToggle);
-  }, []);
-
-  // Mouse drag-to-resize handler
-  const startDrag = (e: React.MouseEvent) => {
-    e.preventDefault();
-    draggingRef.current = true;
-    const onMove = (ev: MouseEvent) => {
-      if (!draggingRef.current) return;
-      const newW = ev.clientX;
-      if (newW < 115) {
-        setCollapsed(true);
-        try {
-          localStorage.setItem("shikshak-sidebar", "collapsed");
-        } catch {
-          /* ignore */
-        }
-      } else {
-        const clamped = Math.max(180, Math.min(340, newW));
-        setCollapsed(false);
-        setWidth(clamped);
-        try {
-          localStorage.setItem("shikshak-sidebar", "open");
-          localStorage.setItem("shikshak-sidebar-w", String(clamped));
-        } catch {
-          /* ignore */
-        }
-      }
-    };
-    const onUp = () => {
-      draggingRef.current = false;
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-  };
-
-  if (!visible) return null;
-
-  const sidebarStyle = collapsed ? { width: "4.25rem" } : { width: `${width}px` };
-
-  return (
-    <aside
-      style={sidebarStyle}
-      className="no-print relative hidden h-screen shrink-0 select-none flex-col bg-sidebar text-sidebar-foreground shadow-lg md:flex"
-      aria-label="Main navigation"
-    >
-      {/* Top Header of Sidebar: Gemini-style always-visible Open/Close button */}
-      <div
-        className={`flex items-center border-b border-sidebar-border py-2.5 ${
-          collapsed ? " flex-col justify-center gap-2 px-1.5" : "gap-2.5 px-3"
-        }`}
-      >
-        <button
-          type="button"
-          onClick={toggle}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent/60 text-white transition hover:bg-sidebar-accent"
-          aria-label={collapsed ? "Open sidebar · साइडबार खोल्नुहोस्" : "Close sidebar · साइडबार सानो बनाउनुहोस्"}
-          title={collapsed ? "Open sidebar · मेनु खोल्नुहोस्" : "Collapse sidebar · मेनु सानो बनाउनुहोस्"}
-        >
-          <Icon n="menu" size={19} />
-        </button>
-
-        {!collapsed && (
-          <Link to="/" className="flex min-w-0 flex-1 items-center gap-2 text-sidebar-foreground">
-            <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-8 w-8 shrink-0 rounded-lg shadow-sm" />
-            <div className="min-w-0 leading-tight">
-              <span className="block truncate font-display text-lg tracking-wide text-white">शिक्षक डायरी</span>
-              <span className="block truncate text-[10px] font-medium tracking-wider text-sidebar-primary">
-                Teacher's Diary
-              </span>
-            </div>
-          </Link>
-        )}
-      </div>
-
-      {/* Scrollable menu items inside fixed sidebar */}
-      <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-2.5">
-        {items.map((i) => (
-          <Link
-            key={i.to}
-            to={i.to}
-            title={`${i.ne} · ${i.en}`}
-            className={`nav-item ${active(i.to) ? "nav-item-on" : ""} ${
-              collapsed ? "justify-center px-0" : ""
-            }`}
-          >
-            <Icon n={i.icon} />
-            {!collapsed && (
-              <span className="min-w-0 flex-1">
-                <span className="block truncate leading-snug">{i.ne}</span>
-                <span className="block truncate text-[10px] font-normal opacity-65">{i.en}</span>
-              </span>
-            )}
-          </Link>
-        ))}
-      </nav>
-
-      {/* Bottom Footer of Sidebar */}
-      <div className="border-t border-sidebar-border p-2 space-y-1.5">
-        {pwa.canInstall && !pwa.isStandalone && (
-          <button
-            type="button"
-            onClick={() => void triggerInstallApp()}
-            className={`nav-item w-full bg-sidebar-accent/70 font-semibold text-white ${
-              collapsed ? "justify-center px-0" : ""
-            }`}
-            title="कम्प्युटर वा मोबाइलमा एप इन्स्टल गर्नुहोस् · Install App"
-          >
-            <Icon n="download" />
-            {!collapsed && <span>📲 एप इन्स्टल</span>}
-          </button>
-        )}
-
-        {!collapsed && (
-          <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-2.5 py-1.5 text-[10px] leading-snug text-sidebar-foreground/85">
-            © 2026 Shikshak Diary.
-            <br />
-            Developed by <b>Bishnu Acharya</b>.
-          </div>
-        )}
-
-        {signed ? (
-          <button
-            className={`nav-item w-full ${collapsed ? "justify-center px-0" : ""}`}
-            title="बाहिरिनुहोस् · Sign out"
-            onClick={async () => {
-              if (await signOut()) nav({ to: "/login" });
-            }}
-          >
-            <Icon n="out" />
-            {!collapsed && <span>बाहिरिनुहोस् · Sign out</span>}
-          </button>
-        ) : (
-          <Link
-            to="/profiles"
-            className={`nav-item ${collapsed ? "justify-center px-0" : ""}`}
-            title="Teacher profiles"
-          >
-            <Icon n="user" />
-            {!collapsed && <span>Teacher profiles</span>}
-          </Link>
-        )}
-
-        {signed && !collapsed && c.me && (
-          <div className="flex items-center gap-2 rounded-lg bg-sidebar-accent/30 px-2 py-1 text-xs">
-            <Avatar name={c.me.name} path={c.me.avatar_path} size={24} />
-            <div className="min-w-0 flex-1">
-              <div className="truncate font-semibold">{c.me.name}</div>
-              {c.me.designation && <div className="truncate text-[10px] opacity-70">{c.me.designation}</div>}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Mouse Drag Handle on the right edge to resize/collapse/expand sidebar */}
-      <div
-        onMouseDown={startDrag}
-        title="तानेर साइडबार घटाउन वा बढाउन सकिन्छ (Drag to resize sidebar)"
-        className="absolute top-0 right-0 z-40 h-full w-1.5 cursor-col-resize transition-colors hover:bg-sidebar-primary/80"
-      />
-    </aside>
-  );
+  return null;
 }
 
 /** Phones: Fixed app-style bottom navigation + floating quick action button + "More" bottom sheet. */
 export function BottomNav() {
   const { signed, local, staff, visible, items, active, path } = useShell();
-  const pwa = usePwa();
   const [more, setMore] = useState(false);
   const nav = useNavigate();
   useEffect(() => {
@@ -412,6 +207,7 @@ export function BottomNav() {
 
   return (
     <>
+      {/* Floating Quick Action Button on Mobile for instant Daily Diary entry */}
       {staff && path !== "/diary" && !more && (
         <Link
           to="/diary"
@@ -461,20 +257,6 @@ export function BottomNav() {
                   <span className="text-[10px] font-normal text-muted-foreground">{i.en}</span>
                 </Link>
               ))}
-              {pwa.canInstall && !pwa.isStandalone && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMore(false);
-                    void triggerInstallApp();
-                  }}
-                  className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border border-primary/40 bg-primary/10 p-2.5 text-center text-xs font-semibold text-primary"
-                >
-                  <Icon n="download" size={22} />
-                  <span>एप इन्स्टल</span>
-                  <span className="text-[10px] font-normal">Install App</span>
-                </button>
-              )}
               {!signed && local && (
                 <Link
                   to="/profiles"
@@ -529,9 +311,9 @@ export function BottomNav() {
 }
 
 /**
- * Locks the desktop viewport to h-screen overflow-hidden so the Sidebar and Top Menu stay 100% FIXED
+ * ShellFrame: locks desktop viewport so the Top Menu stays 100% FIXED at top
  * while only the inner content area scrolls.
  */
 export function ShellFrame({ children }: { children: ReactNode }) {
-  return <div className="print-scroll-reset min-h-screen md:flex md:h-screen md:overflow-hidden">{children}</div>;
+  return <div className="print-scroll-reset min-h-screen md:h-screen md:overflow-hidden">{children}</div>;
 }

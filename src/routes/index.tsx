@@ -36,23 +36,11 @@ function Home() {
   const headDepts = lk.heads.filter((h) => h.user_id === cl.userId).map((h) => h.department_id);
 
   useEffect(() => {
-    void Promise.all([D.loadCampusAnnualEvents(), D.loadCalTypes()]).then(async ([evList, tList]) => {
+    void Promise.all([D.loadCampusAnnualEvents(), D.loadCalTypes()]).then(([evList, tList]) => {
       setCampusEvents(evList);
       setCalTypes(tList);
-
-      if (admin && data?.cal && data.cal.length > 0) {
-        const missing = data.cal.filter(
-          (c) => !evList.some((ce) => ce.title === c.title && ce.from_date === c.from)
-        );
-        if (missing.length > 0) {
-          const synced = await D.syncLocalEventsToCloud(missing);
-          if (synced && synced.length > 0) {
-            setCampusEvents((prev) => [...prev, ...synced]);
-          }
-        }
-      }
     });
-  }, [admin, data?.cal]);
+  }, []);
 
   useEffect(() => {
     if (cl.status !== "ready" || !cl.userId) {
@@ -85,29 +73,39 @@ function Home() {
     );
   }
 
-  // Combine Admin's Campus Annual Calendar events + local events
-  const mergedAnnualEvents = [
+  // Combine Admin's Campus Annual Calendar events + local events with strict deduplication
+  const allRawEvents = [
     ...campusEvents.map((e) => ({
       id: e.id,
-      title: e.title,
+      title: e.title.trim(),
       type: e.event_type,
       from: e.from_date,
       to: e.to_date || "",
       desc: e.description,
       isCloud: true,
     })),
-    ...data.cal
-      .filter((c) => !campusEvents.some((ce) => ce.title === c.title && ce.from_date === c.from))
-      .map((c) => ({
-        id: c.id,
-        title: c.title,
-        type: c.type,
-        from: c.from,
-        to: c.to || "",
-        desc: "",
-        isCloud: false,
-      })),
-  ].sort((a, b) => a.from.localeCompare(b.from));
+    ...data.cal.map((c) => ({
+      id: c.id,
+      title: c.title.trim(),
+      type: c.type,
+      from: c.from,
+      to: c.to || "",
+      desc: "",
+      isCloud: false,
+    })),
+  ];
+
+  const mergedAnnualEventsMap = new Map<string, typeof allRawEvents[0]>();
+  for (const e of allRawEvents) {
+    if (!e.title || !e.from) continue;
+    const key = `${e.title.toLowerCase()}|${e.from}|${e.to || ""}`;
+    if (!mergedAnnualEventsMap.has(key)) {
+      mergedAnnualEventsMap.set(key, e);
+    }
+  }
+  const mergedAnnualEvents = Array.from(mergedAnnualEventsMap.values()).sort((a, b) =>
+    a.from.localeCompare(b.from)
+  );
 
   const upcomingAnnualEvents = mergedAnnualEvents.filter((e) => (e.to || e.from) >= today);
   const targetAnnualEvents =
@@ -116,7 +114,17 @@ function Home() {
     ? targetAnnualEvents.filter((e) => e.type === calFilter)
     : targetAnnualEvents;
 
-  const todayEv = mergedAnnualEvents.filter((e) => inRange(today, e.from, e.to || e.from));
+  // Exact unique events active for today:
+  const todayEvMap = new Map<string, typeof mergedAnnualEvents[0]>();
+  for (const e of mergedAnnualEvents) {
+    if (inRange(today, e.from, e.to || e.from)) {
+      const k = e.title.toLowerCase();
+      if (!todayEvMap.has(k)) {
+        todayEvMap.set(k, e);
+      }
+    }
+  }
+  const todayEv = Array.from(todayEvMap.values());
 
   const upcomingReminders = [
     ...data.reminders

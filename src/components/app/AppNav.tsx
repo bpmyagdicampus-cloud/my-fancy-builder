@@ -4,9 +4,8 @@ import { getLoadError, setEditGuard, useTeacher } from "@/lib/store";
 import { getCloudState, isStaff, listUnsaved, openTeacher, resolveConflict, retryNow, useCloud } from "@/lib/cloud";
 import { Avatar } from "@/components/app/auth";
 import { activeYear, currentYear, isPast } from "@/lib/years";
-import { triggerInstallApp, usePwa } from "@/lib/pwa";
 import { fmtBs, todayBs } from "@/lib/bs";
-import { dispatchToggleSidebar, Icon, useShell, type SubMenuItem } from "@/components/app/Shell";
+import { Icon, useShell, type SubMenuItem } from "@/components/app/Shell";
 
 const SAVE_LABEL: Record<string, string> = {
   dirty: "Saving…",
@@ -19,7 +18,6 @@ const SAVE_LABEL: Record<string, string> = {
 export function AppNav() {
   const { profile, data } = useTeacher();
   const c = useCloud();
-  const pwa = usePwa();
   const nav = useNavigate();
   const { items, active } = useShell();
   const path = useRouterState({ select: (s) => s.location.pathname });
@@ -89,11 +87,8 @@ export function AppNav() {
     });
   };
 
-  // All searchable menu/sub-menu destinations for the quick Search Menu bar
   const allSearchItems: SubMenuItem[] = items.flatMap((m) =>
-    m.subs
-      ? m.subs
-      : [{ labelNe: m.ne, labelEn: m.en, to: m.to }]
+    m.subs ? m.subs : [{ labelNe: m.ne, labelEn: m.en, to: m.to }]
   );
   const filteredSearch = menuSearch.trim()
     ? allSearchItems.filter(
@@ -105,18 +100,8 @@ export function AppNav() {
 
   return (
     <header className="no-print sticky top-0 z-30 w-full shrink-0 border-b border-border bg-card shadow-sm">
-      {/* Top Tier: Campus Name, Academic Year, Today's Date, Quick Search & User Account */}
-      <div className="flex items-center gap-1.5 px-3 py-1.5 sm:gap-2.5 md:px-4">
-        {/* Desktop Sidebar Toggle Button (Always visible so user can open/close sidebar anytime) */}
-        <button
-          type="button"
-          onClick={dispatchToggleSidebar}
-          className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/60 text-foreground transition hover:bg-muted md:inline-flex"
-          title="Open / Close Sidebar · साइडबार खोल्ने वा सानो बनाउने"
-        >
-          <Icon n="menu" size={17} />
-        </button>
-
+      {/* Top Tier: Campus Name & Address (Desktop), Quick Menu Search & User Account (No install button after login, no toggle button) */}
+      <div className="flex items-center gap-2 px-3 py-1.5 sm:gap-2.5 md:px-5">
         {/* Mobile Logo & Title */}
         <Link to="/" className="flex shrink-0 items-center gap-2 leading-none text-primary md:hidden">
           <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-8 w-8 shrink-0 rounded-lg shadow-sm" />
@@ -128,15 +113,17 @@ export function AppNav() {
           </div>
         </Link>
 
-        {/* Desktop Campus Name & Today's Date Badges (Paathshala-inspired top bar) */}
-        <div className="hidden min-w-0 items-center gap-2 md:flex">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-secondary/70 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-primary"
-          >
+        {/* Desktop Brand & Campus Display on Left */}
+        <div className="hidden min-w-0 items-center gap-2.5 md:flex">
+          <Link to="/" className="flex shrink-0 items-center gap-2 text-primary">
+            <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-8 w-8 shrink-0 rounded-lg shadow-sm" />
+            <span className="font-display text-lg tracking-wide text-primary">शिक्षक डायरी</span>
+          </Link>
+          <span className="text-muted-foreground/50">|</span>
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-secondary/70 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-primary">
             <span>🏛️</span>
             <span className="max-w-64 truncate">{profile?.campus || "MYAGDI MULTIPLE CAMPUS"}</span>
-          </Link>
+          </span>
           {profile?.address && (
             <span className="hidden truncate text-xs font-medium text-muted-foreground lg:inline">
               📍 {profile.address}
@@ -149,7 +136,7 @@ export function AppNav() {
 
         <div className="flex-1" />
 
-        {/* Desktop Quick Menu Search (Paathshala-style "Search menu...") */}
+        {/* Desktop Quick Menu Search */}
         <div className="relative hidden w-48 lg:block xl:w-56">
           <div className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-1 text-xs">
             <Icon n="search" size={14} />
@@ -179,17 +166,6 @@ export function AppNav() {
             </div>
           )}
         </div>
-
-        {pwa.canInstall && !pwa.isStandalone && (
-          <button
-            type="button"
-            onClick={() => void triggerInstallApp()}
-            className="chip shrink-0 whitespace-nowrap !border-primary/40 !bg-secondary font-semibold text-primary"
-            title="मोबाइल वा कम्प्युटरमा एप इन्स्टल गर्नुहोस् · Install App"
-          >
-            📲 <span className="hidden sm:inline">Install App · </span>एप इन्स्टल
-          </button>
-        )}
 
         {showLinks && profile && yr && (
           <Link
@@ -241,7 +217,7 @@ export function AppNav() {
         )}
       </div>
 
-      {/* Second Tier (Desktop Only): Paathshala-Style Horizontal Menu Bar with Dropdown Sub-Menus */}
+      {/* Second Tier (Desktop Only): Clean Horizontal Menu Bar with Dropdown Sub-Menus */}
       {showLinks && (
         <nav
           className="hidden items-center gap-1 border-t border-primary/20 bg-primary px-3 py-1 text-primary-foreground md:flex"

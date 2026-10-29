@@ -148,7 +148,6 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Background />
       <ShellFrame>
-        <Sidebar />
         <div className="min-w-0 flex-1 flex flex-col md:h-screen md:overflow-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
           <AppNav />
           <div className="flex-1 md:overflow-y-auto">
