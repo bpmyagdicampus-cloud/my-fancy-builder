@@ -68,7 +68,17 @@ export function initAuth() {
   setAfterMutate(schedule);
   sb.auth.onAuthStateChange((_e: string, session: any) => { setTimeout(() => void handleSession(session?.user ?? null), 0); });
   sb.auth.getSession().then(({ data }: any) => void handleSession(data?.session?.user ?? null)).catch(() => void handleSession(null));
-  window.addEventListener("online", () => { if (offlineMode && !dirty) void retryLoad(); else if (dirty) void flush(); });
+  window.addEventListener("online", () => {
+    if (dirty || state.save === "error") void retryNow();
+    else if (offlineMode) void retryLoad();
+  });
+  if (typeof document !== "undefined" && typeof document.addEventListener === "function") {
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && (dirty || state.save === "error")) {
+        void retryNow();
+      }
+    });
+  }
   window.addEventListener("beforeunload", (e) => { if (dirty || saving) { e.preventDefault(); e.returnValue = ""; } });
 }
 

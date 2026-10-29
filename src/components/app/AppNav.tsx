@@ -1,15 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { daysSinceBackup, getLoadError, setEditGuard, useTeacher } from "@/lib/store";
+import { getLoadError, setEditGuard, useTeacher } from "@/lib/store";
 import { getCloudState, isStaff, listUnsaved, openTeacher, resolveConflict, retryNow, useCloud } from "@/lib/cloud";
 import { Avatar } from "@/components/app/auth";
 import { activeYear, currentYear, isPast } from "@/lib/years";
 
 const SAVE_LABEL: Record<string, string> = {
-  dirty: "Unsaved…",
-  saving: "Saving…",
+  dirty: "Saving locally…",
+  saving: "Syncing…",
   saved: "Saved ✓",
-  error: "Not saved ⚠",
+  error: "Saved on device ☁️",
   conflict: "Conflict ⚠",
 };
 
@@ -17,11 +17,9 @@ export function AppNav() {
   const { profile, data } = useTeacher();
   const c = useCloud();
   const [err, setErr] = useState<string | null>(null);
-  const [age, setAge] = useState<number | null | undefined>(undefined);
 
   useEffect(() => {
     setErr(getLoadError());
-    setAge(daysSinceBackup());
   }, [profile?.id]);
 
   useEffect(() => {
@@ -45,8 +43,6 @@ export function AppNav() {
   const signedIn = c.status === "ready" && !!c.userId;
   const staff = signedIn && isStaff(c.roles);
   const isAdmin = signedIn ? c.roles.includes("admin") : c.localMode;
-  const hasWork = data.diary.length + data.assess.length + data.units.length > 0;
-  const needBackup = !err && !signedIn && !!profile && hasWork && age !== undefined && (age === null || age >= 7);
   const viewingOther = signedIn && !!c.activeId && c.activeId !== c.userId;
   const showLinks = !signedIn || staff;
   const cloudActiveName = c.yearsReady ? c.activeYear?.name : null;
@@ -55,7 +51,7 @@ export function AppNav() {
   const past = isPast(data, cloudActiveName);
 
   return (
-    <header className="no-print sticky top-0 z-20 border-b border-border/80 bg-card/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+    <header className="no-print sticky top-0 z-20 border-b border-border bg-card/95 pt-[env(safe-area-inset-top)] backdrop-blur">
       <div className="flex items-center gap-2 px-3 py-2 md:px-5">
         <Link to="/" className="flex items-center gap-2 leading-none text-primary md:hidden">
           <div>
@@ -80,8 +76,8 @@ export function AppNav() {
             to="/years"
             className={
               past
-                ? "chip !border-destructive/50 !bg-destructive/10 !text-destructive font-semibold"
-                : "chip !border-primary/30 !bg-primary/5 !text-primary font-semibold"
+                ? "chip !border-destructive !text-destructive font-semibold"
+                : "chip !border-primary/40 !text-primary font-semibold"
             }
             title="Academic year · शैक्षिक वर्ष परिवर्तन वा व्यवस्थापन गर्नुहोस्"
           >
@@ -93,12 +89,17 @@ export function AppNav() {
         {staff && c.save !== "idle" && (
           <span
             className={`chip ${
-              c.save === "error" || c.save === "conflict"
-                ? "!border-destructive !bg-destructive/10 !text-destructive"
-                : c.save === "saved"
-                ? "!border-emerald-500/30 !bg-emerald-500/10 !text-emerald-700"
+              c.save === "conflict"
+                ? "!border-destructive !text-destructive"
+                : c.save === "error"
+                ? "!border-primary/40 !text-primary"
                 : ""
             }`}
+            title={
+              c.save === "error"
+                ? "अफलाइनमा यस डिभाइसमा सुरक्षित छ, इन्टरनेट जोडिएपछि स्वतः क्लाउडमा सर्छ"
+                : undefined
+            }
           >
             {SAVE_LABEL[c.save]}
           </span>
@@ -107,7 +108,7 @@ export function AppNav() {
         {signedIn ? (
           <Link
             to="/account"
-            className="flex min-h-9 items-center gap-2 rounded-full border border-border bg-background/80 py-0.5 pl-0.5 pr-3 text-xs font-semibold shadow-sm transition hover:bg-muted sm:text-sm"
+            className="flex min-h-9 items-center gap-2 rounded-full border border-border bg-background py-0.5 pl-0.5 pr-3 text-xs font-semibold shadow-sm transition hover:bg-muted sm:text-sm"
             title="My account · मेरो खाता"
           >
             <Avatar name={c.me?.name} path={c.me?.avatar_path} size={30} />
@@ -147,7 +148,7 @@ export function AppNav() {
         c.activeYear &&
         yr &&
         yr.name.trim().toLowerCase() !== c.activeYear.name.trim().toLowerCase() && (
-          <div className="bg-amber-500/15 border-t border-amber-500/30 px-4 py-1.5 text-center text-xs font-medium text-amber-900 dark:text-amber-200">
+          <div className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground">
             सक्रिय शैक्षिक वर्ष <b>{c.activeYear.name}</b> हो, तर तपाइँकोमा <b>{yr.name}</b> खुलेको छ।{" "}
             <Link to="/years" className="underline font-bold ml-1">
               Academic years मा गएर मिलाउनुहोस् →
@@ -179,11 +180,7 @@ export function AppNav() {
 
       {err && (
         <div className="bg-destructive px-4 py-2 text-center text-sm font-semibold text-destructive-foreground">
-          {err} Changes are not being saved — go to{" "}
-          <Link to="/profiles" className="underline">
-            Teacher profiles
-          </Link>{" "}
-          → Restore from backup.
+          {err}
         </div>
       )}
 
@@ -211,13 +208,15 @@ export function AppNav() {
       )}
 
       {staff && c.save === "error" && (
-        <div className="flex flex-wrap items-center justify-center gap-3 bg-destructive px-4 py-1.5 text-xs text-destructive-foreground">
-          Could not save to the cloud ({c.saveMsg}). Your work is kept on this device and is retried automatically.
+        <div className="flex flex-wrap items-center justify-center gap-3 bg-secondary px-4 py-1.5 text-xs font-medium text-secondary-foreground">
+          <span>
+            ☁️ अफलाइन सुरक्षा: तपाईंको काम यस ब्राउजर/डिभाइसमा सुरक्षित छ। इन्टरनेट जोडिएपछि स्वतः क्लाउडमा सर्नेछ।
+          </span>
           <button
-            className="rounded bg-background px-2 py-0.5 font-semibold text-foreground"
+            className="rounded border border-border bg-card px-2.5 py-0.5 font-semibold text-primary shadow-sm"
             onClick={() => void retryNow()}
           >
-            Try again now
+            Sync now · अहिले सिंक गर्नुहोस्
           </button>
         </div>
       )}
@@ -229,16 +228,6 @@ export function AppNav() {
             Open My account
           </Link>{" "}
           to download or delete it.
-        </div>
-      )}
-
-      {needBackup && (
-        <div className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground">
-          {age === null ? "No backup downloaded yet." : `Last backup was ${age} days ago.`}{" "}
-          <Link to="/profiles" className="underline">
-            Download a backup
-          </Link>{" "}
-          to keep your data safe.
         </div>
       )}
     </header>

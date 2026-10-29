@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { enterLocalMode, initAuth, signIn, useCloud } from "@/lib/cloud";
+import { initAuth, signIn, useCloud } from "@/lib/cloud";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -76,18 +76,9 @@ function Login() {
           {busy ? "Signing in…" : "Sign in · लग-इन गर्नुहोस्"}
         </button>
         <p className="text-xs text-muted-foreground">
-          खाता प्रशासक (admin) ले बनाइदिन्छ। ID/पासवर्ड बिर्सिएमा प्रशासकसँग सम्पर्क गर्नुहोस्।
+          खाता प्रशासक (admin) ले बनाइदिन्छ। एकपटक लग-इन गरेपछि अफलाइनमा काम गर्दा पनि डिभाइसमा सुरक्षित भई इन्टरनेट जोडिएपछि स्वतः क्लाउडमा सेभ हुन्छ।
         </p>
       </div>
-      <button
-        className="text-center text-xs text-muted-foreground underline"
-        onClick={() => {
-          enterLocalMode();
-          nav({ to: "/" });
-        }}
-      >
-        Use old version on this device only (no login)
-      </button>
       <footer className="mt-4 border-t border-border pt-3 text-center text-xs font-medium text-muted-foreground">
         © 2026 Shikshak Diary. Developed by Bishnu Acharya. All rights reserved.
       </footer>
