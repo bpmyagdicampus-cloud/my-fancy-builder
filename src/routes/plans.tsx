@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { Component, useEffect, useState, type ReactNode, type ErrorInfo } from "react";
 import { Page, Tabs, Collection, ClassSelect, PrintHead, Signatures, PrintBtn, Dt, NeedProfile } from "@/components/app/ui";
 import { updateData, uid, useTeacher, type Blended, type Cls, type Data, type Lesson, type Plan, type Unit } from "@/lib/store";
 import { currentYear } from "@/lib/years";
@@ -15,6 +15,44 @@ export const Route = createFileRoute("/plans")({
   ] }),
   component: Plans,
 });
+
+class SafeBoundary extends Component<{ children: ReactNode }, { hasError: boolean; err?: string }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, err: String(error?.message || error) };
+  }
+  componentDidCatch(error: any, errorInfo: ErrorInfo) {
+    console.error("Caught error in SafeBoundary:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <section className="panel my-4 border-destructive/40 bg-destructive/10 p-4 text-center">
+          <p className="font-semibold text-destructive">ब्लेन्डेड योजना लोड गर्दा समस्या देखियो (Error: {this.state.err})</p>
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
+            <button type="button" className="btn-soft text-xs" onClick={() => this.setState({ hasError: false })}>पुनः प्रयास गर्नुहोस् (Retry)</button>
+            <button
+              type="button"
+              className="btn-danger text-xs"
+              onClick={() => {
+                if (confirm("के तपाईं अड्किएको नमुना योजना हटाएर सूची सफा गर्न चाहनुहुन्छ?")) {
+                  updateData((d) => { d.blended = []; });
+                  window.location.reload();
+                }
+              }}
+            >
+              अड्किएको योजना हटाई सूची सफा गर्नुहोस् (Reset)
+            </button>
+          </div>
+        </section>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function Plans() {
   const { profile, data } = useTeacher();
@@ -90,83 +128,118 @@ function Plans() {
         {lp && <LessonSheet l={lp} cls={cn(lp.classId)} />}
       </>)}
 
-      {tab === "blended" && (<>
-        {guide && (
-          <section className="panel no-print mb-3">
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <h2 className="flex-1 text-lg font-bold">कुन कुरा कहिले भर्ने? · Guide</h2>
-              <button className="btn-soft" onClick={() => setSample((v) => !v)}>{sample ? "Hide sample lesson plan" : "View sample lesson plan"}</button>
-              <button className="btn-soft" onClick={() => setGuide(false)}>Close</button>
-            </div>
-            <div className="space-y-4">
-              {GUIDE.map((g) => (
-                <div key={g.step} className="rounded-md border border-border p-3">
-                  <div className="font-semibold">{g.step}</div>
-                  <div className="text-xs text-muted-foreground">{g.en}</div>
-                  {g.note && <p className="mt-1 text-sm">{g.note}</p>}
-                  <ul className="mt-1 space-y-1 text-sm">{g.items.map(([a, b]) => <li key={a}><b>{a}</b> — {b}</li>)}</ul>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <button className="btn" onClick={() => {
-                updateData((d) => {
-                  const mbsClass = (d.classes || []).find((x) => x.name.includes("MBS"));
-                  d.blended.push({ ...SAMPLE, id: uid(), classId: mbsClass?.id || d.classes[0]?.id || "", date: "2083-07-11" });
-                });
-                alert("Research Methodology को नमुना पाठ योजना तपाईंको सूचीमा थपियो। तल सूचीबाट 'Edit' वा 'View / print' थिचेर हेर्न सक्नुहुन्छ।");
-              }}>Use the sample as a new plan</button>
-              <span className="text-xs text-muted-foreground">A copy is added to your list; you can edit it freely. The original sample does not change.</span>
-            </div>
-            {sample && <div className="mt-3"><BlendedSheet l={SAMPLE} cls={undefined} over={{ level: "MBS III", subject: "Research methodology" }} /></div>}
-          </section>
-        )}
-        <Collection k="blended" title="Blended Learning Lesson Plans" titleExtra={<button className="btn-soft !min-h-8 !py-0.5 text-xs" onClick={(e) => { e.stopPropagation(); setGuide((v) => !v); }}>Guide</button>}
-          rowButtons
-          fields={[
-            { k: "classId", l: "Class / Subject", t: "cls" }, { k: "date", l: "Date", t: "date" },
-            { k: "title", l: "Lesson topic" }, { k: "duration", l: "Teaching duration (e.g. 55 mins. 1 Lecture Hour)" },
-            { k: "outcomes", l: "2. Learning outcomes: what will students know, explain or do after the lesson?", t: "area" },
-            { k: "preTeacher", l: "3. Pre-class learning: Teacher's activities", t: "area" },
-            { k: "preStudent", l: "3. Pre-class learning: Students' activities", t: "area" },
-            { k: "preMaterials", l: "3. Pre-class learning: Learning materials (links allowed)", t: "area" },
-            { k: "steps", l: "4. Face-to-face learning activities (one row per time block)", t: "rows", cols: [["time", "Time (e.g. 5 min)"], ["teacher", "Teacher's activities"], ["student", "Students' activities"], ["methods", "Teaching methods / materials"]] },
-            { k: "postTeacher", l: "5. Post-class learning: Teacher's activities", t: "area" },
-            { k: "postStudent", l: "5. Post-class learning: Students' activities", t: "area" },
-            { k: "assignment", l: "5. Post-class learning: Assignment / practice", t: "area" },
-            { k: "resources", l: "6. Learning resources and technology (digital tools, offline resources, links)", t: "area" },
-            { k: "asPre", l: "7. Assessment: Pre-class", t: "area" },
-            { k: "asIn", l: "7. Assessment: In-class", t: "area" },
-            { k: "asPost", l: "7. Assessment: Post-class", t: "area" },
-            { k: "feedback", l: "8. Feedback and improvement (feedback, remedial or additional activities)", t: "area" },
-            { k: "offline", l: "9. Offline learning alternative (limited internet or devices)", t: "area" },
-            { k: "refAchieved", l: "10. Reflection: Were the learning outcomes achieved?", t: "area" },
-            { k: "refDifficulty", l: "10. Reflection: What difficulties did students face?", t: "area" },
-            { k: "refWorked", l: "10. Reflection: What worked well?", t: "area" },
-            { k: "refImprove", l: "10. Reflection: What should be improved in the next lesson?", t: "area" },
-          ]}
-          summary={(l) => (
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <b>{l.title || "Untitled Plan"}</b>
-                <div className="text-xs text-muted-foreground">
-                  <PlanDate d={l.date} /> · {l.duration ? `${l.duration} · ` : ""}{cn(l.classId)}
-                </div>
+      {tab === "blended" && (
+        <SafeBoundary>
+          {guide && (
+            <section className="panel no-print mb-3">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <h2 className="flex-1 text-lg font-bold">कुन कुरा कहिले भर्ने? · Guide</h2>
+                <button type="button" className="btn-soft" onClick={() => setSample((v) => !v)}>{sample ? "Hide sample lesson plan" : "View sample lesson plan"}</button>
+                <button type="button" className="btn-soft" onClick={() => setGuide(false)}>Close</button>
               </div>
+              <div className="space-y-4">
+                {GUIDE.map((g) => (
+                  <div key={g.step} className="rounded-md border border-border p-3">
+                    <div className="font-semibold">{g.step}</div>
+                    <div className="text-xs text-muted-foreground">{g.en}</div>
+                    {g.note && <p className="mt-1 text-sm">{g.note}</p>}
+                    <ul className="mt-1 space-y-1 text-sm">{g.items.map(([a, b]) => <li key={a}><b>{a}</b> — {b}</li>)}</ul>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => {
+                    try {
+                      updateData((d) => {
+                        if (!Array.isArray(d.blended)) d.blended = [];
+                        const mbsClass = (d.classes || []).find((x) => x?.name && x.name.includes("MBS"));
+                        d.blended.push({
+                          ...SAMPLE,
+                          id: uid(),
+                          classId: mbsClass?.id || d.classes?.[0]?.id || "",
+                          date: todayBs(),
+                        });
+                      });
+                      alert("Research Methodology को नमुना पाठ योजना तपाईंको सूचीमा थपियो। तल सूचीबाट 'Edit' वा 'View / print' थिचेर हेर्न सक्नुहुन्छ।");
+                    } catch (err: any) {
+                      alert("योजना थप्दा समस्या देखियो: " + (err?.message || err));
+                    }
+                  }}
+                >
+                  Use the sample as a new plan
+                </button>
+                <span className="text-xs text-muted-foreground">A copy is added to your list; you can edit it freely. The original sample does not change.</span>
+              </div>
+              {sample && <div className="mt-3"><BlendedSheet l={SAMPLE} cls={undefined} over={{ level: "MBS III", subject: "Research methodology" }} /></div>}
+            </section>
+          )}
+          <Collection
+            k="blended"
+            title="Blended Learning Lesson Plans"
+            titleExtra={
               <button
                 type="button"
-                className="btn-soft"
+                className="btn-soft !min-h-8 !py-0.5 text-xs font-semibold"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setBl(l.id === bl ? "" : l.id);
+                  setGuide((v) => !v);
                 }}
               >
-                {bl === l.id ? "Hide view" : "View / print"}
+                Guide
               </button>
-            </div>
-          )} />
-        {bp && <BlendedSheet l={bp} cls={(data.classes || []).find((x) => x.id === bp.classId)} />}
-      </>)}
+            }
+            rowButtons
+            fields={[
+              { k: "classId", l: "Class / Subject", t: "cls" },
+              { k: "date", l: "Date", t: "date" },
+              { k: "title", l: "Lesson topic" },
+              { k: "duration", l: "Teaching duration (e.g. 55 mins. 1 Lecture Hour)" },
+              { k: "outcomes", l: "2. Learning outcomes: what will students know, explain or do after the lesson?", t: "area" },
+              { k: "preTeacher", l: "3. Pre-class learning: Teacher's activities", t: "area" },
+              { k: "preStudent", l: "3. Pre-class learning: Students' activities", t: "area" },
+              { k: "preMaterials", l: "3. Pre-class learning: Learning materials (links allowed)", t: "area" },
+              { k: "steps", l: "4. Face-to-face learning activities (one row per time block)", t: "rows", cols: [["time", "Time (e.g. 5 min)"], ["teacher", "Teacher's activities"], ["student", "Students' activities"], ["methods", "Teaching methods / materials"]] },
+              { k: "postTeacher", l: "5. Post-class learning: Teacher's activities", t: "area" },
+              { k: "postStudent", l: "5. Post-class learning: Students' activities", t: "area" },
+              { k: "assignment", l: "5. Post-class learning: Assignment / practice", t: "area" },
+              { k: "resources", l: "6. Learning resources and technology (digital tools, offline resources, links)", t: "area" },
+              { k: "asPre", l: "7. Assessment: Pre-class", t: "area" },
+              { k: "asIn", l: "7. Assessment: In-class", t: "area" },
+              { k: "asPost", l: "7. Assessment: Post-class", t: "area" },
+              { k: "feedback", l: "8. Feedback and improvement (feedback, remedial or additional activities)", t: "area" },
+              { k: "offline", l: "9. Offline learning alternative (limited internet or devices)", t: "area" },
+              { k: "refAchieved", l: "10. Reflection: Were the learning outcomes achieved?", t: "area" },
+              { k: "refDifficulty", l: "10. Reflection: What difficulties did students face?", t: "area" },
+              { k: "refWorked", l: "10. Reflection: What worked well?", t: "area" },
+              { k: "refImprove", l: "10. Reflection: What should be improved in the next lesson?", t: "area" },
+            ]}
+            summary={(l) => (
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <b>{l?.title || "Untitled Plan"}</b>
+                  <div className="text-xs text-muted-foreground">
+                    <PlanDate d={l?.date} /> · {l?.duration ? `${l.duration} · ` : ""}{cn(l?.classId)}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="btn-soft"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setBl(l?.id === bl ? "" : (l?.id || ""));
+                  }}
+                >
+                  {bl === l?.id ? "Hide view" : "View / print"}
+                </button>
+              </div>
+            )}
+          />
+          {bp && <BlendedSheet l={bp} cls={(data.classes || []).find((x) => x?.id === bp.classId)} />}
+        </SafeBoundary>
+      )}
     </Page>
   );
 }
@@ -565,13 +638,18 @@ const SAMPLE: Blended = {
 
 function PlanDate({ d }: { d?: string }) {
   if (!d) return <span>—</span>;
-  try {
-    const s = String(d).trim();
-    if (!/^\d{4}-\d{1,2}-\d{1,2}$/.test(s)) return <span>{s}</span>;
-    return <Dt d={s} />;
-  } catch {
-    return <span>{String(d)}</span>;
+  const s = String(d).trim();
+  const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (m) {
+    const months = [
+      "Baishakh", "Jestha", "Ashadh", "Shrawan", "Bhadra", "Ashwin",
+      "Kartik", "Mangsir", "Poush", "Magh", "Falgun", "Chaitra"
+    ];
+    const mi = parseInt(m[2], 10) - 1;
+    const monthName = months[mi] || m[2];
+    return <span>{monthName} {parseInt(m[3], 10)}, {m[1]}</span>;
   }
+  return <span>{s}</span>;
 }
 
 function BlendedSheet({ l, cls, over }: { l: Blended; cls: Cls | undefined; over?: { level: string; subject: string } }) {
@@ -579,7 +657,18 @@ function BlendedSheet({ l, cls, over }: { l: Blended; cls: Cls | undefined; over
   const T = (v?: any) => <td className="whitespace-pre-line">{String(v ?? "")}</td>;
   const row = (a: string, v?: any) => <tr key={a}><td className="w-56 font-medium">{a}</td>{T(v)}</tr>;
   const steps = Array.isArray(l?.steps) ? l.steps : [];
-  const safeDate = l?.date ? (/^\d{4}-\d{1,2}-\d{1,2}$/.test(String(l.date).trim()) ? fmtBs(String(l.date)) : String(l.date)) : "";
+  
+  const formatDateSafe = (raw?: string) => {
+    if (!raw) return "";
+    const s = String(raw).trim();
+    const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (m) {
+      const months = ["Baishakh", "Jestha", "Ashadh", "Shrawan", "Bhadra", "Ashwin", "Kartik", "Mangsir", "Poush", "Magh", "Falgun", "Chaitra"];
+      const mi = parseInt(m[2], 10) - 1;
+      return `${months[mi] || m[2]} ${parseInt(m[3], 10)}, ${m[1]}`;
+    }
+    return s;
+  };
 
   return (
     <section className="panel mt-4">
@@ -590,7 +679,7 @@ function BlendedSheet({ l, cls, over }: { l: Blended; cls: Cls | undefined; over
         {row("Class / Level", over?.level ?? cls?.name ?? "")}
         {row("Subject", over?.subject ?? (cls ? `${cls.subject}${cls.code ? ` (${cls.code})` : ""}` : ""))}
         {row("Lesson topic", l?.title ?? "")}
-        {row("Date", safeDate)}
+        {row("Date", formatDateSafe(l?.date))}
         {row("Teaching duration", l?.duration ?? "")}
         {row("Teaching model", "Blended Learning")}
       </tbody></table>
