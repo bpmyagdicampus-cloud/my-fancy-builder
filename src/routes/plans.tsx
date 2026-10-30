@@ -29,7 +29,7 @@ function Plans() {
   const units = data.units.filter((u) => u.classId === cls).sort((a, b) => a.from.localeCompare(b.from));
   const lp = data.lessons.find((l) => l.id === lesson);
   const bp = data.blended.find((l) => l.id === bl);
-  const cn = (id: string) => { const x = data.classes.find((y) => y.id === id); return x ? `${x.name} · ${x.subject}` : "—"; };
+  const cn = (id?: string) => { if (!id) return "—"; const x = (data.classes || []).find((y) => y && y.id === id); return x ? `${x.name || ""} · ${x.subject || ""}` : "—"; };
   const yr = currentYear(data);
   const totalPlannedLh = units.reduce((a, u) => a + (u.lh || 0), 0);
 

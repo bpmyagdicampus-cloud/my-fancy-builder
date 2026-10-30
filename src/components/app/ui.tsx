@@ -397,9 +397,9 @@ export function Collection({
 }) {
   const { data } = useTeacher();
   const [ed, setEd] = useState<Rec | null>(null);
-  let list = (data[k] as Rec[]).filter(filter ?? (() => true));
+  let list = ((data[k] || []) as Rec[]).filter((x) => Boolean(x) && (filter ? filter(x) : true));
   list = [...list].sort(
-    sort ?? ((a, b) => String(b.date ?? b.from ?? "").localeCompare(String(a.date ?? a.from ?? "")))
+    sort ?? ((a, b) => String(b?.date ?? b?.from ?? "").localeCompare(String(a?.date ?? a?.from ?? "")))
   );
   const save = () => {
     if (!ed) return;
