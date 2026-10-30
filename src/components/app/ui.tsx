@@ -623,12 +623,19 @@ export function PrintBtn() {
   );
 }
 
-export function Dt({ d }: { d: string }) {
-  return (
-    <span>
-      {fmtBs(d)} ({weekday(d)})
-    </span>
-  );
+export function Dt({ d }: { d?: string }) {
+  if (!d) return <span>—</span>;
+  try {
+    const formatted = fmtBs(d);
+    const day = weekday(d);
+    return (
+      <span>
+        {formatted}{day ?  : ""}
+      </span>
+    );
+  } catch {
+    return <span>{d || "—"}</span>;
+  }
 }
 
 export function NeedProfile() {

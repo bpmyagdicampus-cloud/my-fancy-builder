@@ -18,8 +18,14 @@ export const bsKey = (y: number, m0: number, d: number) => `${y}-${p(m0 + 1)}-${
 export const monthKey = (y: number, m0: number) => `${y}-${p(m0 + 1)}`;
 
 export function parseBs(s: string) {
-  const [y = 2083, m = 1, d = 1] = (s || "").split("-").map(Number);
-  return { y, m0: (m || 1) - 1, d: d || 1 };
+  if (!s || typeof s !== "string") {
+    return { y: 2083, m0: 0, d: 1 };
+  }
+  const parts = s.split("-").map((x) => parseInt(x, 10));
+  const y = !isNaN(parts[0]) && parts[0] >= 2000 && parts[0] <= 2099 ? parts[0] : 2083;
+  const m = !isNaN(parts[1]) && parts[1] >= 1 && parts[1] <= 12 ? parts[1] : 1;
+  const d = !isNaN(parts[2]) && parts[2] >= 1 && parts[2] <= 32 ? parts[2] : 1;
+  return { y, m0: m - 1, d };
 }
 
 export function adToBs(date: Date) {
@@ -30,24 +36,51 @@ export function adToBs(date: Date) {
 export const todayBs = () => adToBs(new Date());
 
 export function bsToAd(s: string): Date {
-  const { y, m0, d } = parseBs(s);
-  return new NepaliDate(y, m0, d).toJsDate();
+  if (!s || typeof s !== "string" || !/^\d{4}-\d{1,2}-\d{1,2}$/.test(s.trim())) {
+    return new Date();
+  }
+  try {
+    const { y, m0, d } = parseBs(s);
+    return new NepaliDate(y, m0, d).toJsDate();
+  } catch {
+    return new Date();
+  }
 }
 
 export function daysInBsMonth(y: number, m0: number) {
   for (let d = 32; d >= 28; d--) {
-    const n = new NepaliDate(y, m0, d);
-    if (n.getMonth() === m0 && n.getDate() === d) return d;
+    try {
+      const n = new NepaliDate(y, m0, d);
+      if (n.getMonth() === m0 && n.getDate() === d) return d;
+    } catch {
+      continue;
+    }
   }
   return 30;
 }
 
-export const weekday = (s: string) => WEEKDAYS[bsToAd(s).getDay()];
+export const weekday = (s?: string) => {
+  if (!s || typeof s !== "string" || !/^\d{4}-\d{1,2}-\d{1,2}$/.test(s.trim())) {
+    return "";
+  }
+  try {
+    const ad = bsToAd(s);
+    return WEEKDAYS[ad.getDay()] || "";
+  } catch {
+    return "";
+  }
+};
 
 export function fmtBs(s?: string) {
   if (!s) return "—";
-  const { y, m0, d } = parseBs(s);
-  return `${BS_MONTHS[m0]} ${d}, ${y}`;
+  if (!/^\d{4}-\d{1,2}-\d{1,2}$/.test(s.trim())) return s;
+  try {
+    const { y, m0, d } = parseBs(s);
+    if (!y || isNaN(y) || isNaN(m0) || isNaN(d) || !BS_MONTHS[m0]) return s;
+    return ;
+  } catch {
+    return s || "—";
+  }
 }
 
 export function addDaysBs(s: string, n: number) {
