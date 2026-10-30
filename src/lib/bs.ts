@@ -22,15 +22,23 @@ export function parseBs(s: string) {
     return { y: 2083, m0: 0, d: 1 };
   }
   const parts = s.split("-").map((x) => parseInt(x, 10));
-  const y = !isNaN(parts[0]) && parts[0] >= 2000 && parts[0] <= 2099 ? parts[0] : 2083;
+  const y = !isNaN(parts[0]) && parts[0] >= 2000 && parts[0] <= 2090 ? parts[0] : 2083;
   const m = !isNaN(parts[1]) && parts[1] >= 1 && parts[1] <= 12 ? parts[1] : 1;
   const d = !isNaN(parts[2]) && parts[2] >= 1 && parts[2] <= 32 ? parts[2] : 1;
   return { y, m0: m - 1, d };
 }
 
+const FALLBACK_BS = "2083-01-01";
+
 export function adToBs(date: Date) {
-  const n = new NepaliDate(date);
-  return bsKey(n.getYear(), n.getMonth(), n.getDate());
+  try {
+    if (!(date instanceof Date) || isNaN(date.getTime())) return FALLBACK_BS;
+    const n = new NepaliDate(date);
+    return bsKey(n.getYear(), n.getMonth(), n.getDate());
+  } catch {
+    // Date outside the converter's supported range: never crash the page.
+    return FALLBACK_BS;
+  }
 }
 
 export const todayBs = () => adToBs(new Date());
@@ -77,7 +85,7 @@ export function fmtBs(s?: string) {
   try {
     const { y, m0, d } = parseBs(s);
     if (!y || isNaN(y) || isNaN(m0) || isNaN(d) || !BS_MONTHS[m0]) return s;
-    return ;
+    return `${BS_MONTHS[m0]} ${d}, ${y}`;
   } catch {
     return s || "—";
   }
