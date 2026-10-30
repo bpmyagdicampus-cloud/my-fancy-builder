@@ -3,7 +3,7 @@ import { Component, useEffect, useState, type ReactNode, type ErrorInfo } from "
 import { Page, Tabs, Collection, ClassSelect, PrintHead, Signatures, PrintBtn, Dt, NeedProfile } from "@/components/app/ui";
 import { updateData, uid, useTeacher, type Blended, type Cls, type Data, type Lesson, type Plan, type Unit } from "@/lib/store";
 import { currentYear } from "@/lib/years";
-import { fmtBs } from "@/lib/bs";
+import { fmtBs, todayBs } from "@/lib/bs";
 import * as D from "@/lib/dm";
 
 export const Route = createFileRoute("/plans")({
@@ -65,8 +65,8 @@ function Plans() {
   if (!profile) return <NeedProfile />;
   const c = data.classes.find((x) => x.id === cls);
   const units = data.units.filter((u) => u.classId === cls).sort((a, b) => a.from.localeCompare(b.from));
-  const lp = data.lessons.find((l) => l.id === lesson);
-  const bp = data.blended.find((l) => l.id === bl);
+  const lp = (data.lessons || []).find((l) => l?.id === lesson);
+  const bp = (data.blended || []).find((l) => l?.id === bl);
   const cn = (id?: string) => { if (!id) return "—"; const x = (data.classes || []).find((y) => y && y.id === id); return x ? `${x.name || ""} · ${x.subject || ""}` : "—"; };
   const yr = currentYear(data);
   const totalPlannedLh = units.reduce((a, u) => a + (u.lh || 0), 0);
@@ -157,7 +157,7 @@ function Plans() {
                         if (!Array.isArray(d.blended)) d.blended = [];
                         const mbsClass = (d.classes || []).find((x) => x?.name && x.name.includes("MBS"));
                         d.blended.push({
-                          ...SAMPLE,
+                          ...structuredClone(SAMPLE),
                           id: uid(),
                           classId: mbsClass?.id || d.classes?.[0]?.id || "",
                           date: todayBs(),
