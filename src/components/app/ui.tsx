@@ -88,7 +88,7 @@ export function Tabs<T extends string>({
   );
 }
 
-const YEARS = Array.from({ length: 21 }, (_, i) => 2075 + i);
+const YEARS = Array.from({ length: 16 }, (_, i) => 2075 + i); // 2075–2090: converter's supported range
 
 const BS_MONTHS_SHORT_NE = [
   "बैशाख",
@@ -630,7 +630,7 @@ export function Dt({ d }: { d?: string }) {
     const day = weekday(d);
     return (
       <span>
-        {formatted}{day ?  : ""}
+        {formatted}{day ? ` (${day})` : ""}
       </span>
     );
   } catch {
