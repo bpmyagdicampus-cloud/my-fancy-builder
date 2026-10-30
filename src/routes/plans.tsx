@@ -166,7 +166,8 @@ function Plans() {
             </div>
           )} />
         {bp && <BlendedSheet l={bp} cls={(data.classes || []).find((x) => x.id === bp.classId)} />}
-      </>)</Page>
+      </>)}
+    </Page>
   );
 }
 
