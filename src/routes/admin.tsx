@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Page } from "@/components/app/ui";
+import { PopupNoticeAdmin } from "@/components/app/PopupNoticeAdmin";
 import { addAcademicYear, deleteAcademicYear, openTeacher, setActiveAcademicYear, useCloud } from "@/lib/cloud";
 import { loadClasses, syncClasses } from "@/lib/sqc-data";
 import { className, type SqcClass } from "@/lib/sqc";
@@ -223,6 +224,9 @@ function Admin() {
           </>
         )}
       </section>
+
+      {/* पप-अप सूचना · Popup notices */}
+      <PopupNoticeAdmin userId={c.userId} />
 
       {/* Collapsible New Account Drawer */}
       {(showNewForm || made) && (
