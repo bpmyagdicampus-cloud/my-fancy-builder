@@ -15,6 +15,7 @@ export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
   const [form, setForm] = useState({ title: "", content: "", type: "general" as NoticeType, active: true });
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data, error } = await db().select("*").order("created_at", { ascending: false });
@@ -30,6 +31,19 @@ export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
     void load();
   }, [load]);
 
+  const resetForm = () => {
+    setForm({ title: "", content: "", type: "general", active: true });
+    setEditingId(null);
+  };
+
+  const startEdit = (n: PopupNotice) => {
+    setOk("");
+    setErr("");
+    setEditingId(n.id);
+    setForm({ title: n.title, content: n.content, type: n.notice_type, active: n.is_active });
+    document.getElementById("popup-notice-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const publish = async () => {
     setOk("");
     if (!form.title.trim() || !form.content.trim()) {
@@ -37,17 +51,19 @@ export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
       return;
     }
     setBusy(true);
-    const { error } = await db().insert({
+    const payload = {
       title: form.title.trim(),
       content: form.content.trim(),
       notice_type: form.type,
       is_active: form.active,
-      created_by: userId ?? null,
-    });
+    };
+    const { error } = editingId
+      ? await db().update(payload).eq("id", editingId)
+      : await db().insert({ ...payload, created_by: userId ?? null });
     setBusy(false);
     if (error) return setErr(errText(error));
-    setForm({ title: "", content: "", type: "general", active: true });
-    setOk("✅ सूचना प्रकाशित भयो।");
+    setOk(editingId ? "✅ सूचना अपडेट भयो।" : "✅ सूचना प्रकाशित भयो।");
+    resetForm();
     await load();
   };
 
@@ -66,7 +82,7 @@ export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
   };
 
   return (
-    <section className="panel mb-4">
+    <section className="panel mb-4" id="popup-notice-form">
       <h2 className="text-lg font-bold">📢 पप-अप सूचना (Popup Notice)</h2>
       <p className="mb-3 text-xs text-muted-foreground">
         सक्रिय सबैभन्दा नयाँ सूचना सबै प्रयोगकर्तालाई एक पटक देखिन्छ। बन्द गरेपछि सोही सूचना फेरि देखिँदैन।
@@ -119,10 +135,15 @@ export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
           सक्रिय (is_active)
         </label>
       </div>
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap gap-2">
         <button className="btn" disabled={busy} onClick={publish}>
-          {busy ? "प्रकाशित हुँदै…" : "📤 प्रकाशित गर्नुहोस्"}
+          {busy ? "सेभ हुँदै…" : editingId ? "💾 अपडेट गर्नुहोस्" : "📤 प्रकाशित गर्नुहोस्"}
         </button>
+        {editingId && (
+          <button type="button" className="btn-soft" onClick={() => { resetForm(); setErr(""); }}>
+            ✕ रद्द गर्नुहोस्
+          </button>
+        )}
       </div>
 
       <h3 className="mb-2 mt-5 text-sm font-bold">भइरहेका सूचनाहरू</h3>
@@ -137,9 +158,9 @@ export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
             return (
               <li
                 key={n.id}
-                className={`flex flex-wrap items-center gap-3 rounded-xl border border-border p-3 ${
-                  n.is_active ? "" : "opacity-60"
-                }`}
+                className={`flex flex-wrap items-center gap-3 rounded-xl border p-3 ${
+                  editingId === n.id ? "border-primary bg-primary/5" : "border-border"
+                } ${n.is_active ? "" : "opacity-60"}`}
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
@@ -164,6 +185,13 @@ export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
                   onCheckedChange={(v) => void toggle(n, v)}
                   aria-label="Toggle active"
                 />
+                <button
+                  type="button"
+                  className="btn-soft !min-h-8 !px-2.5 !py-1 text-xs"
+                  onClick={() => startEdit(n)}
+                >
+                  ✏️ सम्पादन
+                </button>
                 <button
                   type="button"
                   className="btn-soft !min-h-8 !px-2.5 !py-1 text-xs !text-destructive"
