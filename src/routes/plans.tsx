@@ -5,6 +5,7 @@ import { updateData, uid, useTeacher, type Blended, type Cls, type Data, type Le
 import { currentYear } from "@/lib/years";
 import { fmtBs, todayBs } from "@/lib/bs";
 import * as D from "@/lib/dm";
+import { normClassName } from "@/lib/classes";
 
 export const Route = createFileRoute("/plans")({
   head: () => ({ meta: [
@@ -272,7 +273,7 @@ function ClassAcademicCalendarBanner({ c, yearName, plannedLh }: { c: Cls; yearN
                 (x) =>
                   (c.centralId && x.class_id === c.centralId) ||
                   (x.class_id && x.class_id === c.id) ||
-                  D.normClassName(x.class_name) === D.normClassName(c.name)
+                  normClassName(x.class_name) === normClassName(c.name)
               );
               setCal(matched || null);
               setLoading(false);
