@@ -135,99 +135,6 @@ function Admin() {
     >
       {err && <p className="mb-4 rounded-xl border border-destructive bg-destructive/5 p-3 text-sm text-destructive">{err}</p>}
 
-      {/* Academic Year Management Card */}
-      <section className="panel mb-4">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h2 className="text-lg font-bold">📅 Academic year · शैक्षिक वर्ष व्यवस्थापन</h2>
-            <p className="text-xs text-muted-foreground">
-              यहाँबाट सक्रिय (Active) शैक्षिक वर्ष तोक्न वा गल्तीले बनेको शैक्षिक वर्ष हटाउन सकिन्छ।
-            </p>
-          </div>
-        </div>
-        {!c.yearsReady ? (
-          <p className="text-sm text-muted-foreground">
-            Not set up yet. Run <code>docs/phase4/10_academic_years.sql</code> to let the administrator control the active academic year.
-          </p>
-        ) : (
-          <>
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              {c.yearList.map((y) => (
-                <div
-                  key={y.id}
-                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold ${
-                    y.is_active
-                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                      : "border-border bg-muted/50 text-foreground"
-                  }`}
-                >
-                  <span>
-                    {y.name} {y.is_active ? "· Active ✓" : ""}
-                  </span>
-                  {!y.is_active && (
-                    <>
-                      <button
-                        type="button"
-                        className="rounded bg-primary/15 px-2 py-0.5 text-[11px] font-bold text-primary hover:bg-primary hover:text-primary-foreground"
-                        onClick={async () => {
-                          if (!confirm(`Make ${y.name} the active academic year for everyone?`)) return;
-                          const e = await setActiveAcademicYear(y.id);
-                          if (e) alert(e);
-                        }}
-                      >
-                        Make active
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded px-1.5 py-0.5 text-[11px] text-destructive hover:bg-destructive/15"
-                        title={`गल्तीले बनेको "${y.name}" हटाउनुहोस्`}
-                        onClick={async () => {
-                          if (!confirm(`के तपाइँ गल्तीले बनेको शैक्षिक वर्ष "${y.name}" लाई हटाउन चाहनुहुन्छ?`))
-                            return;
-                          const e = await deleteAcademicYear(y.id);
-                          if (e) alert(e);
-                        }}
-                      >
-                        🗑
-                      </button>
-                    </>
-                  )}
-                </div>
-              ))}
-              {!c.yearList.length && (
-                <span className="text-sm text-muted-foreground">
-                  No academic year yet. Add one below (for example 2083/84).
-                </span>
-              )}
-            </div>
-            <div className="flex flex-wrap items-end gap-2 border-t border-border/70 pt-3">
-              <div>
-                <label className="lbl">New year name · नयाँ वर्षको नाम</label>
-                <input
-                  className="field !w-40"
-                  placeholder="2084/85"
-                  value={yr}
-                  onChange={(e) => setYr(e.target.value)}
-                />
-              </div>
-              <button
-                className="btn-soft"
-                onClick={async () => {
-                  const e = await addAcademicYear(yr);
-                  if (e) alert(e);
-                  else setYr("");
-                }}
-              >
-                + Add year
-              </button>
-            </div>
-          </>
-        )}
-      </section>
-
-      {/* पप-अप सूचना · Popup notices */}
-      <PopupNoticeAdmin userId={c.userId} />
-
       {/* Collapsible New Account Drawer */}
       {(showNewForm || made) && (
         <section className="panel mb-4 border-primary/40 bg-secondary/30">
@@ -577,6 +484,99 @@ function Admin() {
           </table>
         </div>
       </section>
+
+      {/* Academic Year Management Card */}
+      <section className="panel mb-4">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-bold">📅 Academic year · शैक्षिक वर्ष व्यवस्थापन</h2>
+            <p className="text-xs text-muted-foreground">
+              यहाँबाट सक्रिय (Active) शैक्षिक वर्ष तोक्न वा गल्तीले बनेको शैक्षिक वर्ष हटाउन सकिन्छ।
+            </p>
+          </div>
+        </div>
+        {!c.yearsReady ? (
+          <p className="text-sm text-muted-foreground">
+            Not set up yet. Run <code>docs/phase4/10_academic_years.sql</code> to let the administrator control the active academic year.
+          </p>
+        ) : (
+          <>
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              {c.yearList.map((y) => (
+                <div
+                  key={y.id}
+                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold ${
+                    y.is_active
+                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                      : "border-border bg-muted/50 text-foreground"
+                  }`}
+                >
+                  <span>
+                    {y.name} {y.is_active ? "· Active ✓" : ""}
+                  </span>
+                  {!y.is_active && (
+                    <>
+                      <button
+                        type="button"
+                        className="rounded bg-primary/15 px-2 py-0.5 text-[11px] font-bold text-primary hover:bg-primary hover:text-primary-foreground"
+                        onClick={async () => {
+                          if (!confirm(`Make ${y.name} the active academic year for everyone?`)) return;
+                          const e = await setActiveAcademicYear(y.id);
+                          if (e) alert(e);
+                        }}
+                      >
+                        Make active
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded px-1.5 py-0.5 text-[11px] text-destructive hover:bg-destructive/15"
+                        title={`गल्तीले बनेको "${y.name}" हटाउनुहोस्`}
+                        onClick={async () => {
+                          if (!confirm(`के तपाइँ गल्तीले बनेको शैक्षिक वर्ष "${y.name}" लाई हटाउन चाहनुहुन्छ?`))
+                            return;
+                          const e = await deleteAcademicYear(y.id);
+                          if (e) alert(e);
+                        }}
+                      >
+                        🗑
+                      </button>
+                    </>
+                  )}
+                </div>
+              ))}
+              {!c.yearList.length && (
+                <span className="text-sm text-muted-foreground">
+                  No academic year yet. Add one below (for example 2083/84).
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap items-end gap-2 border-t border-border/70 pt-3">
+              <div>
+                <label className="lbl">New year name · नयाँ वर्षको नाम</label>
+                <input
+                  className="field !w-40"
+                  placeholder="2084/85"
+                  value={yr}
+                  onChange={(e) => setYr(e.target.value)}
+                />
+              </div>
+              <button
+                className="btn-soft"
+                onClick={async () => {
+                  const e = await addAcademicYear(yr);
+                  if (e) alert(e);
+                  else setYr("");
+                }}
+              >
+                + Add year
+              </button>
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* पप-अप सूचना · Popup notices */}
+      <PopupNoticeAdmin userId={c.userId} />
     </Page>
   );
 }
