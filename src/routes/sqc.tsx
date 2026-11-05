@@ -174,7 +174,7 @@ function Sqc() {
 
   if (c.status !== "ready") return null;
   const tabs: [T, string][] = [];
-  if (admin || isRep) tabs.push(["new", "New report · नयाँ"]);
+  if (admin || isRep) tabs.push(["new", "New record · नयाँ"]);
   tabs.push(["list", "Reports · प्रतिवेदन"], ["summary", "Summary · सारांश"]);
   if (admin) tabs.push(["setup", "Setup · सेटअप"]);
 
