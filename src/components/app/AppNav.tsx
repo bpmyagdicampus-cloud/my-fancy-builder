@@ -24,6 +24,7 @@ export function AppNav() {
   const [err, setErr] = useState<string | null>(null);
   const [menuSearch, setMenuSearch] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [menuTo, setMenuTo] = useState<string | null>(null);
 
   useEffect(() => {
     setErr(getLoadError());
@@ -99,8 +100,8 @@ export function AppNav() {
   const HIDDEN_FROM_BAR = ["/account", "/years"];
   const barItems = items.filter((i) => !HIDDEN_FROM_BAR.includes(i.to));
   const activeItem = barItems.find((i) => active(i.to));
-  const activeSubs = activeItem?.subs ?? [];
-  const currentTab = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tab") : null;
+  const shownItem = barItems.find((i) => i.to === menuTo) ?? activeItem;
+  const shownSubs = shownItem?.subs ?? [];
 
   return (
     <header className="no-print sticky top-0 z-30 w-full shrink-0 border-b border-border bg-card shadow-sm">
@@ -223,8 +224,8 @@ export function AppNav() {
 
       {/* Second Tier (Desktop Only): Clean Horizontal Menu Bar with Dropdown Sub-Menus */}
       {showLinks && (
-        <div className="border-t border-primary/20 bg-primary text-primary-foreground">
-          <nav className="flex flex-wrap items-center gap-1 px-3 py-1.5 lg:px-5" aria-label="Main navigation">
+        <div className="border-t border-primary/20 bg-primary" onMouseLeave={() => setMenuTo(null)}>
+          <nav className="flex flex-wrap items-center gap-1 px-3 py-1.5 text-primary-foreground lg:px-5" aria-label="Main navigation">
             {barItems.map((item) => {
               const isOn = active(item.to);
               const displayEn = item.en.toLowerCase().includes("student quality") ? "SQC" : item.en;
@@ -232,6 +233,8 @@ export function AppNav() {
                 <Link
                   key={item.to}
                   to={item.to}
+                  onMouseEnter={() => item.subs && setMenuTo(item.to)}
+                  onClick={() => item.subs && setMenuTo(item.to)}
                   className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold tracking-wide transition lg:px-3.5 lg:text-[13px] ${
                     isOn
                       ? "bg-white text-primary font-bold shadow-sm"
@@ -246,29 +249,24 @@ export function AppNav() {
             })}
           </nav>
 
-          {activeSubs.length > 0 && (
-            <div
-              className="flex flex-wrap gap-1.5 border-t border-white/15 bg-primary/90 px-3 py-2 lg:px-5"
-              aria-label="Sub menu"
-            >
-              {activeSubs.map((sub, sIdx) => {
-                const isCurrent = !!sub.tab && sub.tab === currentTab && path === sub.to;
-                return (
+          {shownSubs.length > 0 && (
+            <div className="px-3 pb-3 lg:px-5">
+              <div className="max-w-sm rounded-lg border border-border bg-card text-foreground shadow-md">
+                {shownSubs.map((sub, sIdx) => (
                   <button
                     key={sIdx}
                     type="button"
-                    onClick={() => navigateSub(sub)}
-                    className={`flex flex-col rounded-lg px-3 py-1.5 text-left transition ${
-                      isCurrent
-                        ? "bg-white text-primary shadow-sm"
-                        : "bg-white/10 text-primary-foreground hover:bg-white/20"
-                    }`}
+                    onClick={() => {
+                      setMenuTo(null);
+                      navigateSub(sub);
+                    }}
+                    className="block w-full border-b border-border px-4 py-2 text-left last:border-b-0 hover:bg-muted"
                   >
-                    <span className="text-xs font-bold leading-tight">{sub.labelEn}</span>
-                    <span className="text-[10px] leading-tight opacity-80">{sub.labelNe}</span>
+                    <span className="block text-sm text-foreground">{sub.labelEn}</span>
+                    <span className="block text-xs text-muted-foreground">{sub.labelNe}</span>
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </div>
           )}
         </div>
