@@ -35,6 +35,66 @@ export type Database = {
         }
         Relationships: []
       }
+      campus_annual_calendar: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string
+          event_type: string
+          from_date: string
+          id: string
+          title: string
+          to_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          event_type?: string
+          from_date: string
+          id?: string
+          title: string
+          to_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          event_type?: string
+          from_date?: string
+          id?: string
+          title?: string
+          to_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      campus_cal_types: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          is_holiday: boolean
+          name: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_holiday?: boolean
+          name: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_holiday?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
       campus_classes: {
         Row: {
           created_at: string
@@ -179,6 +239,592 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      dm_academic_calendars: {
+        Row: {
+          academic_year: string
+          approval_note: string
+          approved_at: string | null
+          approved_by: string | null
+          approved_name: string
+          class_id: string
+          class_name: string
+          created_at: string
+          department_id: string
+          end_month: number
+          id: string
+          months: Json
+          particulars: Json
+          prepared_by: string | null
+          prepared_name: string
+          start_month: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          approval_note?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_name?: string
+          class_id: string
+          class_name: string
+          created_at?: string
+          department_id: string
+          end_month?: number
+          id?: string
+          months?: Json
+          particulars?: Json
+          prepared_by?: string | null
+          prepared_name?: string
+          start_month?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          approval_note?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_name?: string
+          class_id?: string
+          class_name?: string
+          created_at?: string
+          department_id?: string
+          end_month?: number
+          id?: string
+          months?: Json
+          particulars?: Json
+          prepared_by?: string | null
+          prepared_name?: string
+          start_month?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_academic_calendars_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dm_activities: {
+        Row: {
+          academic_year: string
+          activity_date: string
+          actual_output: string
+          budget_amount: number
+          category: string
+          challenges: string
+          corrective_actions: string
+          created_at: string
+          created_by: string | null
+          deadline: string
+          department_id: string
+          id: string
+          next_steps: string
+          participants: string
+          plan_id: string | null
+          planned_output: string
+          progress_pct: number
+          responsible_name: string
+          responsible_user_id: string | null
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          academic_year?: string
+          activity_date?: string
+          actual_output?: string
+          budget_amount?: number
+          category?: string
+          challenges?: string
+          corrective_actions?: string
+          created_at?: string
+          created_by?: string | null
+          deadline?: string
+          department_id: string
+          id?: string
+          next_steps?: string
+          participants?: string
+          plan_id?: string | null
+          planned_output?: string
+          progress_pct?: number
+          responsible_name?: string
+          responsible_user_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          academic_year?: string
+          activity_date?: string
+          actual_output?: string
+          budget_amount?: number
+          category?: string
+          challenges?: string
+          corrective_actions?: string
+          created_at?: string
+          created_by?: string | null
+          deadline?: string
+          department_id?: string
+          id?: string
+          next_steps?: string
+          participants?: string
+          plan_id?: string | null
+          planned_output?: string
+          progress_pct?: number
+          responsible_name?: string
+          responsible_user_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_activities_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_activities_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "dm_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dm_budget_lines: {
+        Row: {
+          activity_id: string | null
+          approved: number
+          approved_at: string | null
+          approved_by: string | null
+          comment: string
+          created_at: string
+          created_by: string | null
+          department_id: string
+          id: string
+          plan_id: string | null
+          proposed: number
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          activity_id?: string | null
+          approved?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          comment?: string
+          created_at?: string
+          created_by?: string | null
+          department_id: string
+          id?: string
+          plan_id?: string | null
+          proposed?: number
+          status?: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          activity_id?: string | null
+          approved?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          comment?: string
+          created_at?: string
+          created_by?: string | null
+          department_id?: string
+          id?: string
+          plan_id?: string | null
+          proposed?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_budget_lines_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "dm_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_budget_lines_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_budget_lines_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "dm_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dm_budget_revisions: {
+        Row: {
+          decided_at: string | null
+          decided_by: string | null
+          decision_comment: string
+          id: string
+          line_id: string
+          reason: string
+          requested_amount: number
+          requested_at: string
+          requested_by: string | null
+          status: string
+        }
+        Insert: {
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_comment?: string
+          id?: string
+          line_id: string
+          reason?: string
+          requested_amount: number
+          requested_at?: string
+          requested_by?: string | null
+          status?: string
+        }
+        Update: {
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_comment?: string
+          id?: string
+          line_id?: string
+          reason?: string
+          requested_amount?: number
+          requested_at?: string
+          requested_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_budget_revisions_line_id_fkey"
+            columns: ["line_id"]
+            isOneToOne: false
+            referencedRelation: "dm_budget_lines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dm_evidence: {
+        Row: {
+          activity_id: string | null
+          department_id: string
+          expense_id: string | null
+          file_name: string
+          file_path: string
+          id: string
+          mime: string
+          size_bytes: number
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          activity_id?: string | null
+          department_id: string
+          expense_id?: string | null
+          file_name?: string
+          file_path: string
+          id?: string
+          mime?: string
+          size_bytes?: number
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          activity_id?: string | null
+          department_id?: string
+          expense_id?: string | null
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime?: string
+          size_bytes?: number
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_evidence_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "dm_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_evidence_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_evidence_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "dm_expenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dm_expenses: {
+        Row: {
+          activity_id: string | null
+          amount: number
+          created_at: string
+          created_by: string | null
+          department_id: string
+          description: string
+          expense_date: string
+          id: string
+          line_id: string | null
+          locked: boolean
+          plan_id: string | null
+          reversal_of: string | null
+          updated_at: string
+          updated_by: string | null
+          voucher_no: string
+        }
+        Insert: {
+          activity_id?: string | null
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          department_id: string
+          description?: string
+          expense_date?: string
+          id?: string
+          line_id?: string | null
+          locked?: boolean
+          plan_id?: string | null
+          reversal_of?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          voucher_no?: string
+        }
+        Update: {
+          activity_id?: string | null
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          department_id?: string
+          description?: string
+          expense_date?: string
+          id?: string
+          line_id?: string | null
+          locked?: boolean
+          plan_id?: string | null
+          reversal_of?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          voucher_no?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_expenses_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "dm_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_expenses_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_expenses_line_id_fkey"
+            columns: ["line_id"]
+            isOneToOne: false
+            referencedRelation: "dm_budget_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_expenses_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "dm_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_expenses_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "dm_expenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dm_plan_revisions: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          plan_id: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          plan_id: string
+          snapshot: Json
+          version: number
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          plan_id?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_plan_revisions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "dm_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dm_plans: {
+        Row: {
+          academic_year: string
+          approval_comment: string
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          department_id: string
+          end_date: string
+          estimated_budget: number
+          expected_outcomes: string
+          funding_source: string
+          id: string
+          indicators: string
+          objectives: string
+          start_date: string
+          status: string
+          targets: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          academic_year: string
+          approval_comment?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          department_id: string
+          end_date?: string
+          estimated_budget?: number
+          expected_outcomes?: string
+          funding_source?: string
+          id?: string
+          indicators?: string
+          objectives?: string
+          start_date?: string
+          status?: string
+          targets?: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          academic_year?: string
+          approval_comment?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          department_id?: string
+          end_date?: string
+          estimated_budget?: number
+          expected_outcomes?: string
+          funding_source?: string
+          id?: string
+          indicators?: string
+          objectives?: string
+          start_date?: string
+          status?: string
+          targets?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_plans_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      popup_notices: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          notice_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          notice_type?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          notice_type?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -585,6 +1231,23 @@ export type Database = {
       campus_class_dept: { Args: { _class: string }; Returns: string }
       campus_program_dept: { Args: { _program: string }; Returns: string }
       can_manage_dept: { Args: { _dept: string }; Returns: boolean }
+      dm_budget_decide_revision: {
+        Args: { _approve: boolean; _comment?: string; _id: string }
+        Returns: undefined
+      }
+      dm_can_read: { Args: { _dept: string }; Returns: boolean }
+      dm_dept_teachers: {
+        Args: { _dept: string }
+        Returns: {
+          dept: string
+          designation: string
+          name: string
+          user_id: string
+        }[]
+      }
+      dm_line_dept: { Args: { _line: string }; Returns: string }
+      dm_plan_dept: { Args: { _plan: string }; Returns: string }
+      get_campus_annual_calendar: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -593,6 +1256,20 @@ export type Database = {
         Returns: boolean
       }
       is_staff_user: { Args: never; Returns: boolean }
+      peer_class_students: {
+        Args: never
+        Returns: {
+          central_id: string
+          class_id: string
+          class_name: string
+          code: string
+          raw_students: string
+          students: Json
+          subject: string
+          teacher_id: string
+          teacher_name: string
+        }[]
+      }
       set_active_academic_year: { Args: { _id: string }; Returns: undefined }
       setup_class_delete: { Args: { _id: string }; Returns: string }
       setup_class_dept: { Args: { _class: string }; Returns: string }
