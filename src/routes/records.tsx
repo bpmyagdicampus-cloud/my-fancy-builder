@@ -43,7 +43,7 @@ function Assessments() {
   const c = data.classes.find((x) => x.id === (ed?.classId || cls));
   const stu = studentsOf(c);
   const isRubric = ed?.kind === "Unit assessment (rubric)";
-  const setMark = (s: string, k: "m" | "c", v: string) => setEd((e) => e && { ...e, marks: { ...e.marks, [s]: { m: "", c: "", ...e.marks[s], [k]: v } } });
+  const setMark = (s: string, k: "m" | "c", v: string) => setEd((e) => e && { ...e, marks: { ...e.marks, [s]: { ...{ m: "", c: "" }, ...e.marks[s], [k]: v } } });
   const save = () => {
     if (!ed?.classId) return alert("Select a class");
     updateData((d) => { const i = d.assess.findIndex((x) => x.id === ed.id); if (i >= 0) d.assess[i] = ed; else d.assess.push({ ...ed, id: uid() }); });

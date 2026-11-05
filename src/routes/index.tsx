@@ -25,7 +25,7 @@ function Home() {
   const { profile, data } = useTeacher();
   const cl = useCloud();
   const lk = C.useLookup();
-  const [actSum, setActSum] = useState<D.DmActionSummary | null>(null);
+  const [actSum, setActSum] = useState<D.ActionSummary | null>(null);
   const [campusEvents, setCampusEvents] = useState<D.CampusAnnualEvent[]>([]);
   const [calTypes, setCalTypes] = useState<D.CampusCalType[]>([]);
   const [calFilter, setCalFilter] = useState("");

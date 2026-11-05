@@ -262,8 +262,8 @@ function ClassAcademicCalendarBanner({ c, yearName, plannedLh }: { c: Cls; yearN
     D.loadClassCalendar(c.deptId || "", yearName, searchId)
       .then((res) => {
         if (!active) return;
-        if (res?.data) {
-          setCal(res.data);
+        if ((res?.ok && res.data)) {
+          setCal(res.ok ? res.data : null);
           setLoading(false);
         } else {
           D.loadAllClassCalendars(c.deptId || "", yearName)
