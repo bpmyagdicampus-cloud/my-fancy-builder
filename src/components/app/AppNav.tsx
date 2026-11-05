@@ -92,7 +92,6 @@ export function AppNav() {
   const barItems = items.filter((i) => !HIDDEN_FROM_BAR.includes(i.to));
   const activeItem = barItems.find((i) => active(i.to));
   const shownItem = barItems.find((i) => i.to === menuTo) ?? activeItem;
-  const shownSubs = shownItem?.subs ?? [];
 
   const allSearchItems: SubMenuItem[] = items.flatMap((m) =>
     m.subs ? m.subs : [{ labelNe: m.ne, labelEn: m.en, to: m.to }]
@@ -226,51 +225,62 @@ export function AppNav() {
 
       {/* Second Tier (Desktop Only): Clean Horizontal Menu Bar with Dropdown Sub-Menus */}
       {showLinks && (
-        <div className="relative border-t border-primary/20 bg-primary" onMouseLeave={() => setMenuTo(null)}>
-          <nav className="flex flex-wrap items-center gap-1 px-3 py-2 text-primary-foreground lg:gap-1.5 lg:px-5" aria-label="Main navigation">
+        <nav
+          className="hidden border-t border-primary/20 bg-primary text-primary-foreground md:block"
+          aria-label="Main navigation"
+        >
+          <div className="flex flex-wrap items-center gap-1 px-3 py-2 lg:gap-1.5 lg:px-5">
             {barItems.map((item) => {
               const isOn = active(item.to);
               const hasSubs = !!item.subs && item.subs.length > 0;
               const displayEn = item.en.toLowerCase().includes("student quality") ? "SQC" : item.en;
+              const isShown = shownItem?.to === item.to && hasSubs;
               return (
-                <Link
+                <div
                   key={item.to}
-                  to={item.to}
+                  className="relative shrink-0"
                   onMouseEnter={() => hasSubs && setMenuTo(item.to)}
-                  onClick={() => hasSubs && setMenuTo(item.to)}
-                  className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-bold uppercase tracking-wide transition md:text-[15px] lg:px-4 lg:text-base ${
-                    isOn
-                      ? "bg-white text-primary shadow-sm"
-                      : "text-primary-foreground hover:bg-white/15 hover:text-white"
-                  }`}
-                  title={item.en}
+                  onMouseLeave={() => setMenuTo(null)}
                 >
-                  <Icon n={item.icon} size={18} />
-                  <span className="whitespace-nowrap">{displayEn}</span>
-                </Link>
+                  <Link
+                    to={item.to}
+                    onClick={() => hasSubs && setMenuTo(item.to)}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13.5px] font-bold uppercase tracking-wide transition lg:px-3.5 lg:text-[15px] ${
+                      isOn
+                        ? "bg-white text-primary shadow-sm"
+                        : "text-primary-foreground hover:bg-white/15 hover:text-white"
+                    }`}
+                    title={item.en}
+                  >
+                    <Icon n={item.icon} size={16} />
+                    <span className="whitespace-nowrap">{displayEn}</span>
+                  </Link>
+
+                  {isShown && (
+                    <div className="absolute left-0 top-full z-50 w-64 pt-1">
+                      <div className="overflow-hidden rounded-lg border border-border bg-card text-foreground shadow-xl">
+                        {item.subs!.map((sub, sIdx) => (
+                          <button
+                            key={sIdx}
+                            type="button"
+                            onClick={() => {
+                              setMenuTo(null);
+                              navigateSub(sub);
+                            }}
+                            className="block w-full border-b border-border px-4 py-2.5 text-left last:border-b-0 hover:bg-muted"
+                          >
+                            <span className="block text-sm font-semibold text-foreground">{sub.labelEn}</span>
+                            <span className="block text-xs text-muted-foreground">{sub.labelNe}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               );
             })}
-          </nav>
-
-          {shownSubs.length > 0 && (
-            <div className="absolute left-3 top-full z-50 w-72 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-b-lg border border-t-0 border-border bg-card text-foreground shadow-xl lg:left-5">
-              {shownSubs.map((sub, sIdx) => (
-                <button
-                  key={sIdx}
-                  type="button"
-                  onClick={() => {
-                    setMenuTo(null);
-                    navigateSub(sub);
-                  }}
-                  className="block w-full border-b border-border px-4 py-2.5 text-left last:border-b-0 hover:bg-muted"
-                >
-                  <span className="block text-sm font-semibold text-foreground">{sub.labelEn}</span>
-                  <span className="block text-xs text-muted-foreground">{sub.labelNe}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+          </div>
+        </nav>
       )}
 
       {showLinks && profile && past && (
