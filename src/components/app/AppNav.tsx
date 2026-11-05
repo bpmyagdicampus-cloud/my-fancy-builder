@@ -22,15 +22,16 @@ export function AppNav() {
   const { items, active } = useShell();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [err, setErr] = useState<string | null>(null);
+  const [menuTo, setMenuTo] = useState<string | null>(null);
   const [menuSearch, setMenuSearch] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
-  const [menuTo, setMenuTo] = useState<string | null>(null);
 
   useEffect(() => {
     setErr(getLoadError());
   }, [profile?.id]);
 
   useEffect(() => {
+    setMenuTo(null);
     setSearchFocused(false);
   }, [path]);
 
@@ -66,6 +67,7 @@ export function AppNav() {
   const today = todayBs();
 
   const navigateSub = (sub: SubMenuItem) => {
+    setMenuTo(null);
     setMenuSearch("");
     setSearchFocused(false);
     void nav({ to: sub.to as any }).then(() => {
@@ -85,6 +87,13 @@ export function AppNav() {
     });
   };
 
+  // Blue bar से My account र Academic years हटाइएको (avatar र FY badge बाट पहुँच रहन्छ)
+  const HIDDEN_FROM_BAR = ["/account", "/years"];
+  const barItems = items.filter((i) => !HIDDEN_FROM_BAR.includes(i.to));
+  const activeItem = barItems.find((i) => active(i.to));
+  const shownItem = barItems.find((i) => i.to === menuTo) ?? activeItem;
+  const shownSubs = shownItem?.subs ?? [];
+
   const allSearchItems: SubMenuItem[] = items.flatMap((m) =>
     m.subs ? m.subs : [{ labelNe: m.ne, labelEn: m.en, to: m.to }]
   );
@@ -95,13 +104,6 @@ export function AppNav() {
           s.labelEn.toLowerCase().includes(menuSearch.trim().toLowerCase())
       )
     : [];
-
-  // Blue bar से My account र Academic years हटाइएको छ (avatar र FY badge बाट पहुँच रहन्छ)
-  const HIDDEN_FROM_BAR = ["/account", "/years"];
-  const barItems = items.filter((i) => !HIDDEN_FROM_BAR.includes(i.to));
-  const activeItem = barItems.find((i) => active(i.to));
-  const shownItem = barItems.find((i) => i.to === menuTo) ?? activeItem;
-  const shownSubs = shownItem?.subs ?? [];
 
   return (
     <header className="no-print sticky top-0 z-30 w-full shrink-0 border-b border-border bg-card shadow-sm">
@@ -224,25 +226,26 @@ export function AppNav() {
 
       {/* Second Tier (Desktop Only): Clean Horizontal Menu Bar with Dropdown Sub-Menus */}
       {showLinks && (
-        <div className="border-t border-primary/20 bg-primary" onMouseLeave={() => setMenuTo(null)}>
-          <nav className="flex flex-wrap items-center gap-1 px-3 py-1.5 text-primary-foreground lg:px-5" aria-label="Main navigation">
+        <div className="relative border-t border-primary/20 bg-primary" onMouseLeave={() => setMenuTo(null)}>
+          <nav className="flex flex-wrap items-center gap-1 px-3 py-2 text-primary-foreground lg:gap-1.5 lg:px-5" aria-label="Main navigation">
             {barItems.map((item) => {
               const isOn = active(item.to);
+              const hasSubs = !!item.subs && item.subs.length > 0;
               const displayEn = item.en.toLowerCase().includes("student quality") ? "SQC" : item.en;
               return (
                 <Link
                   key={item.to}
                   to={item.to}
-                  onMouseEnter={() => item.subs && setMenuTo(item.to)}
-                  onClick={() => item.subs && setMenuTo(item.to)}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold tracking-wide transition lg:px-3.5 lg:text-[13px] ${
+                  onMouseEnter={() => hasSubs && setMenuTo(item.to)}
+                  onClick={() => hasSubs && setMenuTo(item.to)}
+                  className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-bold uppercase tracking-wide transition md:text-[15px] lg:px-4 lg:text-base ${
                     isOn
-                      ? "bg-white text-primary font-bold shadow-sm"
-                      : "text-primary-foreground/95 hover:bg-white/15 hover:text-white"
+                      ? "bg-white text-primary shadow-sm"
+                      : "text-primary-foreground hover:bg-white/15 hover:text-white"
                   }`}
                   title={item.en}
                 >
-                  <Icon n={item.icon} size={15} />
+                  <Icon n={item.icon} size={18} />
                   <span className="whitespace-nowrap">{displayEn}</span>
                 </Link>
               );
@@ -250,25 +253,98 @@ export function AppNav() {
           </nav>
 
           {shownSubs.length > 0 && (
-            <div className="px-3 pb-3 lg:px-5">
-              <div className="max-w-sm rounded-lg border border-border bg-card text-foreground shadow-md">
-                {shownSubs.map((sub, sIdx) => (
-                  <button
-                    key={sIdx}
-                    type="button"
-                    onClick={() => {
-                      setMenuTo(null);
-                      navigateSub(sub);
-                    }}
-                    className="block w-full border-b border-border px-4 py-2 text-left last:border-b-0 hover:bg-muted"
-                  >
-                    <span className="block text-sm text-foreground">{sub.labelEn}</span>
-                    <span className="block text-xs text-muted-foreground">{sub.labelNe}</span>
-                  </button>
-                ))}
-              </div>
+            <div className="absolute left-3 top-full z-50 w-72 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-b-lg border border-t-0 border-border bg-card text-foreground shadow-xl lg:left-5">
+              {shownSubs.map((sub, sIdx) => (
+                <button
+                  key={sIdx}
+                  type="button"
+                  onClick={() => {
+                    setMenuTo(null);
+                    navigateSub(sub);
+                  }}
+                  className="block w-full border-b border-border px-4 py-2.5 text-left last:border-b-0 hover:bg-muted"
+                >
+                  <span className="block text-sm font-semibold text-foreground">{sub.labelEn}</span>
+                  <span className="block text-xs text-muted-foreground">{sub.labelNe}</span>
+                </button>
+              ))}
             </div>
           )}
+        </div>
+      )}
+
+      {showLinks && profile && past && (
+        <div className="bg-accent px-4 py-1 text-center text-xs font-medium text-accent-foreground">
+          {isAdmin ? (
+            <>
+              तपाइँ अघिल्लो/निष्क्रिय शैक्षिक वर्ष ({yr?.name}) मा हुनुहुन्छ। सबै शिक्षकका लागि यसमा काम गर्न मिल्ने बनाउन{" "}
+              <Link to="/years" className="underline font-bold">
+                Academic years
+              </Link>{" "}
+              मा गएर Active गर्नुहोस्।
+            </>
+          ) : (
+            <>
+              तपाइँ अघिल्लो शैक्षिक वर्ष ({yr?.name}) हेर्दै हुनुहुन्छ (View only · हेर्न मात्र मिल्ने)। काम गर्न{" "}
+              <Link to="/years" className="underline font-bold">
+                सक्रिय वर्ष ({actYr?.name}) खोल्नुहोस्
+              </Link>
+              ।
+            </>
+          )}
+        </div>
+      )}
+
+      {err && (
+        <div className="bg-destructive px-4 py-1.5 text-center text-xs font-semibold text-destructive-foreground">
+          {err}
+        </div>
+      )}
+
+      {staff && c.save === "conflict" && (
+        <div className="flex flex-wrap items-center justify-center gap-3 bg-destructive px-4 py-1.5 text-xs text-destructive-foreground">
+          <span>{c.saveMsg} Which copy do you want to keep?</span>
+          <button
+            className="rounded bg-background px-2 py-0.5 font-semibold text-foreground"
+            onClick={() =>
+              confirm("Keep THIS device's copy and overwrite the cloud copy?") && void resolveConflict("keep-mine")
+            }
+          >
+            Keep this device's copy
+          </button>
+          <button
+            className="rounded bg-background px-2 py-0.5 font-semibold text-foreground"
+            onClick={() =>
+              confirm("Use the cloud copy? This device's copy will be downloaded as a file first.") &&
+              void resolveConflict("use-cloud")
+            }
+          >
+            Use cloud copy
+          </button>
+        </div>
+      )}
+
+      {staff && c.save === "error" && (
+        <div className="flex flex-wrap items-center justify-center gap-3 bg-secondary px-4 py-1 text-xs font-medium text-secondary-foreground">
+          <span>
+            ☁️ अफलाइन सुरक्षा: तपाईंको काम यस मोबाइल/कम्प्युटरको स्पेसमा सुरक्षित छ। इन्टरनेट जोडिएपछि स्वतः क्लाउडमा सर्नेछ।
+          </span>
+          <button
+            className="rounded border border-border bg-card px-2.5 py-0.5 font-semibold text-primary shadow-sm"
+            onClick={() => void retryNow()}
+          >
+            Sync now · अहिले सिंक गर्नुहोस्
+          </button>
+        </div>
+      )}
+
+      {staff && listUnsaved(c.userId).length > 0 && (
+        <div className="bg-accent px-4 py-1 text-center text-xs font-medium text-accent-foreground">
+          A copy of earlier UNSAVED work is stored on this device.{" "}
+          <Link to="/account" className="underline">
+            Open My account
+          </Link>{" "}
+          to download or delete it.
         </div>
       )}
     </header>
