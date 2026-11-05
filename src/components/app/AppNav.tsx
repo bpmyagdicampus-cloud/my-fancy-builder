@@ -100,9 +100,7 @@ export function AppNav() {
 
   return (
     <header className="no-print sticky top-0 z-30 w-full shrink-0 border-b border-border bg-card shadow-sm">
-      {/* Top Tier: Brand, Campus Name, Search, FY Badge & User Profile */}
       <div className="flex items-center gap-2 px-3 py-2 sm:gap-3 md:px-5">
-        {/* Mobile Logo & Title */}
         <Link to="/" className="flex shrink-0 items-center gap-2.5 leading-none text-primary md:hidden">
           <img src="/icon-192.png" alt="Shikshak Diary" className="h-9 w-9 shrink-0 rounded-lg shadow-sm" />
           <div className="whitespace-nowrap">
@@ -113,7 +111,6 @@ export function AppNav() {
           </div>
         </Link>
 
-        {/* Desktop Brand & Campus Display on Left */}
         <div className="hidden min-w-0 items-center gap-3 md:flex">
           <Link to="/" className="flex shrink-0 items-center gap-2.5 text-primary transition hover:opacity-90">
             <img src="/icon-192.png" alt="Shikshak Diary" className="h-9 w-9 shrink-0 rounded-lg shadow-sm" />
@@ -149,7 +146,6 @@ export function AppNav() {
 
         <div className="flex-1" />
 
-        {/* Desktop Quick Menu Search */}
         <div className="relative hidden w-48 lg:block xl:w-64">
           <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs transition focus-within:border-primary focus-within:bg-background">
             <Icon n="search" size={15} />
@@ -170,7 +166,7 @@ export function AppNav() {
                   key={idx}
                   type="button"
                   onMouseDown={() => navigateSub(s)}
-                  className="flex w-full flex-col rounded-lg px-3 py-2 text-left transition hover:bg-secondary"
+                  className="flex w-full flex-col rounded-lg px-3.5 py-2 text-left transition hover:bg-secondary"
                 >
                   <span className="text-xs font-bold text-foreground sm:text-sm">{s.labelEn}</span>
                   <span className="text-[11px] text-muted-foreground">{s.labelNe}</span>
@@ -195,25 +191,6 @@ export function AppNav() {
           </Link>
         )}
 
-        {staff && c.save !== "idle" && (
-          <span
-            className={`chip shrink-0 whitespace-nowrap text-xs font-semibold ${
-              c.save === "conflict"
-                ? "!border-destructive !text-destructive"
-                : c.save === "error"
-                ? "!border-primary/40 !text-primary"
-                : ""
-            }`}
-            title={
-              c.save === "error"
-                ? "Saved offline on this device; will sync automatically when online."
-                : undefined
-            }
-          >
-            {SAVE_LABEL[c.save]}
-          </span>
-        )}
-
         {signedIn ? (
           <Link
             to="/account"
@@ -230,7 +207,6 @@ export function AppNav() {
         )}
       </div>
 
-      {/* Second Tier (Desktop Only): Enlarged, Professional English Menu Bar that fits every screen */}
       {showLinks && (
         <nav
           className="hidden flex-wrap items-center gap-1 border-t border-primary/20 bg-primary px-3 py-1.5 text-primary-foreground md:flex lg:gap-1.5 lg:px-5"
@@ -283,109 +259,6 @@ export function AppNav() {
             );
           })}
         </nav>
-      )}
-
-      {/* Status & Alert Banners */}
-      {viewingOther && (
-        <div className="flex flex-wrap items-center justify-center gap-3 bg-accent px-4 py-1.5 text-xs font-medium text-accent-foreground sm:text-sm">
-          <span>Admin view: you are viewing/editing {profile?.name ?? "another teacher"}'s diary.</span>
-          <button
-            className="font-bold underline"
-            onClick={() =>
-              c.userId && openTeacher(c.userId).catch((e) => alert(e instanceof Error ? e.message : String(e)))
-            }
-          >
-            ← Back to my own diary
-          </button>
-        </div>
-      )}
-
-      {staff &&
-        profile &&
-        !past &&
-        c.activeYear &&
-        yr &&
-        yr.name.trim().toLowerCase() !== c.activeYear.name.trim().toLowerCase() && (
-          <div className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground sm:text-sm">
-            Active academic year is <b>{c.activeYear.name}</b>, but you have <b>{yr.name}</b> open.{" "}
-            <Link to="/years" className="ml-1 font-bold underline">
-              Switch in Academic Years →
-            </Link>
-          </div>
-        )}
-
-      {showLinks && profile && past && (
-        <div className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground sm:text-sm">
-          {isAdmin ? (
-            <>
-              You are viewing an inactive academic year ({yr?.name}). Go to{" "}
-              <Link to="/years" className="font-bold underline">
-                Academic Years
-              </Link>{" "}
-              to make it active for all teachers.
-            </>
-          ) : (
-            <>
-              You are viewing a past academic year ({yr?.name}) in <b>View-Only</b> mode.{" "}
-              <Link to="/years" className="font-bold underline">
-                Open Active Year ({actYr?.name}) →
-              </Link>
-            </>
-          )}
-        </div>
-      )}
-
-      {err && (
-        <div className="bg-destructive px-4 py-1.5 text-center text-xs font-semibold text-destructive-foreground sm:text-sm">
-          {err}
-        </div>
-      )}
-
-      {staff && c.save === "conflict" && (
-        <div className="flex flex-wrap items-center justify-center gap-3 bg-destructive px-4 py-1.5 text-xs text-destructive-foreground sm:text-sm">
-          <span>{c.saveMsg} Which copy do you want to keep?</span>
-          <button
-            className="rounded bg-background px-2.5 py-1 font-semibold text-foreground"
-            onClick={() =>
-              confirm("Keep THIS device's copy and overwrite the cloud copy?") && void resolveConflict("keep-mine")
-            }
-          >
-            Keep this device's copy
-          </button>
-          <button
-            className="rounded bg-background px-2.5 py-1 font-semibold text-foreground"
-            onClick={() =>
-              confirm("Use the cloud copy? This device's copy will be downloaded as a file first.") &&
-              void resolveConflict("use-cloud")
-            }
-          >
-            Use cloud copy
-          </button>
-        </div>
-      )}
-
-      {staff && c.save === "error" && (
-        <div className="flex flex-wrap items-center justify-center gap-3 bg-secondary px-4 py-1.5 text-xs font-medium text-secondary-foreground sm:text-sm">
-          <span>
-            ☁️ Offline Protection: Your work is safely saved on this device and will sync automatically when online.
-          </span>
-          <button
-            className="rounded border border-border bg-card px-3 py-0.5 font-semibold text-primary shadow-sm"
-            onClick={() => void retryNow()}
-          >
-            Sync Now
-          </button>
-        </div>
-      )}
-
-      {staff && listUnsaved(c.userId).length > 0 && (
-        <div className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground sm:text-sm">
-          A copy of earlier UNSAVED work is stored on this device.{" "}
-          <Link to="/account" className="font-bold underline">
-            Open My Account
-          </Link>{" "}
-          to download or delete it.
-        </div>
       )}
     </header>
   );
