@@ -44,9 +44,9 @@ export function AppNav() {
       const cloudActive = cs.yearsReady ? cs.activeYear?.name : null;
       if (isPast(d, cloudActive)) {
         const act = activeYear(d, cloudActive);
-        return `यो शैक्षिक वर्ष हेर्न मात्र मिल्छ (View only)। अघिल्लो वर्षमा बाँकी काम गर्नुपरेमा Admin बाट यस वर्षलाई Active बनाउन लगाउनुहोस्।${
-          act ? ` (सक्रिय वर्ष: ${act.name})` : ""
-        }\n\nThis academic year is view-only. Only the active academic year can be edited.`;
+        return `This academic year is view-only. Only the active academic year can be edited.${
+          act ? ` (Active Year: ${act.name})` : ""
+        }\n\nयो शैक्षिक वर्ष हेर्न मात्र मिल्छ (View only)। अघिल्लो वर्षमा काम गर्न Admin बाट यस वर्षलाई Active बनाउन लगाउनुहोस्।`;
       }
       return null;
     });
@@ -93,43 +93,56 @@ export function AppNav() {
   const filteredSearch = menuSearch.trim()
     ? allSearchItems.filter(
         (s) =>
-          s.labelNe.toLowerCase().includes(menuSearch.trim().toLowerCase()) ||
-          s.labelEn.toLowerCase().includes(menuSearch.trim().toLowerCase())
+          s.labelEn.toLowerCase().includes(menuSearch.trim().toLowerCase()) ||
+          s.labelNe.toLowerCase().includes(menuSearch.trim().toLowerCase())
       )
     : [];
 
   return (
     <header className="no-print sticky top-0 z-30 w-full shrink-0 border-b border-border bg-card shadow-sm">
-      {/* Top Tier: Campus Name & Address (Desktop), Quick Menu Search & User Account (No install button after login, no toggle button) */}
-      <div className="flex items-center gap-2 px-3 py-1.5 sm:gap-2.5 md:px-5">
+      {/* Top Tier: Brand, Campus Name, Search, FY Badge & User Profile */}
+      <div className="flex items-center gap-2 px-3 py-2 sm:gap-3 md:px-5">
         {/* Mobile Logo & Title */}
-        <Link to="/" className="flex shrink-0 items-center gap-2 leading-none text-primary md:hidden">
-          <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-8 w-8 shrink-0 rounded-lg shadow-sm" />
+        <Link to="/" className="flex shrink-0 items-center gap-2.5 leading-none text-primary md:hidden">
+          <img src="/icon-192.png" alt="Shikshak Diary" className="h-9 w-9 shrink-0 rounded-lg shadow-sm" />
           <div className="whitespace-nowrap">
-            <span className="block font-display text-base sm:text-lg">शिक्षक डायरी</span>
-            <span className="block text-[10px] font-medium tracking-wide text-muted-foreground">
-              Teacher's Diary
+            <span className="block font-display text-base font-bold sm:text-lg">Shikshak Diary</span>
+            <span className="block text-[11px] font-medium tracking-wide text-muted-foreground">
+              Teacher's Academic Portal
             </span>
           </div>
         </Link>
 
         {/* Desktop Brand & Campus Display on Left */}
-        <div className="hidden min-w-0 items-center gap-2.5 md:flex">
-          <Link to="/" className="flex shrink-0 items-center gap-2 text-primary">
-            <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-8 w-8 shrink-0 rounded-lg shadow-sm" />
-            <span className="font-display text-lg tracking-wide text-primary">शिक्षक डायरी</span>
+        <div className="hidden min-w-0 items-center gap-3 md:flex">
+          <Link to="/" className="flex shrink-0 items-center gap-2.5 text-primary transition hover:opacity-90">
+            <img src="/icon-192.png" alt="Shikshak Diary" className="h-9 w-9 shrink-0 rounded-lg shadow-sm" />
+            <div className="leading-tight">
+              <span className="block font-display text-lg font-bold tracking-wide text-primary">
+                Shikshak Diary
+              </span>
+              <span className="block text-[10px] font-medium text-muted-foreground">
+                Academic Management
+              </span>
+            </div>
           </Link>
-          <span className="text-muted-foreground/50">|</span>
-          <span className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-secondary/70 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-primary">
+
+          <span className="h-6 w-px bg-border" />
+
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-secondary/70 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-primary sm:text-sm">
             <span>🏛️</span>
-            <span className="max-w-64 truncate">{profile?.campus || "MYAGDI MULTIPLE CAMPUS"}</span>
+            <span className="max-w-60 truncate lg:max-w-80">
+              {profile?.campus || "MYAGDI MULTIPLE CAMPUS"}
+            </span>
           </span>
+
           {profile?.address && (
-            <span className="hidden truncate text-xs font-medium text-muted-foreground lg:inline">
+            <span className="hidden truncate text-xs font-medium text-muted-foreground xl:inline">
               📍 {profile.address}
             </span>
           )}
-          <span className="hidden items-center gap-1 rounded-md border border-border bg-muted/50 px-2 py-1 text-xs font-medium text-muted-foreground xl:inline-flex">
+
+          <span className="hidden items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-2.5 py-1 text-xs font-semibold text-foreground lg:inline-flex">
             🗓️ {fmtBs(today)}
           </span>
         </div>
@@ -137,13 +150,13 @@ export function AppNav() {
         <div className="flex-1" />
 
         {/* Desktop Quick Menu Search */}
-        <div className="relative hidden w-48 lg:block xl:w-56">
-          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-1 text-xs">
-            <Icon n="search" size={14} />
+        <div className="relative hidden w-48 lg:block xl:w-64">
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs transition focus-within:border-primary focus-within:bg-background">
+            <Icon n="search" size={15} />
             <input
               type="search"
-              placeholder="Search menu · मेनु खोज्नुहोस्..."
-              className="w-full bg-transparent text-xs outline-none"
+              placeholder="Quick search menu..."
+              className="w-full bg-transparent text-xs font-medium outline-none sm:text-sm"
               value={menuSearch}
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setTimeout(() => setSearchFocused(false), 180)}
@@ -151,16 +164,16 @@ export function AppNav() {
             />
           </div>
           {searchFocused && filteredSearch.length > 0 && (
-            <div className="absolute left-0 right-0 top-9 z-50 max-h-64 overflow-y-auto rounded-xl border border-border bg-card p-1.5 shadow-xl">
+            <div className="absolute left-0 right-0 top-10 z-50 max-h-72 overflow-y-auto rounded-xl border border-border bg-card p-1.5 shadow-xl">
               {filteredSearch.map((s, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onMouseDown={() => navigateSub(s)}
-                  className="flex w-full flex-col rounded-lg px-2.5 py-1.5 text-left text-xs transition hover:bg-secondary"
+                  className="flex w-full flex-col rounded-lg px-3 py-2 text-left transition hover:bg-secondary"
                 >
-                  <span className="font-semibold text-foreground">{s.labelNe}</span>
-                  <span className="text-[10px] text-muted-foreground">{s.labelEn}</span>
+                  <span className="text-xs font-bold text-foreground sm:text-sm">{s.labelEn}</span>
+                  <span className="text-[11px] text-muted-foreground">{s.labelNe}</span>
                 </button>
               ))}
             </div>
@@ -170,21 +183,21 @@ export function AppNav() {
         {showLinks && profile && yr && (
           <Link
             to="/years"
-            className={`shrink-0 whitespace-nowrap ${
+            className={`shrink-0 whitespace-nowrap rounded-lg border px-2.5 py-1 text-xs font-bold transition sm:text-sm ${
               past
-                ? "chip !border-destructive !text-destructive font-semibold"
-                : "chip !border-primary/40 !text-primary font-semibold"
+                ? "border-destructive bg-destructive/10 text-destructive"
+                : "border-primary/40 bg-primary/5 text-primary hover:bg-primary/10"
             }`}
-            title="Academic year · शैक्षिक वर्ष परिवर्तन वा व्यवस्थापन गर्नुहोस्"
+            title="Change or manage Academic Year"
           >
             📅 FY {yr.name}
-            {past ? <span className="hidden sm:inline">{isAdmin ? " · inactive" : " · view only"}</span> : ""}
+            {past ? <span className="hidden sm:inline">{isAdmin ? " · Inactive" : " · View Only"}</span> : ""}
           </Link>
         )}
 
         {staff && c.save !== "idle" && (
           <span
-            className={`chip shrink-0 whitespace-nowrap ${
+            className={`chip shrink-0 whitespace-nowrap text-xs font-semibold ${
               c.save === "conflict"
                 ? "!border-destructive !text-destructive"
                 : c.save === "error"
@@ -193,7 +206,7 @@ export function AppNav() {
             }`}
             title={
               c.save === "error"
-                ? "अफलाइनमा यस डिभाइसमा सुरक्षित छ, इन्टरनेट जोडिएपछि स्वतः क्लाउडमा सर्छ"
+                ? "Saved offline on this device; will sync automatically when online."
                 : undefined
             }
           >
@@ -204,24 +217,24 @@ export function AppNav() {
         {signedIn ? (
           <Link
             to="/account"
-            className="flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-border bg-background py-0.5 pl-0.5 pr-1 sm:pr-3 text-xs font-semibold shadow-sm transition hover:bg-muted"
-            title="My account & Sign out · मेरो खाता र बाहिरिनुहोस्"
+            className="flex min-h-9 shrink-0 items-center gap-2 rounded-full border border-border bg-background py-1 pl-1 pr-2 sm:pr-3.5 text-xs font-bold shadow-sm transition hover:border-primary/40 hover:bg-muted sm:text-sm"
+            title="My Account & Sign Out"
           >
-            <Avatar name={c.me?.name} path={c.me?.avatar_path} size={28} />
+            <Avatar name={c.me?.name} path={c.me?.avatar_path} size={30} />
             <span className="hidden max-w-36 truncate sm:inline">{c.me?.name || c.email}</span>
           </Link>
         ) : (
-          <Link to="/login" className="btn-soft shrink-0 whitespace-nowrap !min-h-8 !px-3 !py-1 text-xs">
+          <Link to="/login" className="btn-soft shrink-0 whitespace-nowrap !min-h-9 !px-3.5 !py-1.5 text-xs font-bold sm:text-sm">
             Sign in
           </Link>
         )}
       </div>
 
-      {/* Second Tier (Desktop Only): Clean Horizontal Menu Bar with Dropdown Sub-Menus */}
+      {/* Second Tier (Desktop Only): Enlarged, Professional English Menu Bar that fits every screen */}
       {showLinks && (
         <nav
-          className="hidden items-center gap-1 border-t border-primary/20 bg-primary px-3 py-1 text-primary-foreground md:flex"
-          aria-label="Desktop horizontal navigation with sub-menus"
+          className="hidden flex-wrap items-center gap-1 border-t border-primary/20 bg-primary px-3 py-1.5 text-primary-foreground md:flex lg:gap-1.5 lg:px-5"
+          aria-label="Main navigation"
         >
           {items.map((item) => {
             const isOn = active(item.to);
@@ -238,29 +251,29 @@ export function AppNav() {
                 <Link
                   to={item.to}
                   onClick={() => setOpenMenuTo(null)}
-                  className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+                  className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-semibold tracking-wide transition lg:px-3.5 lg:text-sm ${
                     isOn
-                      ? "bg-white/20 text-white shadow-sm"
-                      : "text-primary-foreground/90 hover:bg-white/10 hover:text-white"
+                      ? "bg-white text-primary font-bold shadow-sm"
+                      : "text-primary-foreground/95 hover:bg-white/15 hover:text-white"
                   }`}
                 >
-                  <Icon n={item.icon} size={15} />
-                  <span className="whitespace-nowrap">{item.ne}</span>
-                  {hasSubs && <Icon n="chevDown" size={13} />}
+                  <Icon n={item.icon} size={17} />
+                  <span className="whitespace-nowrap">{item.en}</span>
+                  {hasSubs && <Icon n="chevDown" size={14} />}
                 </Link>
 
                 {hasSubs && isOpen && (
-                  <div className="absolute left-0 top-full z-50 pt-1">
-                    <div className="w-60 rounded-xl border border-border bg-card p-1.5 text-foreground shadow-xl">
+                  <div className="absolute left-0 top-full z-50 pt-1.5">
+                    <div className="w-64 rounded-xl border border-border bg-card p-1.5 text-foreground shadow-2xl">
                       {item.subs!.map((sub, sIdx) => (
                         <button
                           key={sIdx}
                           type="button"
                           onClick={() => navigateSub(sub)}
-                          className="flex w-full flex-col rounded-lg px-3 py-1.5 text-left text-xs transition hover:bg-secondary"
+                          className="flex w-full flex-col rounded-lg px-3.5 py-2 text-left transition hover:bg-secondary"
                         >
-                          <span className="font-semibold text-foreground">{sub.labelNe}</span>
-                          <span className="text-[10px] text-muted-foreground">{sub.labelEn}</span>
+                          <span className="text-sm font-bold text-foreground">{sub.labelEn}</span>
+                          <span className="text-[11px] font-medium text-muted-foreground">{sub.labelNe}</span>
                         </button>
                       ))}
                     </div>
@@ -272,11 +285,12 @@ export function AppNav() {
         </nav>
       )}
 
+      {/* Status & Alert Banners */}
       {viewingOther && (
-        <div className="flex flex-wrap items-center justify-center gap-3 bg-accent px-4 py-1 text-xs font-medium text-accent-foreground">
+        <div className="flex flex-wrap items-center justify-center gap-3 bg-accent px-4 py-1.5 text-xs font-medium text-accent-foreground sm:text-sm">
           <span>Admin view: you are viewing/editing {profile?.name ?? "another teacher"}'s diary.</span>
           <button
-            className="underline font-bold"
+            className="font-bold underline"
             onClick={() =>
               c.userId && openTeacher(c.userId).catch((e) => alert(e instanceof Error ? e.message : String(e)))
             }
@@ -292,47 +306,46 @@ export function AppNav() {
         c.activeYear &&
         yr &&
         yr.name.trim().toLowerCase() !== c.activeYear.name.trim().toLowerCase() && (
-          <div className="bg-accent px-4 py-1 text-center text-xs font-medium text-accent-foreground">
-            सक्रिय शैक्षिक वर्ष <b>{c.activeYear.name}</b> हो, तर तपाइँकोमा <b>{yr.name}</b> खुलेको छ।{" "}
-            <Link to="/years" className="underline font-bold ml-1">
-              Academic years मा गएर मिलाउनुहोस् →
+          <div className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground sm:text-sm">
+            Active academic year is <b>{c.activeYear.name}</b>, but you have <b>{yr.name}</b> open.{" "}
+            <Link to="/years" className="ml-1 font-bold underline">
+              Switch in Academic Years →
             </Link>
           </div>
         )}
 
       {showLinks && profile && past && (
-        <div className="bg-accent px-4 py-1 text-center text-xs font-medium text-accent-foreground">
+        <div className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground sm:text-sm">
           {isAdmin ? (
             <>
-              तपाइँ अघिल्लो/निष्क्रिय शैक्षिक वर्ष ({yr?.name}) मा हुनुहुन्छ। सबै शिक्षकका लागि यसमा काम गर्न मिल्ने बनाउन{" "}
-              <Link to="/years" className="underline font-bold">
-                Academic years
+              You are viewing an inactive academic year ({yr?.name}). Go to{" "}
+              <Link to="/years" className="font-bold underline">
+                Academic Years
               </Link>{" "}
-              मा गएर Active गर्नुहोस्।
+              to make it active for all teachers.
             </>
           ) : (
             <>
-              तपाइँ अघिल्लो शैक्षिक वर्ष ({yr?.name}) हेर्दै हुनुहुन्छ (View only · हेर्न मात्र मिल्ने)। काम गर्न{" "}
-              <Link to="/years" className="underline font-bold">
-                सक्रिय वर्ष ({actYr?.name}) खोल्नुहोस्
+              You are viewing a past academic year ({yr?.name}) in <b>View-Only</b> mode.{" "}
+              <Link to="/years" className="font-bold underline">
+                Open Active Year ({actYr?.name}) →
               </Link>
-              ।
             </>
           )}
         </div>
       )}
 
       {err && (
-        <div className="bg-destructive px-4 py-1.5 text-center text-xs font-semibold text-destructive-foreground">
+        <div className="bg-destructive px-4 py-1.5 text-center text-xs font-semibold text-destructive-foreground sm:text-sm">
           {err}
         </div>
       )}
 
       {staff && c.save === "conflict" && (
-        <div className="flex flex-wrap items-center justify-center gap-3 bg-destructive px-4 py-1.5 text-xs text-destructive-foreground">
+        <div className="flex flex-wrap items-center justify-center gap-3 bg-destructive px-4 py-1.5 text-xs text-destructive-foreground sm:text-sm">
           <span>{c.saveMsg} Which copy do you want to keep?</span>
           <button
-            className="rounded bg-background px-2 py-0.5 font-semibold text-foreground"
+            className="rounded bg-background px-2.5 py-1 font-semibold text-foreground"
             onClick={() =>
               confirm("Keep THIS device's copy and overwrite the cloud copy?") && void resolveConflict("keep-mine")
             }
@@ -340,7 +353,7 @@ export function AppNav() {
             Keep this device's copy
           </button>
           <button
-            className="rounded bg-background px-2 py-0.5 font-semibold text-foreground"
+            className="rounded bg-background px-2.5 py-1 font-semibold text-foreground"
             onClick={() =>
               confirm("Use the cloud copy? This device's copy will be downloaded as a file first.") &&
               void resolveConflict("use-cloud")
@@ -352,24 +365,24 @@ export function AppNav() {
       )}
 
       {staff && c.save === "error" && (
-        <div className="flex flex-wrap items-center justify-center gap-3 bg-secondary px-4 py-1 text-xs font-medium text-secondary-foreground">
+        <div className="flex flex-wrap items-center justify-center gap-3 bg-secondary px-4 py-1.5 text-xs font-medium text-secondary-foreground sm:text-sm">
           <span>
-            ☁️ अफलाइन सुरक्षा: तपाईंको काम यस मोबाइल/कम्प्युटरको स्पेसमा सुरक्षित छ। इन्टरनेट जोडिएपछि स्वतः क्लाउडमा सर्नेछ।
+            ☁️ Offline Protection: Your work is safely saved on this device and will sync automatically when online.
           </span>
           <button
-            className="rounded border border-border bg-card px-2.5 py-0.5 font-semibold text-primary shadow-sm"
+            className="rounded border border-border bg-card px-3 py-0.5 font-semibold text-primary shadow-sm"
             onClick={() => void retryNow()}
           >
-            Sync now · अहिले सिंक गर्नुहोस्
+            Sync Now
           </button>
         </div>
       )}
 
       {staff && listUnsaved(c.userId).length > 0 && (
-        <div className="bg-accent px-4 py-1 text-center text-xs font-medium text-accent-foreground">
+        <div className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground sm:text-sm">
           A copy of earlier UNSAVED work is stored on this device.{" "}
-          <Link to="/account" className="underline">
-            Open My account
+          <Link to="/account" className="font-bold underline">
+            Open My Account
           </Link>{" "}
           to download or delete it.
         </div>
