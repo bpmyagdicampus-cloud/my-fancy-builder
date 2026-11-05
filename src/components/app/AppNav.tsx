@@ -90,8 +90,8 @@ export function AppNav() {
   // Blue bar से My account र Academic years हटाइएको (avatar र FY badge बाट पहुँच रहन्छ)
   const HIDDEN_FROM_BAR = ["/account", "/years"];
   const barItems = items.filter((i) => !HIDDEN_FROM_BAR.includes(i.to));
-  const activeItem = barItems.find((i) => active(i.to));
-  const shownItem = barItems.find((i) => i.to === menuTo) ?? activeItem;
+  // सब मेनु केवल माउस मुख्य मेनुमा हुँदा मात्र खुल्छ
+  const shownItem = barItems.find((i) => i.to === menuTo);
 
   const allSearchItems: SubMenuItem[] = items.flatMap((m) =>
     m.subs ? m.subs : [{ labelNe: m.ne, labelEn: m.en, to: m.to }]
@@ -244,7 +244,7 @@ export function AppNav() {
                 >
                   <Link
                     to={item.to}
-                    onClick={() => hasSubs && setMenuTo(item.to)}
+                    onClick={() => setMenuTo(null)}
                     className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13.5px] font-bold uppercase tracking-wide transition lg:px-3.5 lg:text-[15px] ${
                       isOn
                         ? "bg-white text-primary shadow-sm"
