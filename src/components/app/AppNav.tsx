@@ -146,12 +146,12 @@ export function AppNav() {
 
         <div className="flex-1" />
 
-        <div className="relative hidden w-48 lg:block xl:w-64">
+        <div className="relative hidden w-44 lg:block xl:w-56">
           <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs transition focus-within:border-primary focus-within:bg-background">
             <Icon n="search" size={15} />
             <input
               type="search"
-              placeholder="Quick search menu..."
+              placeholder="Quick search..."
               className="w-full bg-transparent text-xs font-medium outline-none sm:text-sm"
               value={menuSearch}
               onFocus={() => setSearchFocused(true)}
@@ -209,7 +209,7 @@ export function AppNav() {
 
       {showLinks && (
         <nav
-          className="hidden flex-wrap items-center gap-1 border-t border-primary/20 bg-primary px-3 py-1.5 text-primary-foreground md:flex lg:gap-1.5 lg:px-5"
+          className="hidden items-center gap-0.5 overflow-x-auto border-t border-primary/20 bg-primary px-3 py-1.5 text-primary-foreground md:flex lg:gap-1 lg:px-5 no-scrollbar"
           aria-label="Main navigation"
         >
           {items.map((item) => {
@@ -217,25 +217,29 @@ export function AppNav() {
             const hasSubs = !!item.subs && item.subs.length > 0;
             const isOpen = openMenuTo === item.to;
 
+            // Shorten label for SQC while keeping full form inside
+            const displayEn = item.en.toLowerCase().includes("student quality") ? "SQC" : item.en;
+
             return (
               <div
                 key={item.to}
-                className="relative"
+                className="relative shrink-0"
                 onMouseEnter={() => hasSubs && setOpenMenuTo(item.to)}
                 onMouseLeave={() => hasSubs && setOpenMenuTo((prev) => (prev === item.to ? null : prev))}
               >
                 <Link
                   to={item.to}
                   onClick={() => setOpenMenuTo(null)}
-                  className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-semibold tracking-wide transition lg:px-3.5 lg:text-sm ${
+                  className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold tracking-wide transition lg:px-3 lg:text-[13px] ${
                     isOn
                       ? "bg-white text-primary font-bold shadow-sm"
                       : "text-primary-foreground/95 hover:bg-white/15 hover:text-white"
                   }`}
+                  title={item.en}
                 >
-                  <Icon n={item.icon} size={17} />
-                  <span className="whitespace-nowrap">{item.en}</span>
-                  {hasSubs && <Icon n="chevDown" size={14} />}
+                  <Icon n={item.icon} size={15} />
+                  <span className="whitespace-nowrap">{displayEn}</span>
+                  {hasSubs && <Icon n="chevDown" size={13} />}
                 </Link>
 
                 {hasSubs && isOpen && (
