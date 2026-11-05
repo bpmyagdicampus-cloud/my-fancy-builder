@@ -209,7 +209,7 @@ export function AppNav() {
 
       {showLinks && (
         <nav
-          className="hidden items-center gap-0.5 overflow-x-auto border-t border-primary/20 bg-primary px-3 py-1.5 text-primary-foreground md:flex lg:gap-1 lg:px-5 no-scrollbar"
+          className="hidden items-center gap-1 overflow-x-auto border-t border-primary/20 bg-primary px-3 py-1.5 text-primary-foreground md:flex lg:gap-1.5 lg:px-5"
           aria-label="Main navigation"
         >
           {items.map((item) => {
@@ -217,7 +217,6 @@ export function AppNav() {
             const hasSubs = !!item.subs && item.subs.length > 0;
             const isOpen = openMenuTo === item.to;
 
-            // Shorten label for SQC while keeping full form inside
             const displayEn = item.en.toLowerCase().includes("student quality") ? "SQC" : item.en;
 
             return (
@@ -227,20 +226,34 @@ export function AppNav() {
                 onMouseEnter={() => hasSubs && setOpenMenuTo(item.to)}
                 onMouseLeave={() => hasSubs && setOpenMenuTo((prev) => (prev === item.to ? null : prev))}
               >
-                <Link
-                  to={item.to}
-                  onClick={() => setOpenMenuTo(null)}
-                  className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold tracking-wide transition lg:px-3 lg:text-[13px] ${
-                    isOn
-                      ? "bg-white text-primary font-bold shadow-sm"
-                      : "text-primary-foreground/95 hover:bg-white/15 hover:text-white"
-                  }`}
-                  title={item.en}
-                >
-                  <Icon n={item.icon} size={15} />
-                  <span className="whitespace-nowrap">{displayEn}</span>
-                  {hasSubs && <Icon n="chevDown" size={13} />}
-                </Link>
+                <div className="flex items-center">
+                  <Link
+                    to={item.to}
+                    onClick={() => setOpenMenuTo(null)}
+                    className={`inline-flex items-center gap-1.5 rounded-l-md px-2.5 py-1.5 text-xs font-semibold tracking-wide transition lg:px-3 lg:text-[13px] ${
+                      isOn
+                        ? "bg-white text-primary font-bold shadow-sm"
+                        : "text-primary-foreground/95 hover:bg-white/15 hover:text-white"
+                    }`}
+                    title={item.en}
+                  >
+                    <Icon n={item.icon} size={15} />
+                    <span className="whitespace-nowrap">{displayEn}</span>
+                  </Link>
+
+                  {hasSubs && (
+                    <button
+                      type="button"
+                      onClick={() => setOpenMenuTo(isOpen ? null : item.to)}
+                      className={`inline-flex items-center rounded-r-md px-1 py-1.5 text-xs transition ${
+                        isOn ? "bg-white text-primary" : "text-primary-foreground/95 hover:bg-white/15"
+                      }`}
+                      aria-label="Toggle sub-menu"
+                    >
+                      <Icon n="chevDown" size={13} />
+                    </button>
+                  )}
+                </div>
 
                 {hasSubs && isOpen && (
                   <div className="absolute left-0 top-full z-50 pt-1.5">
