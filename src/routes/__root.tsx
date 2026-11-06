@@ -14,6 +14,7 @@ import { AppNav } from "../components/app/AppNav";
 import { AuthGate, Background } from "../components/app/auth";
 import { BottomNav, ShellFrame, Sidebar } from "../components/app/Shell";
 import { GlobalNoticeModal } from "../components/app/GlobalNoticeModal";
+import { LeaveSync } from "../components/app/LeaveSync";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { initPwa } from "../lib/pwa";
@@ -166,6 +167,7 @@ function RootComponent() {
       </ShellFrame>
       <BottomNav />
       <GlobalNoticeModal />
+      <LeaveSync />
     </QueryClientProvider>
   );
 }
