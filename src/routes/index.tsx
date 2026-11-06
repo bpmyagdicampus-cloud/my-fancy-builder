@@ -25,7 +25,7 @@ function Home() {
   const { profile, data } = useTeacher();
   const cl = useCloud();
   const lk = C.useLookup();
-  const [actSum, setActSum] = useState<D.ActionSummary | null>(null);
+  const [actSum, setActSum] = useState<D.DmActionSummary | null>(null);
   const [campusEvents, setCampusEvents] = useState<D.CampusAnnualEvent[]>([]);
   const [calTypes, setCalTypes] = useState<D.CampusCalType[]>([]);
   const [calFilter, setCalFilter] = useState("");
@@ -185,13 +185,23 @@ function Home() {
               <span>
                 Today: <b>{fmtBs(today)}</b>
               </span>
-              {todayEv.map((e) => (
-                <span key={e.id} className="chip-on">
-                  {e.title} ({e.type})
-                </span>
-              ))}
+              {todayEv.map((e) => {
+                const isHol = /holiday|बिदा|vacation/i.test(e.type);
+                return (
+                  <span
+                    key={e.id}
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-bold text-white shadow-sm ${
+                      isHol ? "bg-red-600" : "bg-blue-600"
+                    }`}
+                  >
+                    {e.title} ({e.type})
+                  </span>
+                );
+              })}
               {!todayEv.length && (
-                <span className="text-xs text-muted-foreground">· आज कुनै विशेष कार्यक्रम/बिदा छैन</span>
+                <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                  आज कुनै विशेष कार्यक्रम/बिदा छैन
+                </span>
               )}
             </div>
           </div>
@@ -204,7 +214,7 @@ function Home() {
               Monthly report
             </Link>
             <Link to="/department" className="btn-soft">
-              विभागीय व्यवस्थापन
+              Department
             </Link>
             <Link to="/sqc" className="btn-soft">
               SQC
@@ -284,7 +294,8 @@ function Home() {
 
       {hasAlerts && actSum && (
         <section className="panel mb-5 border-primary/40">
-          <h2 className="mb-2 text-base font-bold">ध्यानाकर्षण तथा जिम्मेवारीहरू · Action Notifications</h2>
+          <style>{`@keyframes sqc-blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(251,191,36,.9)}50%{opacity:.35;box-shadow:0 0 0 6px rgba(251,191,36,0)}}`}</style>
+          <h2 className="mb-2 text-base font-bold">Action Notifications</h2>
           <div className="flex flex-wrap gap-2 text-xs">
             {admin && actSum.submittedPlans > 0 && (
               <Link to="/department" className="chip-on">
@@ -302,8 +313,12 @@ function Home() {
               </Link>
             )}
             {admin && actSum.pendingSqcReports > 0 && (
-              <Link to="/sqc" className="chip-on">
-                सम्बोधन हुन बाँकी SQC रिपोर्ट: {actSum.pendingSqcReports}
+              <Link
+                to="/sqc"
+                className="rounded-full bg-amber-400 px-3 py-1 font-extrabold text-amber-950 ring-2 ring-amber-200"
+                style={{ animation: "sqc-blink 1s ease-in-out infinite" }}
+              >
+                ⚠ SQC रिपोर्ट सम्बोधन हुन बाँकी: {actSum.pendingSqcReports}
               </Link>
             )}
             {!admin && headDepts.length > 0 && actSum.submittedPlans > 0 && (
