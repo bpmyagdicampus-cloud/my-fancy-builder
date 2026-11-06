@@ -1,24 +1,19 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { BS_DATE_RE, createLeave, deleteLeave, loadUpcomingLeaves, respondLeave, type LeaveNotice } from "@/lib/leave";
-
-type Dept = { id: string; name: string };
+import { loadUpcomingLeaves, respondLeave, type LeaveNotice } from "@/lib/leave";
 
 type Props = {
   userId: string | null;
-  teacherName: string;
   today: string;
-  departments: Dept[];
-  /** null = admin (सबै विभाग), array = प्रमुख भएका विभागहरू, [] = जवाफ दिने अधिकार छैन */
+  departments: { id: string; name: string }[];
+  /** null = admin (सबै विभाग), array = प्रमुख भएका विभागहरू */
   managedDeptIds: string[] | null;
 };
 
-export function LeaveNotices({ userId, teacherName, today, departments, managedDeptIds }: Props) {
+export function LeaveNotices({ userId, today, departments, managedDeptIds }: Props) {
   const [items, setItems] = useState<LeaveNotice[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-  const [ok, setOk] = useState("");
   const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState({ dept: "", from: "", to: "", reason: "" });
   const [replyFor, setReplyFor] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
 
@@ -41,35 +36,6 @@ export function LeaveNotices({ userId, teacherName, today, departments, managedD
     void load();
   }, [load]);
 
-  const submit = async () => {
-    setOk("");
-    setErr("");
-    if (!userId) return setErr("Login आवश्यक छ।");
-    if (!form.dept) return setErr("विभाग छान्नुहोस्।");
-    if (!BS_DATE_RE.test(form.from) || !BS_DATE_RE.test(form.to))
-      return setErr("मिति YYYY-MM-DD ढाँचामा लेख्नुहोस्, जस्तै 2083-07-20।");
-    if (form.to < form.from) return setErr("अन्त्य मिति सुरु मितिभन्दा अगाडि हुन सक्दैन।");
-    if (form.to < today) return setErr("विगतको मितिमा विदा दर्ता गर्न मिल्दैन।");
-    setBusy(true);
-    try {
-      await createLeave({
-        userId,
-        teacherName,
-        departmentId: form.dept,
-        from: form.from,
-        to: form.to,
-        reason: form.reason,
-      });
-      setForm({ dept: "", from: "", to: "", reason: "" });
-      setOk("✅ विदा अभिलेख भयो।");
-      await load();
-    } catch (e: any) {
-      setErr(e?.message ?? String(e));
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const sendReply = async (n: LeaveNotice) => {
     if (!userId || !replyText.trim()) return;
     setBusy(true);
@@ -85,60 +51,21 @@ export function LeaveNotices({ userId, teacherName, today, departments, managedD
     }
   };
 
-  const remove = async (n: LeaveNotice) => {
-    if (!confirm("यो विदा अभिलेख मेट्ने?")) return;
-    try {
-      await deleteLeave(n.id);
-      await load();
-    } catch (e: any) {
-      setErr(e?.message ?? String(e));
-    }
-  };
-
   const mine = items.filter((n) => n.teacher_user_id === userId);
   const others = items.filter((n) => n.teacher_user_id !== userId && canRespondTo(n.department_id));
 
   return (
     <section className="panel mb-5">
-      <h2 className="mb-2 text-base font-bold">Leave Notices · विदा सूचना</h2>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-base font-bold">Leave Notices · विदा सूचना</h2>
+        <span className="text-[11px] text-muted-foreground">
+          विदा थप्ने: Records → Leave
+        </span>
+      </div>
 
-      <details className="mb-3 rounded-xl border border-border p-3">
-        <summary className="cursor-pointer text-sm font-semibold">+ विदा अभिलेख गर्नुहोस् · Record leave</summary>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          <select className="field" value={form.dept} onChange={(e) => setForm({ ...form, dept: e.target.value })}>
-            <option value="">विभाग छान्नुहोस् · Department</option>
-            {departments.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
-          <input
-            className="field"
-            placeholder="कारण (वैकल्पिक) · Reason"
-            value={form.reason}
-            onChange={(e) => setForm({ ...form, reason: e.target.value })}
-          />
-          <input
-            className="field"
-            placeholder="सुरु मिति 2083-07-20"
-            value={form.from}
-            onChange={(e) => setForm({ ...form, from: e.target.value.trim() })}
-          />
-          <input
-            className="field"
-            placeholder="अन्त्य मिति 2083-07-22"
-            value={form.to}
-            onChange={(e) => setForm({ ...form, to: e.target.value.trim() })}
-          />
-        </div>
-        <button className="btn mt-3" disabled={busy} onClick={submit}>
-          {busy ? "सेभ हुँदै…" : "विदा दर्ता गर्नुहोस्"}
-        </button>
-      </details>
-
-      {err && <p className="mb-2 rounded-lg border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">{err}</p>}
-      {ok && <p className="mb-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-2 text-xs">{ok}</p>}
+      {err && (
+        <p className="mb-2 rounded-lg border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">{err}</p>
+      )}
 
       {loading ? (
         <p className="text-xs text-muted-foreground">Loading…</p>
@@ -156,9 +83,6 @@ export function LeaveNotices({ userId, teacherName, today, departments, managedD
                   ) : (
                     <div className="mt-2 text-xs text-muted-foreground">जवाफ बाँकी छ · No response yet</div>
                   )}
-                  <button className="mt-2 text-xs text-destructive underline" onClick={() => remove(n)}>
-                    मेटाउनुहोस्
-                  </button>
                 </NoticeCard>
               ))}
             </div>
