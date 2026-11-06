@@ -89,6 +89,7 @@ export const MENU_ITEMS: MenuItem[] = [
     subs: [
       { labelNe: "विद्यार्थी मूल्याङ्कन र परीक्षा", labelEn: "Student Assessments & Exams", to: "/records", tab: "assess" },
       { labelNe: "अनुसन्धान र अतिरिक्त क्रियाकलाप", labelEn: "Research & Other Activities", to: "/records", tab: "acts" },
+      { labelNe: "सहकर्मी शिक्षण अवलोकन", labelEn: "Peer Teaching Observation", to: "/records", tab: "peer" },
       { labelNe: "रिमाइन्डर र कार्यहरू", labelEn: "Reminders", to: "/records", tab: "rem" },
       { labelNe: "शिक्षक बिदा अभिलेख", labelEn: "Leave Record", to: "/records", tab: "leave" },
     ],
@@ -104,6 +105,7 @@ export const MENU_ITEMS: MenuItem[] = [
       { labelNe: "दैनिक प्रतिवेदन", labelEn: "Daily Activity Report", to: "/reports", tab: "day" },
       { labelNe: "विद्यार्थी हाजिरी र प्रगति", labelEn: "Student Attendance & Marks Report", to: "/reports", tab: "student" },
       { labelNe: "योजना र प्रगति तुलना", labelEn: "Plan vs Actual Progress", to: "/reports", tab: "progress" },
+      { labelNe: "सहकर्मी पृष्ठपोषण प्रतिवेदन", labelEn: "Peer Observation Feedback", to: "/reports", tab: "peer" },
     ],
   },
   {

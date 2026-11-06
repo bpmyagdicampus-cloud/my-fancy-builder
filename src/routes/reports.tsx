@@ -1,3 +1,4 @@
+import { PeerFeedbackReport } from "@/components/reports/PeerFeedbackReport";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Page, Tabs, ClassSelect, BsDate, BsMonth, PrintHead, Signatures, PrintBtn, NeedProfile } from "@/components/app/ui";
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/reports")({
   component: Reports,
 });
 
-type T = "month" | "day" | "student" | "progress";
+type T = "month" | "day" | "student" | "progress" | "peer";
 
 function Reports() {
   const { profile } = useTeacher();
@@ -36,12 +37,14 @@ function Reports() {
           ["day", "Daily report"],
           ["student", "Student report"],
           ["progress", "Plan vs progress"],
+          ["peer", "Peer observation feedback · सहकर्मी पृष्ठपोषण"],
         ]}
       />
       {tab === "month" && <Monthly />}
       {tab === "day" && <Daily />}
       {tab === "student" && <Student />}
       {tab === "progress" && <Progress />}
+      {tab === "peer" && <PeerFeedbackReport />}
     </Page>
   );
 }

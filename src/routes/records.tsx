@@ -1,3 +1,4 @@
+import { PeerObservationSection } from "@/components/records/PeerObservationSection";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Page, Tabs, Collection, ClassSelect, BsDate, Dt, NeedProfile } from "@/components/app/ui";
@@ -17,12 +18,13 @@ export const Route = createFileRoute("/records")({
 
 function Records() {
   const { profile } = useTeacher();
-  const [tab, setTab] = useState<"assess" | "acts" | "rem" | "leave">("assess");
+  const [tab, setTab] = useState<"assess" | "acts" | "peer" | "rem" | "leave">("assess");
   if (!profile) return <NeedProfile />;
   return (
     <Page title="Records">
-      <Tabs value={tab} onChange={setTab} items={[["assess", "Student assessment & exams"], ["acts", "Research & other activities"], ["rem", "Reminders"], ["leave", "Leave · बिदा"]]} />
+      <Tabs value={tab} onChange={setTab} items={[["assess", "Student assessment & exams"], ["acts", "Research & other activities"], ["peer", "Peer observation · सहकर्मी अवलोकन"], ["rem", "Reminders"], ["leave", "Leave · बिदा"]]} />
       {tab === "assess" && <Assessments />}
+      {tab === "peer" && <PeerObservationSection />}
       {tab === "acts" && <Collection k="acts" title="Activities beyond teaching"
         fields={[{ k: "date", l: "Date", t: "date" }, { k: "category", l: "Category", t: "sel", opts: ACT_CATS }, { k: "title", l: "Title", wide: true }, { k: "details", l: "Details / outcome", t: "area" }]}
         summary={(a) => <><b>{a.category}</b> — {a.title}<div className="text-xs text-muted-foreground"><Dt d={a.date} /></div></>} />}
@@ -43,7 +45,7 @@ function Assessments() {
   const c = data.classes.find((x) => x.id === (ed?.classId || cls));
   const stu = studentsOf(c);
   const isRubric = ed?.kind === "Unit assessment (rubric)";
-  const setMark = (s: string, k: "m" | "c", v: string) => setEd((e) => e && { ...e, marks: { ...e.marks, [s]: { ...{ m: "", c: "" }, ...e.marks[s], [k]: v } } });
+  const setMark = (s: string, k: "m" | "c", v: string) => setEd((e) => e && { ...e, marks: { ...e.marks, [s]: { m: "", c: "", ...e.marks[s], [k]: v } } });
   const save = () => {
     if (!ed?.classId) return alert("Select a class");
     updateData((d) => { const i = d.assess.findIndex((x) => x.id === ed.id); if (i >= 0) d.assess[i] = ed; else d.assess.push({ ...ed, id: uid() }); });
