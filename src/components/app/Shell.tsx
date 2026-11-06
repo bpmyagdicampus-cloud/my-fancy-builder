@@ -199,7 +199,7 @@ export function BottomNav() {
   }, [path]);
   if (!visible) return null;
 
-  const primary = staff ? ["/", "/diary", "/plans", "/department"] : ["/sqc", "/account"];
+  const primary = staff ? ["/", "/plans", "/diary", "/reports"] : ["/sqc", "/account"];
   const main = primary.map((to) => items.find((i) => i.to === to)).filter(Boolean) as MenuItem[];
   const rest = items.filter((i) => !primary.includes(i.to));
 
@@ -218,7 +218,7 @@ export function BottomNav() {
           title="आजको दैनिक डायरी लेख्नुहोस् · Quick Daily Diary"
         >
           <Icon n="plus" size={15} />
-          <span>दैनिक डायरी</span>
+          <span>Daily Diary</span>
         </Link>
       )}
 
@@ -234,7 +234,7 @@ export function BottomNav() {
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <img src="/icon-192.png" alt="" className="h-6 w-6 rounded-md" />
-                <span className="text-base font-bold text-foreground">सबै मेनु · All Menus</span>
+                <span className="text-base font-bold text-foreground">All Menus</span>
               </div>
               <button
                 className="rounded-full bg-muted p-2 text-muted-foreground hover:text-foreground"
@@ -256,8 +256,7 @@ export function BottomNav() {
                   }`}
                 >
                   <Icon n={i.icon} size={22} />
-                  <span className="leading-tight">{i.ne}</span>
-                  <span className="text-[10px] font-normal text-muted-foreground">{i.en}</span>
+                  <span className="leading-tight">{i.en}</span>
                 </Link>
               ))}
               {!signed && local && (
@@ -266,8 +265,7 @@ export function BottomNav() {
                   className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-muted/30 p-2.5 text-center text-xs font-semibold"
                 >
                   <Icon n="user" size={22} />
-                  <span>शिक्षक</span>
-                  <span className="text-[10px] font-normal text-muted-foreground">Profiles</span>
+                  <span>Profiles</span>
                 </Link>
               )}
               {signed && (
@@ -281,8 +279,7 @@ export function BottomNav() {
                   }}
                 >
                   <Icon n="out" size={22} />
-                  <span>बाहिरिनुहोस्</span>
-                  <span className="text-[10px] font-normal">Sign out</span>
+                  <span>Sign out</span>
                 </button>
               )}
             </div>
@@ -300,13 +297,13 @@ export function BottomNav() {
             <Link key={i.to} to={i.to} className={cell(on)}>
               {on && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-primary" />}
               <Icon n={i.icon} size={20} />
-              <span>{i.ne}</span>
+              <span>{i.en}</span>
             </Link>
           );
         })}
         <button className={cell(more)} onClick={() => setMore((v) => !v)} aria-expanded={more}>
           <Icon n="more" size={20} />
-          <span>थप · More</span>
+          <span>More</span>
         </button>
       </nav>
     </>
