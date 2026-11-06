@@ -338,7 +338,6 @@ function Home() {
 
       <LeaveNotices
         userId={cl.userId}
-        teacherName={profile.name}
         today={today}
         departments={lk.departments}
         managedDeptIds={admin ? null : headDepts}
