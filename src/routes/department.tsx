@@ -17,9 +17,9 @@ export const Route = createFileRoute("/department")({
   head: () => ({
     meta: [
       { title: "Department Management — Shikshak Diary" },
-      { name: "description", content: "Department plans, budget, activities, academic calendar, supervision, monitoring and reports." },
+      { name: "description", content: "Department plans, budget, activities, academic calendar, supervision, meetings and reports." },
       { property: "og:title", content: "Department Management — Shikshak Diary" },
-      { property: "og:description", content: "Department plans, budget, activities, academic calendar, supervision, monitoring and reports." },
+      { property: "og:description", content: "Department plans, budget, activities, academic calendar, supervision, meetings and reports." },
     ],
   }),
   component: Department,
@@ -31,7 +31,7 @@ const MODULES: { key: DeptTab; ne: string; en: string; note: string; headOnly?: 
   { key: "plans", ne: "वार्षिक योजना", en: "Annual plans", note: "उद्देश्य, लक्ष्य, सूचक, अनुमानित बजेट र स्वीकृति प्रक्रिया" },
   { key: "activities", ne: "गतिविधि तथा प्रगति", en: "Activities and progress", note: "जिम्मेवार व्यक्ति, प्रगति प्रतिशत (%), उपलब्धि र प्रमाण अपलोड" },
   { key: "calendar", ne: "कक्षागत शैक्षिक पात्रो", en: "Class Academic Calendar", note: "बैशाखदेखि चैत (वा आवश्यकता अनुसारका महिनाहरू) को कक्षागत कार्यदिन, पढाउने दिन, परीक्षा र बिदाको कार्यतालिका" },
-  { key: "supervision", ne: "कक्षा अवलोकन तथा सुपरीवेक्षण", en: "Class Supervision & Observations", note: "कक्षा शिक्षण अवलोकन अभिलेख (Class Observation Logs) र मासिक तथा आवधिक प्रतिवेदन समीक्षा" },
+  { key: "supervision", ne: "कक्षा अवलोकन, सुपरीवेक्षण र बैठक", en: "Supervision, Observations & Meetings", note: "बहु-विधि टिक सहितको विस्तृत कक्षा अवलोकन रुब्रिक, मासिक प्रतिवेदन समीक्षा तथा विभागीय बैठक र निर्णय पुस्तिका" },
   { key: "budget", ne: "बजेट व्यवस्थापन र खर्च", en: "Budget & expenses", note: "प्रस्तावित/स्वीकृत बजेट, बजेट संशोधन र भौचर सहितको खर्च अभिलेख", headOnly: true },
   { key: "reports", ne: "स्वचालित प्रतिवेदन", en: "Automated reports", note: "मासिक, वार्षिक वा मितिअनुसार प्रिन्ट तथा Word/Excel प्रतिवेदन" },
 ];
@@ -134,7 +134,7 @@ function Department() {
     ["plans", "Annual plans · वार्षिक योजना"],
     ["activities", "Activities · गतिविधि तथा प्रगति"],
     ["calendar", "Academic Calendar · शैक्षिक पात्रो"],
-    ["supervision", "Supervision & Observations · कक्षा अवलोकन तथा समीक्षा"],
+    ["supervision", "Supervision & Governance · कक्षा अवलोकन, सुपरीवेक्षण र बैठक"],
     ...(canManage ? ([["budget", "Budget & expenses · बजेट तथा खर्च"]] as [DeptTab, string][]) : []),
     ["reports", "Reports · प्रतिवेदन"],
   ];
@@ -142,7 +142,7 @@ function Department() {
   return (
     <Page
       title="Department Management · विभागीय व्यवस्थापन"
-      sub="विभागीय योजना, बजेट, गतिविधि, कक्षागत शैक्षिक कार्यतालिका, कक्षा अवलोकन तथा स्वचालित प्रतिवेदन"
+      sub="विभागीय योजना, बजेट, गतिविधि, कक्षागत शैक्षिक कार्यतालिका, कक्षा अवलोकन, सुपरीवेक्षण तथा स्वचालित प्रतिवेदन"
     >
       <div className="no-print mb-4 grid gap-3 sm:grid-cols-3">
         <div>
