@@ -115,8 +115,9 @@ export const MENU_ITEMS: MenuItem[] = [
     subs: [
       { labelNe: "विभागीय वार्षिक योजना", labelEn: "Department Plans", to: "/department", tab: "plans" },
       { labelNe: "विभागीय गतिविधिहरू", labelEn: "Department Activities", to: "/department", tab: "activities" },
-      { labelNe: "बजेट तथा खर्च", labelEn: "Budget & Expenses", to: "/department", tab: "budget" },
       { labelNe: "शैक्षिक क्यालेन्डर (कक्षागत)", labelEn: "Class Academic Calendar", to: "/department", tab: "calendar" },
+      { labelNe: "कक्षा अवलोकन तथा सुपरीवेक्षण", labelEn: "Class Supervision & Observations", to: "/department", tab: "supervision" },
+      { labelNe: "बजेट तथा खर्च", labelEn: "Budget & Expenses", to: "/department", tab: "budget" },
       { labelNe: "विभागीय प्रतिवेदन", labelEn: "Department Reports", to: "/department", tab: "reports" },
     ],
   },
@@ -196,7 +197,7 @@ export function BottomNav() {
   }, [path]);
   if (!visible) return null;
 
-  const primary = staff ? ["/", "/plans", "/diary", "/reports"] : ["/sqc", "/account"];
+  const primary = staff ? ["/", "/diary", "/plans", "/department"] : ["/sqc", "/account"];
   const main = primary.map((to) => items.find((i) => i.to === to)).filter(Boolean) as MenuItem[];
   const rest = items.filter((i) => !primary.includes(i.to));
 
@@ -215,7 +216,7 @@ export function BottomNav() {
           title="आजको दैनिक डायरी लेख्नुहोस् · Quick Daily Diary"
         >
           <Icon n="plus" size={15} />
-          <span>Daily Diary</span>
+          <span>दैनिक डायरी</span>
         </Link>
       )}
 
@@ -231,7 +232,7 @@ export function BottomNav() {
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <img src="/icon-192.png" alt="" className="h-6 w-6 rounded-md" />
-                <span className="text-base font-bold text-foreground">All Menus</span>
+                <span className="text-base font-bold text-foreground">सबै मेनु · All Menus</span>
               </div>
               <button
                 className="rounded-full bg-muted p-2 text-muted-foreground hover:text-foreground"
@@ -253,7 +254,8 @@ export function BottomNav() {
                   }`}
                 >
                   <Icon n={i.icon} size={22} />
-                  <span className="leading-tight">{i.en}</span>
+                  <span className="leading-tight">{i.ne}</span>
+                  <span className="text-[10px] font-normal text-muted-foreground">{i.en}</span>
                 </Link>
               ))}
               {!signed && local && (
@@ -262,7 +264,8 @@ export function BottomNav() {
                   className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-muted/30 p-2.5 text-center text-xs font-semibold"
                 >
                   <Icon n="user" size={22} />
-                  <span>Profiles</span>
+                  <span>शिक्षक</span>
+                  <span className="text-[10px] font-normal text-muted-foreground">Profiles</span>
                 </Link>
               )}
               {signed && (
@@ -276,7 +279,8 @@ export function BottomNav() {
                   }}
                 >
                   <Icon n="out" size={22} />
-                  <span>Sign out</span>
+                  <span>बाहिरिनुहोस्</span>
+                  <span className="text-[10px] font-normal">Sign out</span>
                 </button>
               )}
             </div>
@@ -294,13 +298,13 @@ export function BottomNav() {
             <Link key={i.to} to={i.to} className={cell(on)}>
               {on && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-primary" />}
               <Icon n={i.icon} size={20} />
-              <span>{i.en}</span>
+              <span>{i.ne}</span>
             </Link>
           );
         })}
         <button className={cell(more)} onClick={() => setMore((v) => !v)} aria-expanded={more}>
           <Icon n="more" size={20} />
-          <span>More</span>
+          <span>थप · More</span>
         </button>
       </nav>
     </>
