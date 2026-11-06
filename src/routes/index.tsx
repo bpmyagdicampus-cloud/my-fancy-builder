@@ -5,6 +5,7 @@ import { todayBs, fmtBs, inRange } from "@/lib/bs";
 import { pct, totalLhDone } from "@/lib/progress";
 import { ACT_CATS } from "@/lib/constants";
 import { Dt } from "@/components/app/ui";
+import { LeaveNotices } from "@/components/app/LeaveNotices";
 import { useCloud } from "@/lib/cloud";
 import * as C from "@/lib/campus";
 import * as D from "@/lib/dm";
@@ -334,6 +335,14 @@ function Home() {
           </div>
         </section>
       )}
+
+      <LeaveNotices
+        userId={cl.userId}
+        teacherName={profile.name}
+        today={today}
+        departments={lk.departments}
+        managedDeptIds={admin ? null : headDepts}
+      />
 
       {/* Campus Annual Calendar — 2 per row on mobile, 3 on tablet/desktop */}
       <section className="panel mb-5">
