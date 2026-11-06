@@ -324,12 +324,12 @@ function Home() {
             )}
             {!admin && headDepts.length > 0 && actSum.submittedPlans > 0 && (
               <Link to="/department" className="chip">
-                मस्यौदा (Draft) वार्षिक योजना: {actSum.submittedPlans}
+                Draft annual plans: {actSum.submittedPlans}
               </Link>
             )}
             {actSum.myAssignedActivities > 0 && (
               <Link to="/department" className="chip-on">
-                मेरो जिम्मेवारीमा रहेका विभागीय गतिविधि: {actSum.myAssignedActivities}
+                My assigned department activities: {actSum.myAssignedActivities}
               </Link>
             )}
           </div>
