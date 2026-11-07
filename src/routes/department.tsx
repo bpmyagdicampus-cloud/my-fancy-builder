@@ -8,6 +8,7 @@ import { PlansTab } from "@/components/dm/PlansTab";
 import { ReportsTab } from "@/components/dm/ReportsTab";
 import { SupervisionTab } from "@/components/dm/SupervisionTab";
 import { useCloud } from "@/lib/cloud";
+import { FacultyProgressMatrix } from "@/components/app/FacultyProgressMatrix";
 import * as C from "@/lib/campus";
 import * as D from "@/lib/dm";
 import { useTeacher } from "@/lib/store";
@@ -229,6 +230,7 @@ function Department() {
 
       {tab === "overview" && (
         <>
+          <FacultyProgressMatrix dept={dept} yearName={year} />
           <section className="panel mb-4">
             <h2 className="mb-1 text-lg font-bold">
               {dname || "—"} · {year || "—"}
