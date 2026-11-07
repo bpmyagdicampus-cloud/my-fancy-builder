@@ -15,6 +15,7 @@ import { AuthGate, Background } from "../components/app/auth";
 import { BottomNav, ShellFrame, Sidebar } from "../components/app/Shell";
 import { GlobalNoticeModal } from "../components/app/GlobalNoticeModal";
 import { LeaveSync } from "../components/app/LeaveSync";
+import { ProgressSync } from "../components/app/ProgressSync";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { initPwa } from "../lib/pwa";
@@ -168,6 +169,7 @@ function RootComponent() {
       <BottomNav />
       <GlobalNoticeModal />
       <LeaveSync />
+      <ProgressSync />
     </QueryClientProvider>
   );
 }
