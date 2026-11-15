@@ -198,6 +198,68 @@ export type Database = {
           },
         ]
       }
+      class_progress_snapshots: {
+        Row: {
+          academic_year: string
+          class_name: string
+          department_id: string | null
+          id: string
+          last_diary: string | null
+          lh_done: number
+          lh_total: number
+          local_class_id: string
+          plans_approved: number
+          plans_total: number
+          students_count: number
+          subject: string
+          teacher_name: string
+          teacher_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          class_name?: string
+          department_id?: string | null
+          id?: string
+          last_diary?: string | null
+          lh_done?: number
+          lh_total?: number
+          local_class_id: string
+          plans_approved?: number
+          plans_total?: number
+          students_count?: number
+          subject?: string
+          teacher_name?: string
+          teacher_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          class_name?: string
+          department_id?: string | null
+          id?: string
+          last_diary?: string | null
+          lh_done?: number
+          lh_total?: number
+          local_class_id?: string
+          plans_approved?: number
+          plans_total?: number
+          students_count?: number
+          subject?: string
+          teacher_name?: string
+          teacher_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_progress_snapshots_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       department_heads: {
         Row: {
           created_at: string
@@ -1200,6 +1262,59 @@ export type Database = {
             columns: ["teacher_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_leave_notices: {
+        Row: {
+          created_at: string
+          department_id: string | null
+          id: string
+          leave_from: string
+          leave_to: string
+          local_leave_id: string | null
+          reason: string
+          responded_at: string | null
+          responded_by: string | null
+          response_text: string | null
+          teacher_name: string
+          teacher_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          leave_from: string
+          leave_to: string
+          local_leave_id?: string | null
+          reason?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          response_text?: string | null
+          teacher_name?: string
+          teacher_user_id: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          leave_from?: string
+          leave_to?: string
+          local_leave_id?: string | null
+          reason?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          response_text?: string | null
+          teacher_name?: string
+          teacher_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_leave_notices_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
             referencedColumns: ["id"]
           },
         ]
