@@ -15,3 +15,4 @@
 - Dates are stored as Bikram Sambat strings "YYYY-MM-DD" (`src/lib/bs.ts`) so they sort and filter as plain strings.
 - `nepali-date-converter` is imported via namespace with default fallback — its default export differs between SSR and browser.
 - Reports use the `.rtable`, `.no-print` and `.print-only` classes from `src/styles.css` for printing via `window.print()`.
+- Saved collection rows open read-only details before explicit editing; lesson previews remain visible on screen and printable so View never targets print-only content.
