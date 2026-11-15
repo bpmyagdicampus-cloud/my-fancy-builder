@@ -238,16 +238,6 @@ function Plans() {
                     <PlanDate d={l?.date} /> · {l?.duration ? `${l.duration} · ` : ""}{cn(l?.classId)}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="btn-soft"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setBl(l?.id === bl ? "" : (l?.id || ""));
-                  }}
-                >
-                  {bl === l?.id ? "Hide view" : "View / print"}
-                </button>
               </div>
             )}
           />
