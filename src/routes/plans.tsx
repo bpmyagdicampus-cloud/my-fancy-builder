@@ -131,6 +131,7 @@ function Plans() {
 
       {tab === "lesson" && (<>
         <Collection k="lessons" title="Period-wise lesson plans"
+          rowButtons
           onView={(l) => setLesson(l.id)}
           fields={[{ k: "classId", l: "Class", t: "cls" }, { k: "date", l: "Date", t: "date" }, { k: "from", l: "Start time", t: "time" }, { k: "to", l: "End time", t: "time" }, { k: "title", l: "Lesson title" }, { k: "level", l: "Grade level" }, { k: "objectives", l: "Learning objectives (Bloom's taxonomy, lower → higher)", t: "area" }, { k: "steps", l: "Teaching steps", t: "rows", cols: [["step", "Step & time (e.g. Motivation – 5 min)"], ["activity", "Activity"], ["theory", "Learning theory / model"]] }, { k: "resources", l: "Resources", t: "area" }, { k: "assessment", l: "Assessment & feedback", t: "area" }]}
           summary={(l) => <div className="flex flex-wrap items-center gap-2"><div className="min-w-0 flex-1"><b>{l.title}</b><div className="text-xs text-muted-foreground"><Dt d={l.date} /> · {cn(l.classId)}</div></div><Button variant="secondary" onClick={(e) => { e.stopPropagation(); setLesson(l.id); previewRef.current?.scrollIntoView({ block: "start" }); }}>View / print</Button></div>} />
