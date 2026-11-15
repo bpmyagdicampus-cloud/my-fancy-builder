@@ -12,6 +12,8 @@ export const Route = createFileRoute("/records")({
     { name: "description", content: "Student assessments and exams with comments, research and other activities, reminders." },
     { property: "og:title", content: "Records — Shikshak Diary" },
     { property: "og:description", content: "Student assessments, exams, activities and reminders." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Records,
 });

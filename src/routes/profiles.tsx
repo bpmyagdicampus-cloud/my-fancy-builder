@@ -10,6 +10,8 @@ export const Route = createFileRoute("/profiles")({
     { name: "description", content: "Choose, add or back up teacher profiles." },
     { property: "og:title", content: "Teacher Profiles — Shikshak Diary" },
     { property: "og:description", content: "Choose, add or back up teacher profiles." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Profiles,
 });

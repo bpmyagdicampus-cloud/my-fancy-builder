@@ -17,6 +17,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Daily teaching diary, lesson plans, student attendance, assessments and printable monthly reports for teachers in Nepal." },
       { property: "og:title", content: "Shikshak Diary — शिक्षक डायरी" },
       { property: "og:description", content: "Daily teaching diary, lesson plans, attendance, assessments and monthly reports." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Home,

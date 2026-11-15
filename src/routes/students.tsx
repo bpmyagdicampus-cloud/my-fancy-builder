@@ -15,6 +15,8 @@ export const Route = createFileRoute("/students")({
     { name: "description", content: "Student lists, roll numbers, renaming and moving students between classes." },
     { property: "og:title", content: "Upgrade Students — Shikshak Diary" },
     { property: "og:description", content: "Student lists, roll numbers, renaming and moving students between classes." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Students,
 });

@@ -24,6 +24,8 @@ export const Route = createFileRoute("/admin")({
       { name: "description", content: "Create and manage teacher and student accounts, and control academic years." },
       { property: "og:title", content: "Admin — Shikshak Diary" },
       { property: "og:description", content: "Create and manage teacher and student accounts." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Admin,

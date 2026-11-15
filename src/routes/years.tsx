@@ -28,6 +28,8 @@ export const Route = createFileRoute("/years")({
       { name: "description", content: "Open past academic years, start a new year, clean up mistaken years and upgrade class subjects." },
       { property: "og:title", content: "Academic years — Shikshak Diary" },
       { property: "og:description", content: "Open past academic years, start a new year and upgrade class subjects." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Years,
