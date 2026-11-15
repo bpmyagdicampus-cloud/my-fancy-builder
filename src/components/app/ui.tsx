@@ -2,6 +2,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ClassPickField, DeptField } from "@/components/app/ClassFields";
 import { BS_MONTHS, daysInBsMonth, parseBs, bsKey, todayBs, fmtBs, weekday } from "@/lib/bs";
 import { updateData, uid, useTeacher, type ListKey } from "@/lib/store";
+import { EntryDetails, DetailFields } from "@/components/app/EntryDetails";
+import { Button } from "@/components/ui/button";
 
 export function Page({
   title,
@@ -378,6 +380,7 @@ export function Collection({
   rowButtons,
   rowExtra,
   titleExtra,
+  onView,
 }: {
   k: ListKey;
   title: string;
@@ -394,9 +397,15 @@ export function Collection({
   rowExtra?: (r: any) => ReactNode;
   /** shown right after the title and the count (for example a Guide button) */
   titleExtra?: ReactNode;
+  onView?: (r: any) => void;
 }) {
   const { data } = useTeacher();
   const [ed, setEd] = useState<Rec | null>(null);
+  const [viewed, setViewed] = useState<Rec | null>(null);
+  const view = (row: Rec) => {
+    if (onView) onView(row);
+    else setViewed(row);
+  };
   let list = ((data[k] || []) as Rec[]).filter((x) => Boolean(x) && (filter ? filter(x) : true));
   list = [...list].sort(
     sort ?? ((a, b) => String(b?.date ?? b?.from ?? "").localeCompare(String(a?.date ?? a?.from ?? "")))
@@ -429,6 +438,20 @@ export function Collection({
   };
   return (
     <section className="panel no-print mb-4">
+      <EntryDetails title={title} open={!!viewed} onClose={() => setViewed(null)} onEdit={() => {
+        if (!viewed) return;
+        setEd(structuredClone(viewed));
+        setViewed(null);
+      }}>
+        {viewed && <DetailFields items={fields.map((f): [string, ReactNode] => {
+          const value = viewed[f.k];
+          const display = f.t === "date" ? <Dt d={value} />
+            : f.t === "cls" ? data.classes.find((c) => c.id === value)?.name || "—"
+            : f.t === "rows" ? (Array.isArray(value) ? value : []).map((row: Rec, i: number) => <div key={i} className="mb-2">{f.cols?.map(([key, label]) => <div key={key}><b>{label}:</b> {String(row[key] ?? "")}</div>)}</div>)
+            : String(value ?? "") || "—";
+          return [f.l, display];
+        })} />}
+      </EntryDetails>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-bold">
           {title}{" "}
@@ -466,12 +489,20 @@ export function Collection({
           <li
             key={r.id}
             className="cursor-pointer rounded-lg px-2 py-2.5 text-sm transition-colors hover:bg-muted/50"
-            onClick={() => setEd(structuredClone(r))}
+            onClick={() => view(r)}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault();
+                view(r);
+              }
+            }}
           >
             {rowButtons ? (
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">{summary(r)}</div>
                 <div className="flex shrink-0 flex-wrap gap-1.5">
+                  <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); view(r); }}>View · हेर्नुहोस्</Button>
                   <button
                     type="button"
                     className="btn-soft !min-h-8 !px-2.5 !py-1 text-xs"

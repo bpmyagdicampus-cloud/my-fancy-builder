@@ -10,6 +10,8 @@ export const Route = createFileRoute("/login")({
       { name: "description", content: "Sign in to Shikshak Diary." },
       { property: "og:title", content: "Sign in — शिक्षक डायरी" },
       { property: "og:description", content: "Sign in to Shikshak Diary." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Login,

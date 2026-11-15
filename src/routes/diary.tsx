@@ -14,6 +14,8 @@ import {
 import { todayBs, weekday, inRange, fmtBs } from "@/lib/bs";
 import { CODES, HOLIDAY_TYPES } from "@/lib/constants";
 import { weeklyOffOf } from "@/lib/migrate";
+import { EntryDetails, DetailFields } from "@/components/app/EntryDetails";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/diary")({
   head: () => ({
@@ -22,6 +24,8 @@ export const Route = createFileRoute("/diary")({
       { name: "description", content: "Record daily classes: attendance, remarks, activities, methods, feedback and evaluation." },
       { property: "og:title", content: "Daily Diary — Shikshak Diary" },
       { property: "og:description", content: "Record daily classes: attendance, activities, methods and feedback." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: DiaryPage,
@@ -50,6 +54,7 @@ const blank = (classId = "", defaultTotal = 0): Diary => ({
 function DiaryPage() {
   const { profile, data } = useTeacher();
   const [ed, setEd] = useState<Diary | null>(null);
+  const [viewed, setViewed] = useState<Diary | null>(null);
   const [fc, setFc] = useState("");
   const [searchQ, setSearchQ] = useState("");
   const [showMoreDetails, setShowMoreDetails] = useState(false);
@@ -212,6 +217,24 @@ function DiaryPage() {
       sub="प्रत्येक कक्षाको हाजिरी, पाठ विवरण, शिक्षण क्रियाकलाप र कैफियत अभिलेख"
       actions={!ed && <button className="btn" onClick={startNewEntry}>+ New entry · नयाँ इन्ट्री</button>}
     >
+      <EntryDetails title="Daily diary · दैनिक डायरी" open={!!viewed} onClose={() => setViewed(null)} onEdit={() => {
+        if (!viewed) return;
+        openExistingEntry(viewed);
+        setViewed(null);
+      }}>
+        {viewed && <DetailFields items={[
+          ["Date · मिति", <Dt d={viewed.date} />],
+          ["Class · कक्षा", data.classes.find((c) => c.id === viewed.classId)?.name || "—"],
+          ["Subject · विषय", data.classes.find((c) => c.id === viewed.classId)?.subject || "—"],
+          ["Topic · पाठ", viewed.topic], ["Unit · एकाइ", data.units.find((u) => u.id === viewed.unitId)?.unit || "—"],
+          ["Lecture hours (LH)", viewed.lh], ["Total students", viewed.total],
+          ["Present", presentCountOf(viewed)], ["Absent", absentCountOf(viewed)],
+          ["Absent students", absentNamesOf(viewed).join(", ") || "—"],
+          ["Activities", viewed.codes.join(", ")], ["Methods", viewed.methods],
+          ["Students' activities", viewed.studentActs], ["Feedback", viewed.feedback],
+          ["Evaluation", viewed.evaluation], ["Remarks", viewed.reasons], ["Special remark", viewed.remarks],
+        ]} />}
+      </EntryDetails>
       {ed && (
         <section className="panel mb-5 space-y-4 border-primary/30 shadow-md">
           <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
@@ -545,7 +568,13 @@ function DiaryPage() {
               <li
                 key={d.id}
                 className="cursor-pointer rounded-lg px-2 py-2.5 text-sm transition-colors hover:bg-muted/50"
-                onClick={() => openExistingEntry(d)}
+                onClick={() => setViewed(d)}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault(); setViewed(d);
+                  }
+                }}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
@@ -556,6 +585,8 @@ function DiaryPage() {
                     <span className="font-medium">{d.topic || "—"}</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                    <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); setViewed(d); }}>View · हेर्नुहोस्</Button>
+                    <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openExistingEntry(d); }}>Edit · सम्पादन</Button>
                     <span className="chip !py-0.5">
                       Present: <b className="text-primary">{p}</b>/{d.total} (A: <b className="text-destructive">{a}</b>)
                     </span>

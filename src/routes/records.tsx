@@ -12,6 +12,8 @@ export const Route = createFileRoute("/records")({
     { name: "description", content: "Student assessments and exams with comments, research and other activities, reminders." },
     { property: "og:title", content: "Records — Shikshak Diary" },
     { property: "og:description", content: "Student assessments, exams, activities and reminders." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Records,
 });
@@ -45,7 +47,7 @@ function Assessments() {
   const c = data.classes.find((x) => x.id === (ed?.classId || cls));
   const stu = studentsOf(c);
   const isRubric = ed?.kind === "Unit assessment (rubric)";
-  const setMark = (s: string, k: "m" | "c", v: string) => setEd((e) => e && { ...e, marks: { ...e.marks, [s]: { m: "", c: "", ...e.marks[s], [k]: v } } });
+  const setMark = (s: string, k: "m" | "c", v: string) => setEd((e) => e && { ...e, marks: { ...e.marks, [s]: { ...(e.marks[s] ?? { m: "", c: "" }), [k]: v } } });
   const save = () => {
     if (!ed?.classId) return alert("Select a class");
     updateData((d) => { const i = d.assess.findIndex((x) => x.id === ed.id); if (i >= 0) d.assess[i] = ed; else d.assess.push({ ...ed, id: uid() }); });

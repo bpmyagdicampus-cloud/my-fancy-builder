@@ -33,6 +33,8 @@ export const Route = createFileRoute("/sqc")({
       },
       { property: "og:title", content: "SQC — Student Quality Control" },
       { property: "og:description", content: "Class reports, administrator responses, summaries and printable reports." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Sqc,

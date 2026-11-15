@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Component, useEffect, useState, type ReactNode, type ErrorInfo } from "react";
+import { Component, useEffect, useRef, useState, type ReactNode, type ErrorInfo } from "react";
+import { Button } from "@/components/ui/button";
 import { Page, Tabs, Collection, ClassSelect, PrintHead, Signatures, PrintBtn, Dt, NeedProfile } from "@/components/app/ui";
 import { updateData, uid, useTeacher, type Blended, type Cls, type Data, type Lesson, type Plan, type Unit } from "@/lib/store";
 import { currentYear } from "@/lib/years";
@@ -13,6 +14,8 @@ export const Route = createFileRoute("/plans")({
     { name: "description", content: "Annual unit-wise plan, monthly and daily teaching plans, and period-wise lesson plans." },
     { property: "og:title", content: "Teaching Plans — Shikshak Diary" },
     { property: "og:description", content: "Annual, monthly, daily and lesson plans with printable approval sheets." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Plans,
 });
@@ -63,6 +66,10 @@ function Plans() {
   const [bl, setBl] = useState<string>("");
   const [guide, setGuide] = useState(false);
   const [sample, setSample] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (lesson || bl) previewRef.current?.scrollIntoView({ block: "start" });
+  }, [lesson, bl]);
   if (!profile) return <NeedProfile />;
   const c = data.classes.find((x) => x.id === cls);
   const units = data.units.filter((u) => u.classId === cls).sort((a, b) => a.from.localeCompare(b.from));
@@ -124,9 +131,14 @@ function Plans() {
 
       {tab === "lesson" && (<>
         <Collection k="lessons" title="Period-wise lesson plans"
+          rowButtons
+          onView={(l) => setLesson(l.id)}
           fields={[{ k: "classId", l: "Class", t: "cls" }, { k: "date", l: "Date", t: "date" }, { k: "from", l: "Start time", t: "time" }, { k: "to", l: "End time", t: "time" }, { k: "title", l: "Lesson title" }, { k: "level", l: "Grade level" }, { k: "objectives", l: "Learning objectives (Bloom's taxonomy, lower → higher)", t: "area" }, { k: "steps", l: "Teaching steps", t: "rows", cols: [["step", "Step & time (e.g. Motivation – 5 min)"], ["activity", "Activity"], ["theory", "Learning theory / model"]] }, { k: "resources", l: "Resources", t: "area" }, { k: "assessment", l: "Assessment & feedback", t: "area" }]}
-          summary={(l) => <div className="flex items-center gap-2"><div className="flex-1"><b>{l.title}</b><div className="text-xs text-muted-foreground"><Dt d={l.date} /> · {cn(l.classId)}</div></div><button className="btn-soft" onClick={(e) => { e.stopPropagation(); setLesson(l.id); }}>View / print</button></div>} />
-        {lp && <LessonSheet l={lp} cls={cn(lp.classId)} />}
+          summary={(l) => <div className="flex flex-wrap items-center gap-2"><div className="min-w-0 flex-1"><b>{l.title}</b><div className="text-xs text-muted-foreground"><Dt d={l.date} /> · {cn(l.classId)}</div></div><Button variant="secondary" onClick={(e) => { e.stopPropagation(); setLesson(l.id); previewRef.current?.scrollIntoView({ block: "start" }); }}>View / print</Button></div>} />
+        {lp && <div ref={previewRef} className="scroll-mt-20">
+          <div className="no-print mb-3 flex flex-wrap justify-between gap-2"><PrintBtn /><Button variant="secondary" onClick={() => setLesson("")}>Close · बन्द गर्नुहोस्</Button></div>
+          <LessonSheet l={lp} cls={cn(lp.classId)} />
+        </div>}
       </>)}
 
       {tab === "blended" && (
@@ -193,6 +205,7 @@ function Plans() {
               </button>
             }
             rowButtons
+            onView={(l) => setBl(l.id)}
             fields={[
               { k: "classId", l: "Class / Subject", t: "cls" },
               { k: "date", l: "Date", t: "date" },
@@ -238,7 +251,7 @@ function Plans() {
               </div>
             )}
           />
-          {bp && <BlendedSheet l={bp} cls={(data.classes || []).find((x) => x?.id === bp.classId)} />}
+          {bp && <div ref={previewRef} className="scroll-mt-20"><BlendedSheet l={bp} cls={(data.classes || []).find((x) => x?.id === bp.classId)} /></div>}
         </SafeBoundary>
       )}
     </Page>
@@ -614,7 +627,7 @@ const SAMPLE: Blended = {
 };function LessonSheet({ l, cls }: { l: Lesson; cls: string }) {
   const { profile } = useTeacher();
   return (
-    <section className="panel print-only">
+    <section className="panel">
       <PrintHead title="Period-wise Lesson Plan" />
       <div className="mb-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
         <div>Class: <b>{cls}</b></div>

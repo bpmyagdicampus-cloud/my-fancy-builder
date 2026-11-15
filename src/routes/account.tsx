@@ -24,6 +24,8 @@ export const Route = createFileRoute("/account")({
       { name: "description", content: "Change your photo, password, background or sign out." },
       { property: "og:title", content: "My account — Shikshak Diary" },
       { property: "og:description", content: "Change your photo, password, background or sign out." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Account,

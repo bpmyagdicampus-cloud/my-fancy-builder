@@ -16,6 +16,8 @@ export const Route = createFileRoute("/reports")({
       { name: "description", content: "Monthly performance report, daily report, student report and plan vs progress — all printable." },
       { property: "og:title", content: "Reports — Shikshak Diary" },
       { property: "og:description", content: "Printable monthly, daily, student and progress reports." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Reports,

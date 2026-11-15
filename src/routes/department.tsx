@@ -21,6 +21,8 @@ export const Route = createFileRoute("/department")({
       { name: "description", content: "Department plans, budget, activities, academic calendar, supervision, meetings and reports." },
       { property: "og:title", content: "Department Management — Shikshak Diary" },
       { property: "og:description", content: "Department plans, budget, activities, academic calendar, supervision, meetings and reports." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Department,
