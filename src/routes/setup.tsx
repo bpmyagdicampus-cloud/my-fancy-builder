@@ -12,6 +12,8 @@ import * as C from "@/lib/campus";
 import { classDataSummary, loadPeerClassSources } from "@/lib/classes";
 import { addStudents } from "@/lib/students";
 import * as D from "@/lib/dm";
+import { EntryDetails, DetailFields } from "@/components/app/EntryDetails";
+import { Button } from "@/components/ui/button";
 import {
   setupListTeachers,
   setupUpdateTeacher,
@@ -26,6 +28,8 @@ export const Route = createFileRoute("/setup")({
     { name: "description", content: "Campus, teacher, classes, students and annual academic calendar setup." },
     { property: "og:title", content: "Setup — Shikshak Diary" },
     { property: "og:description", content: "Campus, teacher, classes, students and annual academic calendar setup." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Setup,
 });
@@ -106,6 +110,7 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
   const [edEvent, setEdEvent] = useState<{ id?: string; title: string; type: string; from: string; to: string; desc: string } | null>(null);
   const [note, setNote] = useState("");
   const [syncing, setSyncing] = useState(false);
+  const [viewedEvent, setViewedEvent] = useState<{ id: string; title: string; type: string; from: string; to: string; desc: string } | null>(null);
 
   const loadData = useCallback(async () => {
     const [tList, evList] = await Promise.all([
@@ -247,6 +252,17 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
 
   return (
     <section className="panel no-print mb-4">
+      <EntryDetails title={viewedEvent?.title || "Calendar event · कार्यक्रम"} open={!!viewedEvent} onClose={() => setViewedEvent(null)} onEdit={canEdit ? () => {
+        if (!viewedEvent) return;
+        setEdEvent({ ...viewedEvent });
+        setViewedEvent(null);
+      } : undefined}>
+        {viewedEvent && <DetailFields items={[
+          ["Event type · प्रकार", viewedEvent.type], ["From · सुरु", <Dt d={viewedEvent.from} />],
+          ["To · अन्त्य", viewedEvent.to ? <Dt d={viewedEvent.to} /> : "—"],
+          ["Description · विवरण", viewedEvent.desc || "—"],
+        ]} />}
+      </EntryDetails>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-bold">
@@ -408,7 +424,9 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
       {/* Events List */}
       <ul className="divide-y divide-border text-sm">
         {allEvents.map((e) => (
-          <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+          <li key={e.id} className="flex cursor-pointer flex-wrap items-center justify-between gap-2 py-2.5" onClick={() => setViewedEvent(e)} tabIndex={0} onKeyDown={(event) => {
+            if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); setViewedEvent(e); }
+          }}>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <b>{e.title}</b>
@@ -425,8 +443,9 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
                 {e.desc && ` · ${e.desc}`}
               </div>
             </div>
+            <Button size="sm" variant="secondary" onClick={(event) => { event.stopPropagation(); setViewedEvent(e); }}>View · हेर्नुहोस्</Button>
             {canEdit && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1" onClick={(event) => event.stopPropagation()}>
                 <button
                   type="button"
                   className="btn-soft !py-0.5 !px-2 text-xs"
