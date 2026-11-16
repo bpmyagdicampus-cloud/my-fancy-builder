@@ -1,3 +1,5 @@
+import { RowActions } from "@/components/app/RowActions";
+import { EntryDetails, DetailFields } from "@/components/app/EntryDetails";
 import { PeerObservationSection } from "@/components/records/PeerObservationSection";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
@@ -44,6 +46,7 @@ function Assessments() {
   const { data } = useTeacher();
   const [cls, setCls] = useState("");
   const [ed, setEd] = useState<Assess | null>(null);
+  const [viewed, setViewed] = useState<Assess | null>(null);
   const c = data.classes.find((x) => x.id === (ed?.classId || cls));
   const stu = studentsOf(c);
   const isRubric = ed?.kind === "Unit assessment (rubric)";
@@ -56,10 +59,14 @@ function Assessments() {
   const list = data.assess.filter((a) => !cls || a.classId === cls).sort((a, b) => b.date.localeCompare(a.date));
   return (
     <section className="panel">
+      <EntryDetails title={viewed?.title || "मूल्याङ्कन"} open={!!viewed} onClose={() => setViewed(null)} onEdit={() => { if (viewed) setEd(structuredClone(viewed)); setViewed(null); }}>
+        {viewed && <><DetailFields items={[["Type", viewed.kind], ["Date", <Dt d={viewed.date} />], ["Class", data.classes.find((x) => x.id === viewed.classId)?.name], ["Full marks", viewed.max]]} />
+          <table className="rtable mt-3"><thead><tr><th>Student</th><th>Marks</th><th>Comment</th></tr></thead><tbody>{Object.entries(viewed.marks).map(([name, mark]) => <tr key={name}><td>{name}</td><td>{mark.m}</td><td>{mark.c}</td></tr>)}</tbody></table></>}
+      </EntryDetails>
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <div className="w-72"><ClassSelect all value={cls} onChange={setCls} /></div>
         <div className="flex-1" />
-        {!ed && <button className="btn" onClick={() => setEd({ id: "", classId: cls, date: todayBs(), kind: ASSESS_KINDS[0]!, title: "", max: 10, marks: {} })}>+ New assessment</button>}
+        {!ed && <button className="btn" onClick={() => setEd({ id: "", classId: cls, date: todayBs(), kind: (ASSESS_KINDS[0] ?? ""), title: "", max: 10, marks: {} })}>+ New assessment</button>}
       </div>
       {ed && (
         <div className="mb-4 space-y-3 rounded-lg border border-primary/30 bg-secondary/40 p-3">
@@ -91,7 +98,7 @@ function Assessments() {
       <ul className="divide-y divide-border">
         {list.map((a) => {
           const cc = data.classes.find((x) => x.id === a.classId);
-          return <li key={a.id} className="cursor-pointer py-2 text-sm hover:bg-muted/50" onClick={() => setEd(structuredClone(a))}><b>{a.kind}</b> — {a.title}<div className="text-xs text-muted-foreground"><Dt d={a.date} /> · {cc?.name} {cc?.subject} · FM {a.max} · {Object.values(a.marks).filter((m) => m.m !== "").length} marked</div></li>;
+          return <li key={a.id} className="grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-start gap-2 py-2 text-sm hover:bg-muted/50" onClick={() => setViewed(a)} tabIndex={0} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setViewed(a); } }}><div className="min-w-0 break-words"><b>{a.kind}</b> — {a.title}<div className="text-xs text-muted-foreground"><Dt d={a.date} /> · {cc?.name} {cc?.subject} · FM {a.max} · {Object.values(a.marks).filter((m) => m.m !== "").length} marked</div></div><RowActions onView={() => setViewed(a)} onEdit={() => setEd(structuredClone(a))} onDelete={() => { if (confirm("Do you want to permanently delete this?")) updateData((d) => { d.assess = d.assess.filter((x) => x.id !== a.id); }); }} /></li>;
         })}
         {!list.length && <li className="py-2 text-sm text-muted-foreground">No assessments yet.</li>}
       </ul>

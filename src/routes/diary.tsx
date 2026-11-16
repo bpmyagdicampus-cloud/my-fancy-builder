@@ -15,7 +15,7 @@ import { todayBs, weekday, inRange, fmtBs } from "@/lib/bs";
 import { CODES, HOLIDAY_TYPES } from "@/lib/constants";
 import { weeklyOffOf } from "@/lib/migrate";
 import { EntryDetails, DetailFields } from "@/components/app/EntryDetails";
-import { Button } from "@/components/ui/button";
+import { RowActions } from "@/components/app/RowActions";
 
 export const Route = createFileRoute("/diary")({
   head: () => ({
@@ -576,17 +576,18 @@ function DiaryPage() {
                   }
                 }}
               >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                  <div className="min-w-0 break-words">
                     <b>
                       <Dt d={d.date} />
                     </b>{" "}
                     · <span className="font-semibold text-primary">{c?.name}</span> · {c?.subject} —{" "}
                     <span className="font-medium">{d.topic || "—"}</span>
                   </div>
-                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                    <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); setViewed(d); }}>View · हेर्नुहोस्</Button>
-                    <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openExistingEntry(d); }}>Edit · सम्पादन</Button>
+                  <RowActions onView={() => setViewed(d)} onEdit={() => openExistingEntry(d)} onDelete={() => {
+                    if (confirm("Do you want to permanently delete this?")) updateData((data) => { data.diary = data.diary.filter((entry) => entry.id !== d.id); });
+                  }} />
+                  <div className="col-span-2 flex flex-wrap items-center gap-1.5 text-xs">
                     <span className="chip !py-0.5">
                       Present: <b className="text-primary">{p}</b>/{d.total} (A: <b className="text-destructive">{a}</b>)
                     </span>
