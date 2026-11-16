@@ -14,6 +14,8 @@ import { addStudents } from "@/lib/students";
 import * as D from "@/lib/dm";
 import { EntryDetails, DetailFields } from "@/components/app/EntryDetails";
 import { Button } from "@/components/ui/button";
+import { RowActions, ActionsMenu } from "@/components/app/RowActions";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   setupListTeachers,
   setupUpdateTeacher,
@@ -424,7 +426,7 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
       {/* Events List */}
       <ul className="divide-y divide-border text-sm">
         {allEvents.map((e) => (
-          <li key={e.id} className="flex cursor-pointer flex-wrap items-center justify-between gap-2 py-2.5" onClick={() => setViewedEvent(e)} tabIndex={0} onKeyDown={(event) => {
+          <li key={e.id} className="grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-start gap-2 py-2.5" onClick={() => setViewedEvent(e)} tabIndex={0} onKeyDown={(event) => {
             if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); setViewedEvent(e); }
           }}>
             <div className="min-w-0 flex-1">
@@ -443,34 +445,7 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
                 {e.desc && ` · ${e.desc}`}
               </div>
             </div>
-            <Button size="sm" variant="secondary" onClick={(event) => { event.stopPropagation(); setViewedEvent(e); }}>View · हेर्नुहोस्</Button>
-            {canEdit && (
-              <div className="flex items-center gap-1" onClick={(event) => event.stopPropagation()}>
-                <button
-                  type="button"
-                  className="btn-soft !py-0.5 !px-2 text-xs"
-                  onClick={() =>
-                    setEdEvent({
-                      id: e.id,
-                      title: e.title,
-                      type: e.type,
-                      from: e.from,
-                      to: e.to,
-                      desc: e.desc,
-                    })
-                  }
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  className="btn-danger !py-0.5 !px-2 text-xs"
-                  onClick={() => void deleteEvent(e.id, e.isCloud)}
-                >
-                  Delete
-                </button>
-              </div>
-            )}
+            <RowActions onView={() => setViewedEvent(e)} onEdit={canEdit ? () => setEdEvent({ id: e.id, title: e.title, type: e.type, from: e.from, to: e.to, desc: e.desc }) : undefined} onDelete={canEdit ? () => void deleteEvent(e.id, e.isCloud) : undefined} />
           </li>
         ))}
         {!allEvents.length && (
@@ -620,7 +595,7 @@ function TeacherDetailsSection() {
             setNote("");
           }}
         >
-          {open ? "Hide · बन्द गर्नुहोस्" : "View · हेर्नुहोस्"}
+          {open ? "Hide · बन्द गर्नुहोस्" : "हेर्नुहोस्"}
         </button>
       </div>
 
@@ -733,30 +708,7 @@ const CLASS_FIELDS: Field[] = [
 
 /** Three-dot menu for each class row (Edit, Disable/Enable, Delete). */
 function ClassRowDots({ items }: { items: [string, () => void, boolean?][] }) {
-  const ref = useRef<HTMLDetailsElement>(null);
-  return (
-    <details ref={ref} className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
-      <summary className="btn-soft cursor-pointer list-none !px-2.5" aria-label="More options" title="More actions">
-        ⋮
-      </summary>
-      <div className="absolute right-0 z-20 mt-1 min-w-44 rounded-md border border-border bg-card p-1 shadow-lg">
-        {items.map(([label, fn, danger]) => (
-          <button
-            key={label}
-            type="button"
-            className={`block w-full rounded px-3 py-2 text-left text-sm hover:bg-muted ${danger ? "text-destructive" : ""}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (ref.current) ref.current.open = false;
-              fn();
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-    </details>
-  );
+  return <ActionsMenu>{items.map(([label, fn, danger]) => <DropdownMenuItem key={label} onSelect={fn} className={danger ? "text-destructive focus:text-destructive" : ""}>{label}</DropdownMenuItem>)}</ActionsMenu>;
 }
 
 /**

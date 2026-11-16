@@ -1,3 +1,4 @@
+import { ExistingActionsMenu } from "@/components/app/RowActions";
 import { useEffect, useMemo, useState } from "react";
 import { PrintBtn, PrintHead, Signatures } from "@/components/app/ui";
 import { useTeacher } from "@/lib/store";
@@ -1159,7 +1160,7 @@ export function SupervisionTab({
                           </span>
                         </td>
                         <td className="no-print p-2.5 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5">
+                          <ExistingActionsMenu>
                             <button
                               type="button"
                               className="btn-soft !py-1 !px-2 text-[11px] font-semibold"
@@ -1194,7 +1195,7 @@ export function SupervisionTab({
                                 </button>
                               </>
                             )}
-                          </div>
+                          </ExistingActionsMenu>
                         </td>
                       </tr>
                     ))}
@@ -1592,7 +1593,7 @@ export function SupervisionTab({
                         <td className="p-2.5 text-muted-foreground whitespace-nowrap">{m.chairperson}</td>
                         <td className="p-2.5 max-w-64 truncate text-muted-foreground">{m.decisions}</td>
                         <td className="no-print p-2.5 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5">
+                          <ExistingActionsMenu>
                             <button
                               type="button"
                               className="btn-soft !py-1 !px-2 text-[11px] font-semibold"
@@ -1627,7 +1628,7 @@ export function SupervisionTab({
                                 </button>
                               </>
                             )}
-                          </div>
+                          </ExistingActionsMenu>
                         </td>
                       </tr>
                     ))}

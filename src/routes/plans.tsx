@@ -134,7 +134,7 @@ function Plans() {
           rowButtons
           onView={(l) => setLesson(l.id)}
           fields={[{ k: "classId", l: "Class", t: "cls" }, { k: "date", l: "Date", t: "date" }, { k: "from", l: "Start time", t: "time" }, { k: "to", l: "End time", t: "time" }, { k: "title", l: "Lesson title" }, { k: "level", l: "Grade level" }, { k: "objectives", l: "Learning objectives (Bloom's taxonomy, lower → higher)", t: "area" }, { k: "steps", l: "Teaching steps", t: "rows", cols: [["step", "Step & time (e.g. Motivation – 5 min)"], ["activity", "Activity"], ["theory", "Learning theory / model"]] }, { k: "resources", l: "Resources", t: "area" }, { k: "assessment", l: "Assessment & feedback", t: "area" }]}
-          summary={(l) => <div className="flex flex-wrap items-center gap-2"><div className="min-w-0 flex-1"><b>{l.title}</b><div className="text-xs text-muted-foreground"><Dt d={l.date} /> · {cn(l.classId)}</div></div><Button variant="secondary" onClick={(e) => { e.stopPropagation(); setLesson(l.id); previewRef.current?.scrollIntoView({ block: "start" }); }}>View / print</Button></div>} />
+          summary={(l) => <><b className="block break-words">{l.title}</b><div className="mt-1 text-xs text-muted-foreground"><Dt d={l.date} /> · {cn(l.classId)}</div></>} />
         {lp && <div ref={previewRef} className="scroll-mt-20">
           <div className="no-print mb-3 flex flex-wrap justify-between gap-2"><PrintBtn /><Button variant="secondary" onClick={() => setLesson("")}>Close · बन्द गर्नुहोस्</Button></div>
           <LessonSheet l={lp} cls={cn(lp.classId)} />
@@ -147,7 +147,7 @@ function Plans() {
             <section className="panel no-print mb-3">
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <h2 className="flex-1 text-lg font-bold">कुन कुरा कहिले भर्ने? · Guide</h2>
-                <button type="button" className="btn-soft" onClick={() => setSample((v) => !v)}>{sample ? "Hide sample lesson plan" : "View sample lesson plan"}</button>
+                <button type="button" className="btn-soft" onClick={() => setSample((v) => !v)}>{sample ? "Hide sample lesson plan" : "नमुना पाठ योजना हेर्नुहोस्"}</button>
                 <button type="button" className="btn-soft" onClick={() => setGuide(false)}>Close</button>
               </div>
               <div className="space-y-4">
@@ -176,7 +176,7 @@ function Plans() {
                           date: todayBs(),
                         });
                       });
-                      alert("Research Methodology को नमुना पाठ योजना तपाईंको सूचीमा थपियो। तल सूचीबाट 'Edit' वा 'View / print' थिचेर हेर्न सक्नुहुन्छ।");
+                      alert("Research Methodology को नमुना पाठ योजना तपाईंको सूचीमा थपियो। तल सूचीबाट 'Edit' वा 'हेर्नुहोस्' थिचेर हेर्न सक्नुहुन्छ।");
                     } catch (err: any) {
                       alert("योजना थप्दा समस्या देखियो: " + (err?.message || err));
                     }

@@ -1,3 +1,4 @@
+import { ExistingActionsMenu } from "@/components/app/RowActions";
 import { useEffect, useState } from "react";
 import { PrintHead, Signatures } from "@/components/app/ui";
 import { todayBs, fmtBs } from "@/lib/bs";
@@ -708,7 +709,7 @@ export function PeerObservationSection() {
                       </span>
                     </td>
                     <td className="no-print p-2.5 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5">
+                      <ExistingActionsMenu>
                         <button
                           type="button"
                           className="btn-soft !py-1 !px-2 text-[11px] font-semibold"
@@ -736,7 +737,7 @@ export function PeerObservationSection() {
                         >
                           ×
                         </button>
-                      </div>
+                      </ExistingActionsMenu>
                     </td>
                   </tr>
                 ))}

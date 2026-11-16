@@ -1,3 +1,5 @@
+import { RowActions } from "@/components/app/RowActions";
+import { EntryDetails } from "@/components/app/EntryDetails";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
@@ -9,6 +11,7 @@ const errText = (e: unknown) =>
 const db = () => (supabase as any).from("popup_notices");
 
 export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
+  const [viewed, setViewed] = useState<PopupNotice | null>(null);
   const [items, setItems] = useState<PopupNotice[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -153,12 +156,13 @@ export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
         <p className="text-xs text-muted-foreground">कुनै सूचना छैन।</p>
       ) : (
         <ul className="space-y-2">
+          <EntryDetails title={viewed?.title || "सूचना"} open={!!viewed} onClose={() => setViewed(null)}><div className="whitespace-pre-wrap break-words">{viewed?.content}</div></EntryDetails>
           {items.map((n) => {
             const m = noticeMeta(n.notice_type);
             return (
               <li
                 key={n.id}
-                className={`flex flex-wrap items-center gap-3 rounded-xl border p-3 ${
+                className={`grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 rounded-lg border p-3 ${
                   editingId === n.id ? "border-primary bg-primary/5" : "border-border"
                 } ${n.is_active ? "" : "opacity-60"}`}
               >
@@ -185,20 +189,7 @@ export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
                   onCheckedChange={(v) => void toggle(n, v)}
                   aria-label="Toggle active"
                 />
-                <button
-                  type="button"
-                  className="btn-soft !min-h-8 !px-2.5 !py-1 text-xs"
-                  onClick={() => startEdit(n)}
-                >
-                  ✏️ सम्पादन
-                </button>
-                <button
-                  type="button"
-                  className="btn-soft !min-h-8 !px-2.5 !py-1 text-xs !text-destructive"
-                  onClick={() => void remove(n)}
-                >
-                  🗑 मेट्नुहोस्
-                </button>
+                <RowActions onView={() => setViewed(n)} onEdit={() => startEdit(n)} onDelete={() => void remove(n)} />
               </li>
             );
           })}

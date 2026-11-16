@@ -3,7 +3,7 @@ import { ClassPickField, DeptField } from "@/components/app/ClassFields";
 import { BS_MONTHS, daysInBsMonth, parseBs, bsKey, todayBs, fmtBs, weekday } from "@/lib/bs";
 import { updateData, uid, useTeacher, type ListKey } from "@/lib/store";
 import { EntryDetails, DetailFields } from "@/components/app/EntryDetails";
-import { Button } from "@/components/ui/button";
+import { RowActions } from "@/components/app/RowActions";
 
 export function Page({
   title,
@@ -377,7 +377,6 @@ export function Collection({
   defaults,
   sort,
   canDelete,
-  rowButtons,
   rowExtra,
   titleExtra,
   onView,
@@ -452,8 +451,8 @@ export function Collection({
           return [f.l, display];
         })} />}
       </EntryDetails>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-lg font-bold">
+      <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+        <h2 className="min-w-0 break-words text-lg font-bold">
           {title}{" "}
           <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
             {list.length}
@@ -498,37 +497,13 @@ export function Collection({
               }
             }}
           >
-            {rowButtons ? (
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">{summary(r)}</div>
-                <div className="flex shrink-0 flex-wrap gap-1.5">
-                  <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); view(r); }}>View · हेर्नुहोस्</Button>
-                  <button
-                    type="button"
-                    className="btn-soft !min-h-8 !px-2.5 !py-1 text-xs"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEd(structuredClone(r));
-                    }}
-                  >
-                    Edit
-                  </button>
-                  {rowExtra?.(r)}
-                  <button
-                    type="button"
-                    className="btn-danger !min-h-8 !px-2.5 !py-1 text-xs"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      del(r.id);
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+              <div className="min-w-0 break-words [overflow-wrap:anywhere]">{summary(r)}</div>
+              <div className="shrink-0">
+                <RowActions onView={() => view(r)} onEdit={() => setEd(structuredClone(r))} onDelete={() => del(r.id)} />
+                {rowExtra?.(r)}
               </div>
-            ) : (
-              summary(r)
-            )}
+            </div>
           </li>
         ))}
         {!list.length && (

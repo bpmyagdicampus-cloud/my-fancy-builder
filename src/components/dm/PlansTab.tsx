@@ -1,3 +1,4 @@
+import { ExistingActionsMenu } from "@/components/app/RowActions";
 import { useCallback, useEffect, useState } from "react";
 import { BsDate } from "@/components/app/ui";
 import { fmtBs, todayBs } from "@/lib/bs";
@@ -100,14 +101,14 @@ export function PlansTab({ dept, year, admin, canManage, onChanged }: { dept: st
                 </div>
                 <span className={p.status === "approved" ? "chip-on" : "chip"}>{st?.en} · {st?.ne}</span>
               </div>
-              <div className="mt-2 flex flex-wrap gap-2">
+              <ExistingActionsMenu>
                 <button className="btn-soft" onClick={() => setOpen(isOpen ? "" : p.id)}>{isOpen ? "Hide details" : "View details"}</button>
                 {canManage && !lockedForHead && <button className="btn-soft" onClick={() => { setEd({ id: p.id, f: { title: p.title, objectives: p.objectives, expected_outcomes: p.expected_outcomes, indicators: p.indicators, targets: p.targets, estimated_budget: p.estimated_budget, funding_source: p.funding_source, start_date: p.start_date, end_date: p.end_date } }); setNote(""); }}>Edit</button>}
                 {canManage && <button className="btn-soft" onClick={() => void act(D.createPlan(dept, year, { title: `${p.title} (copy)`, objectives: p.objectives, expected_outcomes: p.expected_outcomes, indicators: p.indicators, targets: p.targets, estimated_budget: p.estimated_budget, funding_source: p.funding_source, start_date: p.start_date, end_date: p.end_date }), "A copy was created as a new draft.")}>Copy as new</button>}
                 {canManage && (p.status === "draft" || p.status === "rejected") && <button className="btn" onClick={() => confirm("Submit this plan to the administration for approval?") && void act(D.setPlanStatus(p.id, "submitted"), "Submitted for approval.")}>Submit for approval</button>}
                 {canManage && p.status === "draft" && <button className="btn-danger" onClick={() => confirm("Do you want to permanently delete this?") && void act(D.deletePlan(p.id), "Deleted.")}>Delete</button>}
                 {admin && p.status === "approved" && <button className="btn-soft" onClick={() => confirm("Reopen this approved plan as a draft so it can be revised?") && void act(D.setPlanStatus(p.id, "draft", p.approval_comment), "Reopened as a draft.")}>Reopen for revision</button>}
-              </div>
+              </ExistingActionsMenu>
               {lockedForHead && <p className="mt-2 text-xs text-muted-foreground">An approved plan is locked. Use “Copy as new” to prepare a revised plan, or ask the administration to reopen it.</p>}
 
               {admin && p.status === "submitted" && (
