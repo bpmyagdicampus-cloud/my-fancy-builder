@@ -1,3 +1,4 @@
+import { RowActions, ExistingActionsMenu } from "@/components/app/RowActions";
 import { useMemo, useState } from "react";
 import { PrintBtn } from "@/components/app/ui";
 import { PeriodPicker, defaultSpan, spanRange, type Span } from "@/components/sqc/PeriodPicker";
@@ -21,6 +22,8 @@ export function ReportList({ rows, classes, periods, actions, admin, canEdit, on
   const list = useMemo(() => filterReports(rows, filters, classes), [rows, f, span, classes]); // eslint-disable-line react-hooks/exhaustive-deps
   const teacherNames = useMemo(() => [...new Map(rows.map((r) => [r.teacher_id ?? `n:${r.teacher_name}`, r.teacher_name])).entries()], [rows]);
   const chosen = rows.find((r) => r.id === sel) ?? null;
+  const removeRow = async (r: Report) => { if (!confirm("Do you want to permanently delete this report?")) return; const x = await deleteReport(r.id); if (!x.ok) alert(x.error); else { setSel(null); onChanged(); } };
+  const menu = (r: Report) => <RowActions onView={() => setSel(r.id)} onEdit={canEdit && r.status === "Submitted" ? () => onEdit(r) : undefined} onDelete={admin ? () => void removeRow(r) : undefined} />;
   const set = (p: Partial<Filters>) => setF((x) => ({ ...x, ...p }));
 
   return (
@@ -56,7 +59,7 @@ export function ReportList({ rows, classes, periods, actions, admin, canEdit, on
                   <td>{late === null ? "—" : late > 0 ? fmtMin(late) : "on time"}</td>
                   <td>{short([r.issues, r.facilities, r.requests, r.suggestions].filter(Boolean).join(" | "), 80) || "—"}</td>
                   <td><Chip s={r.status} /></td>
-                  <td className="no-print"><button className="btn-soft" onClick={() => setSel(sel === r.id ? null : r.id)}>{sel === r.id ? "Close" : "Open"}</button></td>
+                  <td className="no-print">{menu(r)}</td>
                 </tr>
               );
             })}
@@ -67,11 +70,11 @@ export function ReportList({ rows, classes, periods, actions, admin, canEdit, on
       {/* phones: cards */}
       <div className="space-y-2 md:hidden print:hidden">
         {list.map((r) => (
-          <button key={r.id} onClick={() => setSel(sel === r.id ? null : r.id)} className="panel w-full text-left">
+          <div key={r.id} className="panel grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 text-left"><div className="min-w-0 break-words" onClick={() => setSel(r.id)}>
             <div className="flex items-center gap-2"><b>{fmtBs(r.report_date)} · P{r.period_no}</b><span className="flex-1" /><Chip s={r.status} /></div>
             <div className="text-sm">{className(classes.find((c) => c.id === r.class_id))} · {r.teacher_name || "—"}</div>
             <div className="text-xs text-muted-foreground">{r.held ? `Held ${hhmm(r.arrival_time)}–${hhmm(r.departure_time) || "?"}` : `Not held: ${short(r.not_held_reason, 50)}`}</div>
-          </button>
+          </div>{menu(r)}</div>
         ))}
         {!list.length && <p className="text-sm text-muted-foreground">No reports match.</p>}
       </div>
@@ -102,8 +105,10 @@ function Detail({ r, classes, periods, actions, admin, canEdit, onEdit, onChange
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="text-lg font-bold">{className(classes.find((c) => c.id === r.class_id))} · {fmtBs(r.report_date)} · Period {r.period_no}</h3><Chip s={r.status} />
         <span className="flex-1" />
+        <ExistingActionsMenu>
         {canEdit && r.status === "Submitted" && <button className="btn-soft" onClick={() => onEdit(r)}>Edit</button>}
         {admin && <button className="btn-danger" onClick={async () => { if (!confirm("Do you want to permanently delete this report?")) return; const x = await deleteReport(r.id); if (!x.ok) alert(x.error); else onChanged(); }}>Delete</button>}
+        </ExistingActionsMenu>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
         <div><div className="lbl">Teacher</div>{r.teacher_name || "—"}<div className="text-xs text-muted-foreground">{r.subject}</div></div>

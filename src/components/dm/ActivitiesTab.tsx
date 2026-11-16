@@ -1,3 +1,4 @@
+import { ExistingActionsMenu } from "@/components/app/RowActions";
 import { useCallback, useEffect, useState } from "react";
 import { BsDate } from "@/components/app/ui";
 import { fmtBs, todayBs } from "@/lib/bs";
@@ -587,7 +588,7 @@ export function ActivitiesTab({
               </div>
 
               {/* Action buttons */}
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+              <ExistingActionsMenu>
                 <button className="btn-soft" onClick={() => setOpenId(isOpen ? "" : a.id)}>
                   {isOpen ? "Hide details" : `Details & Evidence (${actEv.length})`}
                 </button>
@@ -657,7 +658,7 @@ export function ActivitiesTab({
                     Delete
                   </button>
                 )}
-              </div>
+              </ExistingActionsMenu>
 
               {isOpen && (
                 <div className="mt-3 space-y-2 border-t border-border pt-3 text-sm">

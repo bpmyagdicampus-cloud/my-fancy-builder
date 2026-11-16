@@ -1,3 +1,4 @@
+import { ExistingActionsMenu } from "@/components/app/RowActions";
 import { useCallback, useEffect, useState } from "react";
 import { BsDate, Tabs } from "@/components/app/ui";
 import { fmtBs, todayBs } from "@/lib/bs";
@@ -407,7 +408,7 @@ export function BudgetTab({
                     </span>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <ExistingActionsMenu>
                     {!lockedForHead && (
                       <button
                         className="btn-soft"
@@ -480,7 +481,7 @@ export function BudgetTab({
                         + Request revision · संशोधन माग
                       </button>
                     )}
-                  </div>
+                  </ExistingActionsMenu>
 
                   {/* Admin approval box */}
                   {admin && approvingId === l.id && (
@@ -762,7 +763,7 @@ export function BudgetTab({
                   </div>
 
                   {/* Expense actions & voucher evidence */}
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                  <ExistingActionsMenu>
                     {(!ex.locked || admin) && (
                       <button
                         className="btn-soft"
@@ -861,7 +862,7 @@ export function BudgetTab({
                         </button>
                       </span>
                     ))}
-                  </div>
+                  </ExistingActionsMenu>
                 </section>
               );
             })}
