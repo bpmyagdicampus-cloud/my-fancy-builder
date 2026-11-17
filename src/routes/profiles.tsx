@@ -1,3 +1,4 @@
+import { ExistingActionsMenu } from "@/components/app/RowActions";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Page, FormFields, type Field } from "@/components/app/ui";
@@ -52,13 +53,13 @@ function Profiles() {
           <div key={p.id} className={`panel ${db.current === p.id ? "ring-2 ring-primary" : ""}`}>
             <div className="font-bold">{p.name}</div>
             <div className="text-sm text-muted-foreground">{p.designation} · {p.campus}</div>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <ExistingActionsMenu>
               {signedIn && !isCloud && <span className="chip self-center">old · this device only</span>}
               {(!signedIn || isCloud) && <button className="btn" onClick={() => { mutate((x) => { x.current = p.id; }); nav({ to: "/" }); }}>Open</button>}
               <button className="btn-soft" onClick={() => download(p.id, p.name)}>Backup</button>
               {signedIn && !isCloud && <button className="btn-soft" onClick={() => nav({ to: "/account" })}>Move to cloud…</button>}
               {!isCloud && <button className="btn-danger" onClick={() => confirm(`Do you want to permanently delete ${p.name} and all their data?\n\nThis cannot be undone. Download a Backup first if unsure.`) && mutate((x) => { x.profiles = x.profiles.filter((y) => y.id !== p.id); delete x.data[p.id]; if (x.current === p.id) x.current = null; })}>Delete</button>}
-            </div>
+            </ExistingActionsMenu>
           </div>
           );
         })}

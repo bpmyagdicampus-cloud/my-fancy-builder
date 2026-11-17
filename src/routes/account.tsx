@@ -1,3 +1,4 @@
+import { ExistingActionsMenu } from "@/components/app/RowActions";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Page } from "@/components/app/ui";
@@ -95,7 +96,7 @@ function Account() {
         setNote("");
       }}
     >
-      {ne} · {en}
+      {en}
     </button>
   );
 
@@ -157,6 +158,7 @@ function Account() {
                   {listUnsaved(c.userId).map((u) => (
                     <li key={u.key} className="flex items-center gap-2">
                       <span className="flex-1">{new Date(u.at).toLocaleString()}</span>
+                      <ExistingActionsMenu>
                       <button className="btn-soft" onClick={() => downloadUnsaved(u.key)}>
                         Download
                       </button>
@@ -169,6 +171,7 @@ function Account() {
                       >
                         Delete
                       </button>
+                      </ExistingActionsMenu>
                     </li>
                   ))}
                 </ul>

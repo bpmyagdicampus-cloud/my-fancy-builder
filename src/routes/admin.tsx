@@ -1,3 +1,4 @@
+import { ExistingActionsMenu } from "@/components/app/RowActions";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Page } from "@/components/app/ui";
@@ -349,7 +350,7 @@ function Admin() {
             </thead>
             <tbody>
               {filteredUsers.map((u) => {
-                const isMenuOpen = openMenuId === u.id;
+
                 return (
                   <tr key={u.id} className={`border-b border-border/70 hover:bg-muted/30 ${u.disabled ? "opacity-50" : ""}`}>
                     <td className="p-2.5 font-semibold">
@@ -382,7 +383,7 @@ function Admin() {
                       {u.lastSignIn ? new Date(u.lastSignIn).toLocaleDateString() : "never"}
                     </td>
                     <td className="p-2.5 text-right">
-                      <div className="relative inline-flex items-center justify-end gap-1.5">
+                      <ExistingActionsMenu>
                         <button
                           type="button"
                           className="btn-soft !min-h-8 !px-2.5 !py-1 text-xs"
@@ -403,19 +404,6 @@ function Admin() {
                         >
                           Edit
                         </button>
-                        <button
-                          type="button"
-                          className="btn-soft !min-h-8 !w-8 !p-0 text-base font-bold"
-                          title="थप कार्यहरू · More actions"
-                          onClick={() => setOpenMenuId(isMenuOpen ? null : u.id)}
-                        >
-                          ⋮
-                        </button>
-                        {isMenuOpen && (
-                          <div
-                            className="absolute right-0 top-9 z-30 w-44 rounded-xl border border-border bg-card p-1.5 text-left text-xs shadow-xl"
-                            onMouseLeave={() => setOpenMenuId(null)}
-                          >
                             {(u.roles.includes("teacher") || u.roles.includes("admin")) && (
                               <button
                                 type="button"
@@ -468,9 +456,7 @@ function Admin() {
                                 🚫 {u.disabled ? "Enable account" : "Disable account"}
                               </button>
                             )}
-                          </div>
-                        )}
-                      </div>
+                      </ExistingActionsMenu>
                     </td>
                   </tr>
                 );

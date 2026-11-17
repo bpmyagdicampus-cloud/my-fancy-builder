@@ -1,3 +1,4 @@
+import { RowActions } from "@/components/app/RowActions";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Page, NeedProfile } from "@/components/app/ui";
@@ -322,19 +323,7 @@ function Years() {
                         {isAdmin ? "Inactive" : "View only"}
                       </span>
                     )}
-                    {canDelThis && (
-                      <button
-                        type="button"
-                        className="mt-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-destructive hover:bg-destructive/10"
-                        title="गल्तीले बनेको यो शैक्षिक वर्ष हटाउनुहोस्"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void handleDeleteYear(y.id, y.name);
-                        }}
-                      >
-                        🗑 हटाउनुहोस्
-                      </button>
-                    )}
+                    <RowActions onView={() => run((d) => switchYear(d, y.id), `Opened ${y.name}.`, true)} onDelete={canDelThis ? () => void handleDeleteYear(y.id, y.name) : undefined} />
                   </div>
                 </div>
               </div>
