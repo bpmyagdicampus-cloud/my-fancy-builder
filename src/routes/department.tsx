@@ -114,14 +114,14 @@ function Department() {
 
   if (cl.status !== "ready" || !cl.userId) {
     return (
-      <Page title="Department Management · विभागीय व्यवस्थापन">
+      <Page title="Department Management">
         <p className="text-sm text-muted-foreground">Please sign in.</p>
       </Page>
     );
   }
   if (!staff) {
     return (
-      <Page title="Department Management · विभागीय व्यवस्थापन">
+      <Page title="Department Management">
         <p className="text-sm text-muted-foreground">
           This module is for teachers, department heads and the administration.
         </p>
@@ -133,18 +133,18 @@ function Department() {
   const num = (n: number | undefined) => n ?? 0;
 
   const tabItems: [DeptTab, string][] = [
-    ["overview", "Overview · सारांश"],
-    ["plans", "Annual plans · वार्षिक योजना"],
-    ["activities", "Activities · गतिविधि तथा प्रगति"],
-    ["calendar", "Academic Calendar · शैक्षिक पात्रो"],
-    ["supervision", "Supervision & Governance · कक्षा अवलोकन, सुपरीवेक्षण र बैठक"],
-    ...(canManage ? ([["budget", "Budget & expenses · बजेट तथा खर्च"]] as [DeptTab, string][]) : []),
-    ["reports", "Reports · प्रतिवेदन"],
+    ["overview", "Overview"],
+    ["plans", "Annual plans"],
+    ["activities", "Activities"],
+    ["calendar", "Academic Calendar"],
+    ["supervision", "Supervision & Governance"],
+    ...(canManage ? ([["budget", "Budget & expenses"]] as [DeptTab, string][]) : []),
+    ["reports", "Reports"],
   ];
 
   return (
     <Page
-      title="Department Management · विभागीय व्यवस्थापन"
+      title="Department Management"
       sub="विभागीय योजना, बजेट, गतिविधि, कक्षागत शैक्षिक कार्यतालिका, कक्षा अवलोकन, सुपरीवेक्षण तथा स्वचालित प्रतिवेदन"
     >
       <div className="no-print mb-4 grid gap-3 sm:grid-cols-3">
@@ -293,10 +293,9 @@ function Department() {
             {MODULES.filter((m) => !m.headOnly || canManage).map((m) => (
               <section key={m.key} className="panel">
                 <div className="flex items-center gap-2">
-                  <h3 className="flex-1 text-base font-bold">{m.ne}</h3>
+                  <h3 className="flex-1 text-base font-bold">{m.en}</h3>
                   <span className="chip-on text-xs">Active</span>
                 </div>
-                <div className="text-sm font-medium">{m.en}</div>
                 <p className="mt-1 text-sm text-muted-foreground">{m.note}</p>
                 <button className="btn-soft mt-3" onClick={() => setTab(m.key)}>
                   Open · खोल्नुहोस्

@@ -213,11 +213,11 @@ function DiaryPage() {
 
   return (
     <Page
-      title="Daily diary · दैनिक डायरी"
+      title="Daily diary"
       sub="प्रत्येक कक्षाको हाजिरी, पाठ विवरण, शिक्षण क्रियाकलाप र कैफियत अभिलेख"
       actions={!ed && <button className="btn" onClick={startNewEntry}>+ New entry · नयाँ इन्ट्री</button>}
     >
-      <EntryDetails title="Daily diary · दैनिक डायरी" open={!!viewed} onClose={() => setViewed(null)} onEdit={() => {
+      <EntryDetails title="Daily diary" open={!!viewed} onClose={() => setViewed(null)} onEdit={() => {
         if (!viewed) return;
         openExistingEntry(viewed);
         setViewed(null);
@@ -239,7 +239,7 @@ function DiaryPage() {
         <section className="panel mb-5 space-y-4 border-primary/30 shadow-md">
           <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
             <h2 className="text-base font-bold text-primary">
-              {ed.id ? "✏️ दैनिक डायरी सम्पादन (Edit Entry)" : "➕ नयाँ दैनिक डायरी (New Daily Entry)"}
+              {ed.id ? "Edit Entry" : "New Daily Entry"}
             </h2>
             <button type="button" className="btn-soft !min-h-8 !px-2.5 !py-1 text-xs" onClick={() => setEd(null)}>
               ✕ बन्द गर्नुहोस्

@@ -391,7 +391,7 @@ export function SupervisionTab({
     <div className="space-y-4">
       {/* Sub-Tabs / View Switcher */}
       <div className="no-print flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2.5">
-        <div className="inline-flex rounded-lg bg-secondary p-1">
+        <div className="flex max-w-full items-center overflow-x-auto rounded-lg bg-secondary p-1 [&>button]:shrink-0">
           <button
             type="button"
             className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
@@ -403,7 +403,7 @@ export function SupervisionTab({
               setSinglePrintMeeting(null);
             }}
           >
-            📋 Class Observation Logs · कक्षा अवलोकन फारम ({logs.length})
+            Class Observation Logs ({logs.length})
           </button>
           <button
             type="button"
@@ -416,7 +416,7 @@ export function SupervisionTab({
               setSinglePrintMeeting(null);
             }}
           >
-            🔍 Monthly Report Review · मासिक प्रतिवेदन समीक्षा
+            Monthly Report Review
           </button>
           <button
             type="button"
@@ -429,7 +429,7 @@ export function SupervisionTab({
               setSinglePrintMeeting(null);
             }}
           >
-            📝 Department Meetings · विभागीय बैठक र निर्णय ({meetings.length})
+            Department Meetings ({meetings.length})
           </button>
         </div>
 
@@ -512,7 +512,7 @@ export function SupervisionTab({
               <div className="flex items-center justify-between border-b border-border pb-2.5">
                 <div>
                   <h3 className="font-bold text-lg text-primary">
-                    {form.id ? "कक्षा शिक्षण अवलोकन सम्पादन (Edit Observation)" : "कक्षा शिक्षण अवलोकन तथा मूल्याङ्कन फारम (Classroom Observation Rubric)"}
+                    {form.id ? "Edit Observation" : "Classroom Observation Rubric"}
                   </h3>
                   <p className="text-xs text-muted-foreground">
                     त्रिभुवन विश्वविद्यालय तथा म्याग्दी बहुमुखी क्याम्पसको गुणस्तर सुधार (QAA) मापदण्ड अनुसारको विस्तृत मूल्याङ्कन फारम
@@ -527,7 +527,7 @@ export function SupervisionTab({
                 {/* खण्ड १: आधारभूत विवरण */}
                 <div className="rounded-xl border border-border/80 bg-secondary/20 p-3.5 space-y-3">
                   <h4 className="font-bold text-sm text-foreground flex items-center gap-1.5">
-                    <span>१. आधारभूत विवरण (General Information)</span>
+                    <span>General Information</span>
                   </h4>
                   <div className="grid gap-3 sm:grid-cols-4">
                     <div>
@@ -623,9 +623,7 @@ export function SupervisionTab({
                 {/* खण्ड २: शिक्षण विधि (Multi-select) */}
                 <div className="rounded-xl border border-border/80 bg-secondary/20 p-3.5 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-sm text-foreground">
-                      २. प्रयोग गरिएका शिक्षण विधिहरू (Teaching Methods Used)
-                    </h4>
+                    <h4 className="font-bold text-sm text-foreground">Teaching Methods Used</h4>
                     <span className="text-[11px] text-primary font-medium">✓ एक भन्दा बढी टिक लगाउन सकिने</span>
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
@@ -663,9 +661,7 @@ export function SupervisionTab({
                 {/* खण्ड ३: शिक्षण सामग्री तथा प्रविधि (Multi-select) */}
                 <div className="rounded-xl border border-border/80 bg-secondary/20 p-3.5 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-sm text-foreground">
-                      ३. प्रयोग गरिएका शिक्षण सामग्री तथा प्रविधि (Teaching Materials & Media)
-                    </h4>
+                    <h4 className="font-bold text-sm text-foreground">Teaching Materials & Media</h4>
                     <span className="text-[11px] text-primary font-medium">✓ एक भन्दा बढी टिक लगाउन सकिने</span>
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
@@ -702,9 +698,7 @@ export function SupervisionTab({
 
                 {/* खण्ड ४: समयको पालना तथा कक्षा व्यवस्थापन */}
                 <div className="rounded-xl border border-border/80 bg-secondary/20 p-3.5 space-y-3">
-                  <h4 className="font-bold text-sm text-foreground">
-                    ४. समयको पालना तथा कक्षा व्यवस्थापन (Time Management & Discipline)
-                  </h4>
+                  <h4 className="font-bold text-sm text-foreground">Time Management & Discipline</h4>
                   <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
                     <div>
                       <label className="lbl">समयको पालना (Punctuality)</label>
@@ -762,9 +756,7 @@ export function SupervisionTab({
 
                 {/* खण्ड ५: विद्यार्थी सहभागिता तथा अन्तरक्रिया */}
                 <div className="rounded-xl border border-border/80 bg-secondary/20 p-3.5 space-y-3">
-                  <h4 className="font-bold text-sm text-foreground">
-                    ५. विद्यार्थी सहभागिता तथा अन्तरक्रिया (Student Engagement & Interactivity)
-                  </h4>
+                  <h4 className="font-bold text-sm text-foreground">Student Engagement & Interactivity</h4>
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div>
                       <label className="lbl">सहभागिताको स्तर (Engagement Level)</label>
@@ -808,9 +800,7 @@ export function SupervisionTab({
 
                 {/* खण्ड ६: विद्यार्थी मूल्याङ्कन तथा सिकाइ परीक्षण */}
                 <div className="rounded-xl border border-border/80 bg-secondary/20 p-3.5 space-y-3">
-                  <h4 className="font-bold text-sm text-foreground">
-                    ६. सिकाइ परीक्षण तथा विद्यार्थी मूल्याङ्कन (Assessment & Evaluation during Class)
-                  </h4>
+                  <h4 className="font-bold text-sm text-foreground">Assessment & Evaluation during Class</h4>
 
                   <div className="space-y-1.5">
                     <label className="lbl">कक्षामा प्रयोग गरिएका मूल्याङ्कन विधिहरू (Assessment Methods Used)</label>
@@ -910,9 +900,7 @@ export function SupervisionTab({
 
                 {/* खण्ड ८: समग्र ग्रेड तथा हस्ताक्षर */}
                 <div className="rounded-xl border border-border/80 bg-secondary/20 p-3.5 space-y-3">
-                  <h4 className="font-bold text-sm text-foreground">
-                    ९. समग्र स्तर निर्धारण तथा पर्यवेक्षक विवरण (Overall Rating & Sign-off)
-                  </h4>
+                  <h4 className="font-bold text-sm text-foreground">Overall Rating & Sign-off</h4>
                   <div className="grid gap-3 sm:grid-cols-4">
                     <div>
                       <label className="lbl">समग्र स्तर (Overall Grade) *</label>
@@ -991,7 +979,7 @@ export function SupervisionTab({
               </div>
 
               <div className="p-2 sm:p-4">
-                <PrintHead title={`कक्षा शिक्षण अवलोकन तथा मूल्याङ्कन प्रतिवेदन — ${deptName || "Department"}`} />
+                <PrintHead title={`Classroom Observation Report — ${deptName || "Department"}`} />
 
                 <div className="mb-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 border-y border-border py-2.5 bg-muted/20">
                   <div>विभाग: <b>{deptName || "—"}</b></div>
@@ -1094,7 +1082,7 @@ export function SupervisionTab({
           <section className="panel">
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-base text-primary">कक्षा अवलोकन अभिलेख (Class Observation Logs)</h3>
+                <h3 className="font-bold text-base text-primary">Class Observation Logs</h3>
                 <p className="text-xs text-muted-foreground">
                   विभागका शिक्षकहरूको कक्षा अवलोकन, बहु-शिक्षण विधि, सामग्री, विद्यार्थी सहभागिता र सुझावहरूको अभिलेख
                 </p>
@@ -1214,7 +1202,7 @@ export function SupervisionTab({
         <section className="panel space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
             <div>
-              <h3 className="font-bold text-base text-primary">मासिक / आवधिक प्रतिवेदन समीक्षा (Monthly Report Review)</h3>
+              <h3 className="font-bold text-base text-primary">Monthly Report Review</h3>
               <p className="text-xs text-muted-foreground">
                 विभागीय शिक्षकहरूको मासिक शिक्षण प्रगति, कार्यघन्टा र डायरी विवरणको अनुगमन तथा विभागीय प्रमुखको समीक्षा टिप्पणी
               </p>
@@ -1369,7 +1357,7 @@ export function SupervisionTab({
             <section className="no-print panel mb-4 rounded-xl border border-primary/40 bg-card p-5 shadow-lg space-y-4">
               <div className="flex items-center justify-between border-b border-border pb-2.5">
                 <h3 className="font-bold text-base text-primary">
-                  {meetingForm.id ? "विभागीय बैठक सम्पादन (Edit Meeting)" : "नयाँ विभागीय बैठक तथा निर्णय (New Department Meeting & Minutes)"}
+                  {meetingForm.id ? "Edit Meeting" : "New Department Meeting & Minutes"}
                 </h3>
                 <button type="button" className="btn-soft !py-1 !px-2 text-xs" onClick={() => setIsEditingMeeting(false)}>
                   ✕ बन्द गर्नुहोस्
@@ -1500,7 +1488,7 @@ export function SupervisionTab({
               </div>
 
               <div className="p-2 sm:p-4">
-                <PrintHead title={`विभागीय बैठकको निर्णय पुस्तिका (Meeting Minutes) — ${deptName || "Department"}`} />
+                <PrintHead title={`Department Meeting Minutes — ${deptName || "Department"}`} />
 
                 <div className="mb-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 border-y border-border py-2.5 bg-muted/20">
                   <div>विभाग: <b>{deptName || "—"}</b></div>
@@ -1554,7 +1542,7 @@ export function SupervisionTab({
           <section className="panel">
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-base text-primary">विभागीय बैठक तथा निर्णय अभिलेख (Departmental Meetings & Minutes)</h3>
+                <h3 className="font-bold text-base text-primary">Departmental Meetings & Minutes</h3>
                 <p className="text-xs text-muted-foreground">
                   विभागका नियमित मासिक बैठक, निर्णय तथा कार्यान्वयन कार्ययोजनाको आधिकारिक अभिलेख
                 </p>

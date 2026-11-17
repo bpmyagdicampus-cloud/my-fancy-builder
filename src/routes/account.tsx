@@ -42,7 +42,7 @@ function Account() {
 
   if (c.status !== "ready" || !c.me) {
     return (
-      <Page title="My account · मेरो खाता" sub="Sign in to manage your account.">
+      <Page title="My account" sub="Sign in to manage your account.">
         <p className="text-sm text-muted-foreground">
           कृपया आफ्नो खाता व्यवस्थापन गर्न{" "}
           <a className="underline font-semibold text-primary" href="/login">
@@ -102,7 +102,7 @@ function Account() {
 
   return (
     <Page
-      title="My account · मेरो खाता"
+      title="My account"
       sub={`${me.name} · ID: ${loginOf(c.email)} · ${c.roles.join(", ")}`}
       actions={
         <button type="button" className="btn-danger" onClick={() => void handleSignOut()}>
@@ -120,7 +120,7 @@ function Account() {
         {view === "profile" && (
           <>
             <section className="panel md:col-span-2">
-              <h2 className="mb-3 text-lg font-bold">Profile · प्रोफाइल</h2>
+              <h2 className="mb-3 text-lg font-bold">Profile</h2>
               <div className="mb-3 flex items-center gap-4">
                 <Avatar name={me.name} path={me.avatar_path} size={72} />
                 <label className="btn-soft cursor-pointer">
@@ -181,7 +181,7 @@ function Account() {
         )}
         {view === "password" && (
           <section className="panel">
-            <h2 className="mb-3 text-lg font-bold">Change password · पासवर्ड परिवर्तन</h2>
+            <h2 className="mb-3 text-lg font-bold">Change password</h2>
             <div className="space-y-2">
               <input
                 className="field"
@@ -207,7 +207,7 @@ function Account() {
         )}
         {view === "theme" && (
           <section className="panel md:col-span-2">
-            <h2 className="mb-3 text-lg font-bold">Change theme · थिम परिवर्तन</h2>
+            <h2 className="mb-3 text-lg font-bold">Change theme</h2>
             <p className="mb-2 text-xs text-muted-foreground">Choose a background colour, or use your own photo.</p>
             <div className="flex flex-wrap gap-2">
               {BG_PRESETS.map((p) => (

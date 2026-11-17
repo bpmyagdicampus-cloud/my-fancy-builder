@@ -133,9 +133,7 @@ export function PeerObservationSection() {
       {/* Header Bar */}
       <div className="no-print flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
         <div>
-          <h3 className="font-bold text-base text-primary">
-            Peer Teaching Observation · सहकर्मी शिक्षण अवलोकन फाराम
-          </h3>
+          <h3 className="font-bold text-base text-primary">Peer Teaching Observation</h3>
           <p className="text-xs text-muted-foreground">
             एक शिक्षकले अर्को शिक्षकको कक्षा अवलोकन गरी रचनात्मक पृष्ठपोषण आदानप्रदान गर्ने आधिकारिक फारम (पूर्णाङ्क ५०)
           </p>
@@ -182,7 +180,7 @@ export function PeerObservationSection() {
             <div>
               <div className="text-xs font-bold text-primary tracking-wide uppercase">Myagdi Multiple Campus, Beni, Myagdi</div>
               <h3 className="font-black text-lg text-foreground">
-                {form.id ? "सहकर्मी शिक्षण अवलोकन सम्पादन (Edit Form)" : "Peer Teaching Observation Form (सहकर्मी शिक्षण अवलोकन फाराम)"}
+                {form.id ? "Edit Form" : "Peer Teaching Observation Form"}
               </h3>
             </div>
             <button
@@ -197,9 +195,7 @@ export function PeerObservationSection() {
           <form onSubmit={handleSave} className="space-y-6 text-xs">
             {/* SECTION A: General Information */}
             <div className="rounded-xl border border-border bg-secondary/20 p-4 space-y-3">
-              <h4 className="font-bold text-sm text-primary border-b border-border pb-1">
-                Section A: General Information (सामान्य विवरण)
-              </h4>
+              <h4 className="font-bold text-sm text-primary border-b border-border pb-1">Section A: General Information</h4>
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
                   <label className="lbl">शिक्षकको नाम (Name of Teacher Observed) *</label>
@@ -333,9 +329,7 @@ export function PeerObservationSection() {
             <div className="rounded-xl border border-border bg-card p-4 space-y-4 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2.5">
                 <div>
-                  <h4 className="font-bold text-sm text-primary">
-                    Section B: Classroom Observation (कक्षा अवलोकन - १० सूचकहरू)
-                  </h4>
+                  <h4 className="font-bold text-sm text-primary">Section B: Classroom Observation</h4>
                   <p className="text-[11px] text-muted-foreground">
                     तलका प्रत्येक सूचकमा १ देखि ५ सम्म उपयुक्त अंक दिनुहोस्। (५ = उत्कृष्ट, ४ = धेरै राम्रो, ३ = राम्रो, २ = सन्तोषजनक, १ = सुधार आवश्यक)
                   </p>
@@ -415,9 +409,7 @@ export function PeerObservationSection() {
 
             {/* SECTION C: Feedback and Suggestions */}
             <div className="rounded-xl border border-border bg-secondary/20 p-4 space-y-3.5">
-              <h4 className="font-bold text-sm text-primary border-b border-border pb-1">
-                Section C: Feedback and Suggestions (पृष्ठपोषण तथा सुझाव)
-              </h4>
+              <h4 className="font-bold text-sm text-primary border-b border-border pb-1">Section C: Feedback and Suggestions</h4>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
@@ -472,9 +464,7 @@ export function PeerObservationSection() {
 
             {/* SECTION D: Confirmation */}
             <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-              <h4 className="font-bold text-sm text-primary border-b border-border pb-1">
-                Section D: Confirmation & Signatures (हस्ताक्षर तथा मिति)
-              </h4>
+              <h4 className="font-bold text-sm text-primary border-b border-border pb-1">Section D: Confirmation & Signatures</h4>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-lg border border-border p-3 bg-secondary/10 space-y-2">
                   <div className="font-bold text-xs text-foreground">अवलोकनकर्ता (Observer):</div>
@@ -537,9 +527,7 @@ export function PeerObservationSection() {
             <div className="text-center mb-3">
               <h2 className="font-black text-base text-primary uppercase">MYAGDI MULTIPLE CAMPUS</h2>
               <div className="text-xs font-semibold text-muted-foreground">Beni, Myagdi</div>
-              <h3 className="font-black text-sm mt-1 border-b border-border pb-1">
-                Peer Teaching Observation Form (सहकर्मी शिक्षण अवलोकन फाराम)
-              </h3>
+              <h3 className="font-black text-sm mt-1 border-b border-border pb-1">Peer Teaching Observation Form</h3>
             </div>
 
             {/* Section A */}
@@ -662,7 +650,7 @@ export function PeerObservationSection() {
       <section className="panel">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <h4 className="font-bold text-sm text-primary">मेरो सहकर्मी अवलोकन अभिलेख (Observations Conducted by Me)</h4>
+            <h4 className="font-bold text-sm text-primary">Observations Conducted by Me</h4>
             <p className="text-xs text-muted-foreground">
               तपाईंले अन्य सहकर्मी शिक्षकहरूको कक्षा अवलोकन गरी प्रदान गर्नुभएको आधिकारिक फारामहरूको सूची
             </p>

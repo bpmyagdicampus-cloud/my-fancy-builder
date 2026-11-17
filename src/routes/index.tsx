@@ -58,7 +58,7 @@ function Home() {
       <main className="mx-auto max-w-2xl px-4 py-16 text-center">
         <div className="panel py-10">
           <img src="/icon-192.png" alt="शिक्षक डायरी" className="mx-auto mb-3 h-16 w-16 rounded-2xl shadow-sm" />
-          <h1 className="font-display text-4xl text-primary sm:text-5xl">शिक्षक डायरी</h1>
+          <h1 className="font-display text-4xl text-primary sm:text-5xl">Shikshak Diary</h1>
           <p className="mt-1 text-sm font-semibold tracking-wide text-muted-foreground">
             Teacher's Diary · Academic Management System
           </p>
@@ -349,9 +349,7 @@ function Home() {
       <section className="panel mb-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2.5">
           <div>
-            <h2 className="text-base font-bold sm:text-lg">
-              Campus Annual Calendar · क्याम्पस वार्षिक क्यालेन्डर
-            </h2>
+            <h2 className="text-base font-bold sm:text-lg">Campus Annual Calendar</h2>
             <p className="text-xs text-muted-foreground">
               क्याम्पस प्रशासनद्वारा निर्धारित वार्षिक शैक्षिक कार्यक्रम, परीक्षा र बिदाहरू
             </p>

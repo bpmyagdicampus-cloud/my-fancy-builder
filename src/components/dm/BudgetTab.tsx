@@ -87,7 +87,7 @@ export function BudgetTab({
   if (!canManage) {
     return (
       <section className="panel">
-        <h2 className="mb-1 text-lg font-bold">Budget & Expenditure · बजेट तथा खर्च व्यवस्थापन</h2>
+        <h2 className="mb-1 text-lg font-bold">Budget & Expenditure</h2>
         <p className="text-sm text-muted-foreground">
           बजेट र खर्च सम्बन्धी विवरण विभागीय प्रमुख र क्याम्पस प्रशासनले मात्र हेर्न र व्यवस्थापन गर्न सक्छन्। · Budget lines and
           expenses are visible only to the Department Head and Administration.
@@ -232,8 +232,8 @@ export function BudgetTab({
         value={subTab}
         onChange={setSubTab}
         items={[
-          ["lines", `Budget lines & revisions · बजेट शीर्षक (${yearLines.length})`],
-          ["expenses", `Expenses & vouchers · खर्च अभिलेख (${yearExpenses.length})`],
+          ["lines", `Budget lines & revisions (${yearLines.length})`],
+          ["expenses", `Expenses & vouchers (${yearExpenses.length})`],
         ]}
       />
 
@@ -254,7 +254,7 @@ export function BudgetTab({
           {lineEd && (
             <section className="panel mb-4 border-primary/40">
               <h3 className="mb-3 text-lg font-bold">
-                {lineEd.id ? "Edit budget line · बजेट शीर्षक सम्पादन" : "New budget line · नयाँ बजेट शीर्षक"}
+                {lineEd.id ? "Edit budget line" : "New budget line"}
               </h3>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="sm:col-span-2">
@@ -340,7 +340,7 @@ export function BudgetTab({
 
           {revReq && (
             <section className="panel mb-4 border-primary/40">
-              <h3 className="mb-1 text-base font-bold">Request Budget Revision · बजेट संशोधन अनुरोध</h3>
+              <h3 className="mb-1 text-base font-bold">Request Budget Revision</h3>
               <p className="mb-3 text-xs text-muted-foreground">
                 {revReq.title} (हाल स्वीकृत: {money(revReq.currentApproved)})
               </p>
@@ -631,7 +631,7 @@ export function BudgetTab({
           {expEd && (
             <section className="panel mb-4 border-primary/40">
               <h3 className="mb-3 text-lg font-bold">
-                {expEd.id ? "Edit expense · खर्च सम्पादन" : "Record expense · खर्च प्रविष्टि"}
+                {expEd.id ? "Edit expense" : "Record expense"}
               </h3>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>

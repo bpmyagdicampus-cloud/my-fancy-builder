@@ -107,7 +107,7 @@ function Plans() {
               ))}</tbody>
             </table>
             {data.cal.length > 0 && (<>
-              <h3 className="mb-1 mt-4 font-semibold">Academic calendar · कार्यतालिका</h3>
+              <h3 className="mb-1 mt-4 font-semibold">Academic calendar</h3>
               <table className="rtable"><thead><tr><th>Activity</th><th>Note</th><th>From</th><th>To</th></tr></thead>
                 <tbody>{[...data.cal].sort((a, b) => a.from.localeCompare(b.from)).map((e) => <tr key={e.id}><td>{e.type}</td><td>{e.title}</td><td>{fmtBs(e.from)}</td><td>{e.to ? fmtBs(e.to) : ""}</td></tr>)}</tbody></table>
             </>)}
@@ -146,7 +146,7 @@ function Plans() {
           {guide && (
             <section className="panel no-print mb-3">
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <h2 className="flex-1 text-lg font-bold">कुन कुरा कहिले भर्ने? · Guide</h2>
+                <h2 className="flex-1 text-lg font-bold">Guide</h2>
                 <button type="button" className="btn-soft" onClick={() => setSample((v) => !v)}>{sample ? "Hide sample lesson plan" : "नमुना पाठ योजना हेर्नुहोस्"}</button>
                 <button type="button" className="btn-soft" onClick={() => setGuide(false)}>Close</button>
               </div>

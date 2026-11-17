@@ -45,18 +45,18 @@ function Setup() {
   if (!profile) return <NeedProfile />;
   return (
     <Page
-      title="Setup · सेटअप र व्यवस्थापन"
+      title="Setup"
       sub="कक्षा, विषय, विद्यार्थी, शिक्षक विवरण, क्याम्पस वार्षिक क्यालेन्डर र प्रोफाइल सेटिङ"
     >
       <Tabs
         value={tab}
         onChange={setTab}
         items={[
-          ["classes", "📚 कक्षा र विषय (Classes & Students)"],
-          ["teachers", "👨‍🏫 शिक्षक विवरण (Teachers)"],
-          ["calendar", "📅 वार्षिक क्यालेन्डर (Annual Calendar)"],
-          ["campus", "🏛️ प्रोफाइल र क्याम्पस (Profile & Campus)"],
-          ["all", "सबै हेर्नुहोस् (All)"],
+          ["classes", "Classes & Subjects"],
+          ["teachers", "Teacher details"],
+          ["calendar", "Annual Calendar"],
+          ["campus", "Profile & Campus"],
+          ["all", "All"],
         ]}
       />
 
@@ -64,9 +64,7 @@ function Setup() {
         <>
           <section className="panel no-print mb-4 flex flex-wrap items-center justify-between gap-3 border-primary/25 bg-gradient-to-r from-primary/5 to-secondary/40">
             <div className="min-w-0 flex-1">
-              <h2 className="text-base font-bold text-primary">
-                🎓 Upgrade & Manage Students · विद्यार्थी व्यवस्थापन र अपग्रेड
-              </h2>
+              <h2 className="text-base font-bold text-primary">🎓 Upgrade & Manage Students</h2>
               <p className="text-xs text-muted-foreground">
                 विद्यार्थी थप्ने, सोही कक्षाका अन्य शिक्षकको विषयबाट तान्ने वा कक्षा अपग्रेड गर्ने। शैक्षिक वर्ष व्यवस्थापनका लागि{" "}
                 <Link to="/years" className="font-semibold text-primary underline">
@@ -367,7 +365,7 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
       {edEvent && canEdit && (
         <div className="mb-4 rounded-lg border border-primary/40 bg-secondary/40 p-3 text-sm">
           <h3 className="mb-3 font-bold">
-            {edEvent.id ? "Edit Event · कार्यक्रम सम्पादन" : "New Event · नयाँ कार्यक्रम"}
+            {edEvent.id ? "Edit Event" : "New Event"}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
@@ -579,7 +577,7 @@ function TeacherDetailsSection() {
     <section className="panel no-print mb-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-bold">Teacher details · शिक्षक विवरण</h2>
+          <h2 className="text-lg font-bold">Teacher details</h2>
           <p className="text-xs text-muted-foreground">
             {profile?.name}
             {profile?.designation ? ` · ${profile.designation}` : ""}
@@ -675,7 +673,7 @@ function WeeklyOff({ canEdit }: { canEdit: boolean }) {
   });
   return (
     <section className="panel no-print mb-4">
-      <h2 className="mb-1 text-lg font-bold">Weekly holidays · साप्ताहिक बिदा</h2>
+      <h2 className="mb-1 text-lg font-bold">Weekly holidays</h2>
       <p className="mb-3 text-xs text-muted-foreground">Selected days are shaded as holidays in the monthly report and warned about when saving a diary entry. {canEdit ? "" : "Only the administrator can change these."}</p>
       <div className="flex flex-wrap gap-2">
         {DAYS.map(([k, l]) => (
@@ -884,8 +882,7 @@ function ClassesByDept() {
 
       <section className="panel no-print mb-4">
         <div className="mb-3 flex items-center gap-2">
-          <h2 className="flex-1 text-lg font-bold">
-            Classes · कक्षा <span className="text-sm font-normal text-muted-foreground">({list.length})</span>
+          <h2 className="flex-1 text-lg font-bold">Classes<span className="text-sm font-normal text-muted-foreground">({list.length})</span>
           </h2>
           {!ed && (
             <button
@@ -967,7 +964,7 @@ function ClassesByDept() {
                         className="btn-soft text-xs"
                         onClick={() => setPreviewOpen((v) => !v)}
                       >
-                        {previewOpen ? "Hide list · लुकाउनुहोस्" : `View ${selectedSource?.students.length ?? 0} students · हेर्नुहोस्`}
+                        {previewOpen ? "Hide list · लुकाउनुहोस्" : `विद्यार्थी हेर्नुहोस् (${selectedSource?.students.length ?? 0})`}
                       </button>
                       <button
                         type="button"

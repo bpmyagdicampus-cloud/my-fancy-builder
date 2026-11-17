@@ -34,7 +34,7 @@ export function ReportForm({ classes, teachers, periods, teaching = [], initial,
 
   return (
     <div className="panel space-y-3">
-      <h2 className="text-lg font-bold">{initial ? "Edit report · प्रतिवेदन सच्याउनुहोस्" : "New report · नयाँ प्रतिवेदन"}</h2>
+      <h2 className="text-lg font-bold">{initial ? "Edit report" : "New report"}</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div><label className="lbl">Class · कक्षा</label>
           <select className="field" value={d.class_id} disabled={!!initial} onChange={(e) => set({ class_id: e.target.value })}>

@@ -220,7 +220,7 @@ export function ActivitiesTab({
       {ed && (
         <section className="panel mb-4 border-primary/40">
           <h2 className="mb-3 text-lg font-bold">
-            {ed.id ? "Edit activity · गतिविधि सम्पादन" : "New activity · नयाँ गतिविधि"}{" "}
+            {ed.id ? "Edit activity" : "New activity"}{" "}
             <span className="text-sm font-normal text-muted-foreground">({year})</span>
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -454,7 +454,7 @@ export function ActivitiesTab({
       {/* Progress-only modal for assigned teacher or quick update */}
       {progEd && (
         <section className="panel mb-4 border-primary/40">
-          <h2 className="mb-1 text-lg font-bold">Update Progress · प्रगति विवरण अद्यावधिक</h2>
+          <h2 className="mb-1 text-lg font-bold">Update Progress</h2>
           <p className="mb-3 text-sm text-muted-foreground">{progEd.title}</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>

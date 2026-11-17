@@ -128,7 +128,7 @@ function Admin() {
 
   return (
     <Page
-      title="Admin · प्रशासन तथा खाता व्यवस्थापन"
+      title="Admin"
       sub="शैक्षिक वर्ष नियन्त्रण, नयाँ शिक्षक/विद्यार्थी खाता निर्माण र पासवर्ड व्यवस्थापन"
       actions={
         <button className="btn" onClick={() => setShowNewForm((v) => !v)}>
@@ -142,7 +142,7 @@ function Admin() {
       {(showNewForm || made) && (
         <section className="panel mb-4 border-primary/40 bg-secondary/30">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-primary">➕ New account · नयाँ प्रयोगकर्ता खाता</h2>
+            <h2 className="text-lg font-bold text-primary">➕ New account</h2>
             <button type="button" className="btn-soft !min-h-8 !px-2.5 !py-1 text-xs" onClick={() => setShowNewForm(false)}>
               ✕ बन्द गर्नुहोस्
             </button>
@@ -255,7 +255,7 @@ function Admin() {
 
       {ed && (
         <section className="panel mb-4 border-primary/40 bg-secondary/30">
-          <h2 className="mb-1 text-lg font-bold">✏️ Edit account details · विवरण सम्पादन</h2>
+          <h2 className="mb-1 text-lg font-bold">✏️ Edit account details</h2>
           <p className="mb-3 text-xs text-muted-foreground">
             Login ID: <b>{ed.login}</b>
           </p>
@@ -477,7 +477,7 @@ function Admin() {
       <section className="panel mb-4">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-lg font-bold">📅 Academic year · शैक्षिक वर्ष व्यवस्थापन</h2>
+            <h2 className="text-lg font-bold">📅 Academic year</h2>
             <p className="text-xs text-muted-foreground">
               यहाँबाट सक्रिय (Active) शैक्षिक वर्ष तोक्न वा गल्तीले बनेको शैक्षिक वर्ष हटाउन सकिन्छ।
             </p>

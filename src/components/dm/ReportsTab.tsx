@@ -174,7 +174,7 @@ export function ReportsTab({
         <PrintHead
           title={
             <>
-              <div>विभागीय प्रगति तथा अनुगमन प्रतिवेदन · Departmental Progress Report</div>
+              <div>Departmental Progress Report</div>
               <div className="text-sm font-normal">
                 विभाग: <b>{deptName || "—"}</b> · {periodLabel}
               </div>
@@ -183,7 +183,7 @@ export function ReportsTab({
         />
 
         {/* 1. Executive Summary Table */}
-        <h3 className="mb-1 mt-3 text-sm font-bold">१. सारांश विवरण (Executive Summary)</h3>
+        <h3 className="mb-1 mt-3 text-sm font-bold">Executive Summary</h3>
         <table className="rtable mb-5">
           <thead>
             <tr>
@@ -227,7 +227,7 @@ export function ReportsTab({
         {/* 2. Annual Plans Table */}
         {showPlans && (
           <>
-            <h3 className="mb-1 mt-4 text-sm font-bold">२. वार्षिक योजना विवरण (Annual Plans)</h3>
+            <h3 className="mb-1 mt-4 text-sm font-bold">Annual Plans</h3>
             <table className="rtable mb-5">
               <thead>
                 <tr>
@@ -275,7 +275,7 @@ export function ReportsTab({
         {/* 3. Activities & Progress Table */}
         {showActs && (
           <>
-            <h3 className="mb-1 mt-4 text-sm font-bold">३. गतिविधि तथा प्रगति विवरण (Activities & Progress)</h3>
+            <h3 className="mb-1 mt-4 text-sm font-bold">Activities & Progress</h3>
             <table className="rtable mb-5">
               <thead>
                 <tr>
@@ -337,7 +337,7 @@ export function ReportsTab({
         {/* 4. Budget & Expenses Tables (HOD / Admin only) */}
         {canManage && showBudget && (
           <>
-            <h3 className="mb-1 mt-4 text-sm font-bold">४. बजेट शीर्षक तथा खर्च अवस्था (Budget Lines & Balance)</h3>
+            <h3 className="mb-1 mt-4 text-sm font-bold">Budget Lines & Balance</h3>
             <table className="rtable mb-5">
               <thead>
                 <tr>
@@ -378,7 +378,7 @@ export function ReportsTab({
               </tbody>
             </table>
 
-            <h3 className="mb-1 mt-4 text-sm font-bold">५. खर्च तथा भौचर विवरण (Itemized Expenditure Statement)</h3>
+            <h3 className="mb-1 mt-4 text-sm font-bold">Itemized Expenditure Statement</h3>
             <table className="rtable mb-5">
               <thead>
                 <tr>

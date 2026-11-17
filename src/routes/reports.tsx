@@ -39,7 +39,7 @@ function Reports() {
           ["day", "Daily report"],
           ["student", "Student report"],
           ["progress", "Plan vs progress"],
-          ["peer", "Peer observation feedback · सहकर्मी पृष्ठपोषण"],
+          ["peer", "Peer observation feedback"],
         ]}
       />
       {tab === "month" && <Monthly />}

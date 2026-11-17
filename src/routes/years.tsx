@@ -182,7 +182,7 @@ function Years() {
 
   return (
     <Page
-      title="Academic years · शैक्षिक वर्ष व्यवस्थापन"
+      title="Academic years"
       sub="Each year keeps its own diary, plans, records and students. Mistakenly created years can be safely removed."
     >
       {note && (
@@ -422,7 +422,7 @@ function Years() {
 
       {wiz && (isAdmin || (!!cloudActive && !hasCloudActiveInLocal)) && (
         <section className="panel mb-4 border-primary">
-          <h2 className="mb-1 text-lg font-bold">Start new academic year · नयाँ शैक्षिक वर्ष सुरु गर्नुहोस्</h2>
+          <h2 className="mb-1 text-lg font-bold">Start new academic year</h2>
           <p className="mb-3 text-xs text-muted-foreground">
             The open year ({cur?.name}) is saved as it is and can be reopened any time. Diary, attendance, marks, activities, reminders and leave are never carried over. Everything carried over can be edited afterwards.
           </p>
