@@ -53,7 +53,7 @@ export function FacultyProgressMatrix({ dept, yearName }: { dept: string; yearNa
     <section className="panel mb-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-base font-bold">Faculty Progress Matrix · शिक्षक प्रगति तालिका</h2>
+          <h2 className="text-base font-bold">Faculty Progress Matrix</h2>
           <p className="text-xs text-muted-foreground">
             श्रावण १ देखि · अपेक्षित प्रगति: <b>{prog.expectedPct}%</b> (वर्षको {prog.elapsed}/{prog.total} दिन)
           </p>

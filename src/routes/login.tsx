@@ -6,9 +6,9 @@ import { initPwa, triggerInstallApp, usePwa } from "@/lib/pwa";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Sign in — शिक्षक डायरी (Shikshak Diary)" },
+      { title: "Sign in — Shikshak Diary" },
       { name: "description", content: "Sign in to Shikshak Diary." },
-      { property: "og:title", content: "Sign in — शिक्षक डायरी" },
+      { property: "og:title", content: "Sign in — Shikshak Diary" },
       { property: "og:description", content: "Sign in to Shikshak Diary." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -54,7 +54,7 @@ function Login() {
           alt="शिक्षक डायरी लोगो"
           className="mb-2.5 h-16 w-16 rounded-2xl shadow-sm"
         />
-        <h1 className="font-display text-4xl text-primary">शिक्षक डायरी</h1>
+        <h1 className="font-display text-4xl text-primary">Shikshak Diary</h1>
         <p className="text-sm font-semibold tracking-wide text-muted-foreground">Teacher's Diary</p>
         <p className="mt-1 text-xs text-muted-foreground">
           दैनिक शिक्षण अभिलेख, पाठ योजना, हाजिरी र मासिक प्रतिवेदन प्रणाली

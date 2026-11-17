@@ -91,7 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "शिक्षक डायरी — Shikshak Diary" },
+      { title: "Shikshak Diary" },
       { name: "application-name", content: "शिक्षक डायरी" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
@@ -99,8 +99,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "description", content: "Teacher diary: classes, lesson plans, attendance, assessments and monthly reports." },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "/icon-512.png" },
-      { name: "twitter:card", content: "summary" },
+            { name: "twitter:card", content: "summary" },
       { name: "theme-color", content: "#13265e" },
     ],
     links: [

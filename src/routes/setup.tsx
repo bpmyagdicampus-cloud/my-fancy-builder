@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Page, Tabs, FormFields, Collection, Dt, NeedProfile, BsDate, type Field } from "@/components/app/ui";
 import { mutate, updateData, uid, useTeacher, studentsOf, type Cls } from "@/lib/store";
 import { weeklyOffOf } from "@/lib/migrate";
@@ -13,7 +13,6 @@ import { classDataSummary, loadPeerClassSources } from "@/lib/classes";
 import { addStudents } from "@/lib/students";
 import * as D from "@/lib/dm";
 import { EntryDetails, DetailFields } from "@/components/app/EntryDetails";
-import { Button } from "@/components/ui/button";
 import { RowActions, ActionsMenu } from "@/components/app/RowActions";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
@@ -46,18 +45,18 @@ function Setup() {
   if (!profile) return <NeedProfile />;
   return (
     <Page
-      title="Setup · सेटअप र व्यवस्थापन"
+      title="Setup"
       sub="कक्षा, विषय, विद्यार्थी, शिक्षक विवरण, क्याम्पस वार्षिक क्यालेन्डर र प्रोफाइल सेटिङ"
     >
       <Tabs
         value={tab}
         onChange={setTab}
         items={[
-          ["classes", "📚 कक्षा र विषय (Classes & Students)"],
-          ["teachers", "👨‍🏫 शिक्षक विवरण (Teachers)"],
-          ["calendar", "📅 वार्षिक क्यालेन्डर (Annual Calendar)"],
-          ["campus", "🏛️ प्रोफाइल र क्याम्पस (Profile & Campus)"],
-          ["all", "सबै हेर्नुहोस् (All)"],
+          ["classes", "Classes & Subjects"],
+          ["teachers", "Teacher details"],
+          ["calendar", "Annual Calendar"],
+          ["campus", "Profile & Campus"],
+          ["all", "All"],
         ]}
       />
 
@@ -65,9 +64,7 @@ function Setup() {
         <>
           <section className="panel no-print mb-4 flex flex-wrap items-center justify-between gap-3 border-primary/25 bg-gradient-to-r from-primary/5 to-secondary/40">
             <div className="min-w-0 flex-1">
-              <h2 className="text-base font-bold text-primary">
-                🎓 Upgrade & Manage Students · विद्यार्थी व्यवस्थापन र अपग्रेड
-              </h2>
+              <h2 className="text-base font-bold text-primary">🎓 Upgrade & Manage Students</h2>
               <p className="text-xs text-muted-foreground">
                 विद्यार्थी थप्ने, सोही कक्षाका अन्य शिक्षकको विषयबाट तान्ने वा कक्षा अपग्रेड गर्ने। शैक्षिक वर्ष व्यवस्थापनका लागि{" "}
                 <Link to="/years" className="font-semibold text-primary underline">
@@ -368,7 +365,7 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
       {edEvent && canEdit && (
         <div className="mb-4 rounded-lg border border-primary/40 bg-secondary/40 p-3 text-sm">
           <h3 className="mb-3 font-bold">
-            {edEvent.id ? "Edit Event · कार्यक्रम सम्पादन" : "New Event · नयाँ कार्यक्रम"}
+            {edEvent.id ? "Edit Event" : "New Event"}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
@@ -477,6 +474,7 @@ function TeacherDetailsSection() {
   const [loading, setLoading] = useState(false);
   const [note, setNote] = useState("");
   const [editing, setEditing] = useState<SetupTeacher | null>(null);
+  const [viewedTeacher, setViewedTeacher] = useState<SetupTeacher | null>(null);
 
   const signedIn = cl.status === "ready" && !!cl.userId;
   const isAdmin = signedIn ? cl.roles.includes("admin") : true;
@@ -579,7 +577,7 @@ function TeacherDetailsSection() {
     <section className="panel no-print mb-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-bold">Teacher details · शिक्षक विवरण</h2>
+          <h2 className="text-lg font-bold">Teacher details</h2>
           <p className="text-xs text-muted-foreground">
             {profile?.name}
             {profile?.designation ? ` · ${profile.designation}` : ""}
@@ -599,6 +597,7 @@ function TeacherDetailsSection() {
         </button>
       </div>
 
+      <EntryDetails title="Teacher details" open={!!viewedTeacher} onClose={() => setViewedTeacher(null)}>{viewedTeacher && <DetailFields items={PROFILE_FIELDS.map((f) => [f.l, String(viewedTeacher[f.k as keyof SetupTeacher] ?? "—")])} />}</EntryDetails>
       {open && (
         <div className="mt-4 border-t border-border pt-3">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -650,18 +649,7 @@ function TeacherDetailsSection() {
                       .join(" · ") || "No extra details filled yet."}
                   </div>
                 </div>
-                {t.canEdit && (
-                  <button
-                    type="button"
-                    className="btn-soft shrink-0"
-                    onClick={() => {
-                      setEditing({ ...t });
-                      setNote("");
-                    }}
-                  >
-                    Edit · सम्पादन
-                  </button>
-                )}
+                <RowActions onView={() => setViewedTeacher(t)} onEdit={t.canEdit ? () => { setEditing({ ...t }); setNote(""); } : undefined} />
               </div>
             ))}
             {!loading && !teachers.length && (
@@ -685,7 +673,7 @@ function WeeklyOff({ canEdit }: { canEdit: boolean }) {
   });
   return (
     <section className="panel no-print mb-4">
-      <h2 className="mb-1 text-lg font-bold">Weekly holidays · साप्ताहिक बिदा</h2>
+      <h2 className="mb-1 text-lg font-bold">Weekly holidays</h2>
       <p className="mb-3 text-xs text-muted-foreground">Selected days are shaded as holidays in the monthly report and warned about when saving a diary entry. {canEdit ? "" : "Only the administrator can change these."}</p>
       <div className="flex flex-wrap gap-2">
         {DAYS.map(([k, l]) => (
@@ -750,6 +738,7 @@ function ClassesByDept() {
   }, [lk.classes, lk.ready, lk.failed, data.classes]);
 
   // Load peer subjects' students from ALL teachers whenever a class is being created/edited
+  const [viewedClass, setViewedClass] = useState<Cls | null>(null);
   const edCentralId = String(ed?.centralId ?? "").trim();
   const edClassName = String(ed?.name ?? "").trim();
   const edId = String(ed?.id ?? "").trim();
@@ -893,8 +882,7 @@ function ClassesByDept() {
 
       <section className="panel no-print mb-4">
         <div className="mb-3 flex items-center gap-2">
-          <h2 className="flex-1 text-lg font-bold">
-            Classes · कक्षा <span className="text-sm font-normal text-muted-foreground">({list.length})</span>
+          <h2 className="flex-1 text-lg font-bold">Classes<span className="text-sm font-normal text-muted-foreground">({list.length})</span>
           </h2>
           {!ed && (
             <button
@@ -976,7 +964,7 @@ function ClassesByDept() {
                         className="btn-soft text-xs"
                         onClick={() => setPreviewOpen((v) => !v)}
                       >
-                        {previewOpen ? "Hide list · लुकाउनुहोस्" : `View ${selectedSource?.students.length ?? 0} students · हेर्नुहोस्`}
+                        {previewOpen ? "Hide list · लुकाउनुहोस्" : `विद्यार्थी हेर्नुहोस् (${selectedSource?.students.length ?? 0})`}
                       </button>
                       <button
                         type="button"
@@ -1031,14 +1019,15 @@ function ClassesByDept() {
           </div>
         )}
 
+        <EntryDetails title="Class details" open={!!viewedClass} onClose={() => setViewedClass(null)}>{viewedClass && <DetailFields items={[["Class", viewedClass.name], ["Subject", viewedClass.subject], ["Code", viewedClass.code], ["Lecture hours", viewedClass.totalLh], ["Students", studentsOf(viewedClass).join(", ")]]} />}</EntryDetails>
         <ul className="divide-y divide-border">
           {list.map((c) => (
             <li
               key={c.id}
               className="cursor-pointer py-2.5 text-sm hover:bg-muted/50"
-              onClick={() => setEd(structuredClone(c))}
+              onClick={() => setViewedClass(c)}
             >
-              <div className="flex items-start gap-2">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <DeptTag deptId={c.deptId} />
                   <b>{c.name}</b> · {c.subject} {c.code && `(${c.code})`}
@@ -1050,23 +1039,10 @@ function ClassesByDept() {
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    type="button"
-                    className="btn-soft"
-                    title="Add, pull from other teachers' subjects, edit or move students of this class"
-                    onClick={() => {
-                      try {
-                        sessionStorage.setItem("shikshak-students-cls", c.id);
-                      } catch {
-                        /* ignore */
-                      }
-                      void nav({ to: "/students" });
-                    }}
-                  >
-                    Students
-                  </button>
                   <ClassRowDots
                     items={[
+                      ["हेर्नुहोस्", () => setViewedClass(c)],
+                      ["Students", () => { sessionStorage.setItem("shikshak-students-cls", c.id); void nav({ to: "/students" }); }],
                       ["Edit · सम्पादन", () => setEd(structuredClone(c))],
                       [
                         c.closed ? "Enable · सक्रिय बनाउने" : "Disable · निष्क्रिय बनाउने",

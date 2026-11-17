@@ -57,7 +57,7 @@ export function LeaveNotices({ userId, today, departments, managedDeptIds }: Pro
   return (
     <section className="panel mb-5">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-bold">Leave Notices · विदा सूचना</h2>
+        <h2 className="text-base font-bold">Leave Notices</h2>
         <span className="text-[11px] text-muted-foreground">
           विदा थप्ने: Records → Leave
         </span>

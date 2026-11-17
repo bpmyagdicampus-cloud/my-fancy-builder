@@ -71,7 +71,7 @@ export function PlansTab({ dept, year, admin, canManage, onChanged }: { dept: st
 
       {ed && (
         <section className="panel mb-4">
-          <h2 className="mb-3 text-lg font-bold">{ed.id ? "Edit plan · योजना सम्पादन" : "New plan · नयाँ योजना"} <span className="text-sm font-normal text-muted-foreground">({year})</span></h2>
+          <h2 className="mb-3 text-lg font-bold">{ed.id ? "Edit plan" : "New plan"} <span className="text-sm font-normal text-muted-foreground">({year})</span></h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {field("title", "Plan / programme title · योजना वा कार्यक्रम", true)}
             {field("objectives", "Objectives · उद्देश्य", true)}

@@ -112,7 +112,7 @@ export function AppNav() {
         <Link to="/" className="flex shrink-0 items-center gap-2 leading-none text-primary md:hidden">
           <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-8 w-8 shrink-0 rounded-lg shadow-sm" />
           <div className="whitespace-nowrap">
-            <span className="block font-display text-base sm:text-lg">शिक्षक डायरी</span>
+            <span className="block font-display text-base sm:text-lg">Shikshak Diary</span>
             <span className="block text-[10px] font-medium tracking-wide text-muted-foreground">
               Teacher's Diary
             </span>
@@ -123,7 +123,7 @@ export function AppNav() {
         <div className="hidden min-w-0 items-center gap-2.5 md:flex">
           <Link to="/" className="flex shrink-0 items-center gap-2 text-primary">
             <img src="/icon-192.png" alt="शिक्षक डायरी" className="h-8 w-8 shrink-0 rounded-lg shadow-sm" />
-            <span className="font-display text-lg tracking-wide text-primary">शिक्षक डायरी</span>
+            <span className="font-display text-lg tracking-wide text-primary">Shikshak Diary</span>
           </Link>
           <span className="text-muted-foreground/50">|</span>
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-secondary/70 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-primary">
@@ -165,8 +165,7 @@ export function AppNav() {
                   onMouseDown={() => navigateSub(s)}
                   className="flex w-full flex-col rounded-lg px-2.5 py-1.5 text-left text-xs transition hover:bg-secondary"
                 >
-                  <span className="font-semibold text-foreground">{s.labelNe}</span>
-                  <span className="text-[10px] text-muted-foreground">{s.labelEn}</span>
+                  <span className="font-semibold text-foreground">{s.labelEn}</span>
                 </button>
               ))}
             </div>
@@ -270,7 +269,6 @@ export function AppNav() {
                             className="block w-full border-b border-border px-4 py-2.5 text-left last:border-b-0 hover:bg-muted"
                           >
                             <span className="block text-sm font-semibold text-foreground">{sub.labelEn}</span>
-                            <span className="block text-xs text-muted-foreground">{sub.labelNe}</span>
                           </button>
                         ))}
                       </div>

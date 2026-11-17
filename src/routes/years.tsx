@@ -1,3 +1,4 @@
+import { RowActions } from "@/components/app/RowActions";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Page, NeedProfile } from "@/components/app/ui";
@@ -181,7 +182,7 @@ function Years() {
 
   return (
     <Page
-      title="Academic years · शैक्षिक वर्ष व्यवस्थापन"
+      title="Academic years"
       sub="Each year keeps its own diary, plans, records and students. Mistakenly created years can be safely removed."
     >
       {note && (
@@ -322,19 +323,7 @@ function Years() {
                         {isAdmin ? "Inactive" : "View only"}
                       </span>
                     )}
-                    {canDelThis && (
-                      <button
-                        type="button"
-                        className="mt-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-destructive hover:bg-destructive/10"
-                        title="गल्तीले बनेको यो शैक्षिक वर्ष हटाउनुहोस्"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void handleDeleteYear(y.id, y.name);
-                        }}
-                      >
-                        🗑 हटाउनुहोस्
-                      </button>
-                    )}
+                    <RowActions onView={() => run((d) => switchYear(d, y.id), `Opened ${y.name}.`, true)} onDelete={canDelThis ? () => void handleDeleteYear(y.id, y.name) : undefined} />
                   </div>
                 </div>
               </div>
@@ -433,7 +422,7 @@ function Years() {
 
       {wiz && (isAdmin || (!!cloudActive && !hasCloudActiveInLocal)) && (
         <section className="panel mb-4 border-primary">
-          <h2 className="mb-1 text-lg font-bold">Start new academic year · नयाँ शैक्षिक वर्ष सुरु गर्नुहोस्</h2>
+          <h2 className="mb-1 text-lg font-bold">Start new academic year</h2>
           <p className="mb-3 text-xs text-muted-foreground">
             The open year ({cur?.name}) is saved as it is and can be reopened any time. Diary, attendance, marks, activities, reminders and leave are never carried over. Everything carried over can be edited afterwards.
           </p>

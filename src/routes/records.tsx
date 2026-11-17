@@ -26,7 +26,7 @@ function Records() {
   if (!profile) return <NeedProfile />;
   return (
     <Page title="Records">
-      <Tabs value={tab} onChange={setTab} items={[["assess", "Student assessment & exams"], ["acts", "Research & other activities"], ["peer", "Peer observation · सहकर्मी अवलोकन"], ["rem", "Reminders"], ["leave", "Leave · बिदा"]]} />
+      <Tabs value={tab} onChange={setTab} items={[["assess", "Student assessment & exams"], ["acts", "Research & other activities"], ["peer", "Peer observation"], ["rem", "Reminders"], ["leave", "Leave"]]} />
       {tab === "assess" && <Assessments />}
       {tab === "peer" && <PeerObservationSection />}
       {tab === "acts" && <Collection k="acts" title="Activities beyond teaching"

@@ -40,7 +40,7 @@ export function CampusSetup() {
   };
 
   if (cl.status !== "ready" || !cl.userId) return null;
-  if (err && !d) return <section className="panel no-print mb-4"><h2 className="mb-2 text-lg font-bold">Campus · क्याम्पस</h2><p className="rounded-md border border-destructive p-3 text-sm text-destructive">{err}</p><button className="btn-soft mt-2" onClick={() => void load()}>Try again</button></section>;
+  if (err && !d) return <section className="panel no-print mb-4"><h2 className="mb-2 text-lg font-bold">Campus</h2><p className="rounded-md border border-destructive p-3 text-sm text-destructive">{err}</p><button className="btn-soft mt-2" onClick={() => void load()}>Try again</button></section>;
   if (!d) return <section className="panel no-print mb-4"><p className="text-sm text-muted-foreground">Loading campus set-up…</p></section>;
 
   const myDepts = d.heads.filter((h) => h.user_id === cl.userId).map((h) => h.department_id);
@@ -52,7 +52,7 @@ export function CampusSetup() {
       {note && <p className="my-3 rounded-md border border-primary p-2 text-sm">{note}</p>}
 
       <div className="mt-4 border-t border-border pt-3">
-        <h3 className="mb-2 text-base font-bold">Departments · विभाग</h3>
+        <h3 className="mb-2 text-base font-bold">Departments</h3>
         <div className="flex flex-wrap gap-2">
           {d.departments.map((x) => (
             <button key={x.id} className={dept === x.id ? "chip-on" : "chip"} onClick={() => { setDept(x.id); setNote(""); }}>{x.name}</button>
@@ -73,7 +73,7 @@ export function CampusSetup() {
           </div>
           <Heads d={d} dept={curDept} users={users} admin={admin} act={act} />
 
-          <h4 className="mb-2 mt-4 font-semibold">Classes in this department · कक्षा</h4>
+          <h4 className="mb-2 mt-4 font-semibold">Classes in this department</h4>
           <div className="flex flex-wrap gap-2">
             {d.classes.filter((c) => c.department_id === curDept.id).map((c) => <span key={c.id} className="chip">{c.name}</span>)}
             {!d.classes.some((c) => c.department_id === curDept.id) && <span className="text-sm text-muted-foreground">No classes yet.</span>}
@@ -106,7 +106,7 @@ function Institution({ d, admin, act }: { d: C.CampusData; admin: boolean; act: 
   if (edit && admin) {
     return (
       <div>
-        <h2 className="mb-3 text-lg font-bold">Institutional profile · संस्थागत विवरण</h2>
+        <h2 className="mb-3 text-lg font-bold">Institutional profile</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {F("name", "Campus name · क्याम्पसको नाम", true)}{F("address", "Address · ठेगाना", true)}
           {F("website", "Website")}{F("email", "Email")}{F("phone", "Phone · फोन नं.")}

@@ -86,7 +86,7 @@ export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
 
   return (
     <section className="panel mb-4" id="popup-notice-form">
-      <h2 className="text-lg font-bold">📢 पप-अप सूचना (Popup Notice)</h2>
+      <h2 className="text-lg font-bold">Popup Notice</h2>
       <p className="mb-3 text-xs text-muted-foreground">
         सक्रिय सबैभन्दा नयाँ सूचना सबै प्रयोगकर्तालाई एक पटक देखिन्छ। बन्द गरेपछि सोही सूचना फेरि देखिँदैन।
       </p>
@@ -149,7 +149,7 @@ export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
         )}
       </div>
 
-      <h3 className="mb-2 mt-5 text-sm font-bold">भइरहेका सूचनाहरू</h3>
+      <h3 className="mb-2 mt-5 text-sm font-bold">Existing notices</h3>
       {loading ? (
         <p className="text-xs text-muted-foreground">लोड हुँदै…</p>
       ) : !items.length ? (

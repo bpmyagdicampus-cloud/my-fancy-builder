@@ -73,7 +73,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (c.status === "loading" || (c.status === "anon" && !c.localMode))
     return (
       <Center>
-        <h1 className="font-display text-3xl text-primary">शिक्षक डायरी</h1>
+        <h1 className="font-display text-3xl text-primary">Shikshak Diary</h1>
         <p className="text-sm text-muted-foreground">Loading… / लोड हुँदैछ…</p>
       </Center>
     );

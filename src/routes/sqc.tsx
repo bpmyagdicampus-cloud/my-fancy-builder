@@ -176,13 +176,13 @@ function Sqc() {
 
   if (c.status !== "ready") return null;
   const tabs: [T, string][] = [];
-  if (admin || isRep) tabs.push(["new", "New record · नयाँ"]);
-  tabs.push(["list", "Reports · प्रतिवेदन"], ["summary", "Summary · सारांश"]);
-  if (admin) tabs.push(["setup", "Setup · सेटअप"]);
+  if (admin || isRep) tabs.push(["new", "New record"]);
+  tabs.push(["list", "Reports"], ["summary", "Summary"]);
+  if (admin) tabs.push(["setup", "Setup"]);
 
   return (
     <Page
-      title="SQC · विद्यार्थी गुणस्तर नियन्त्रण"
+      title="SQC"
       sub="Student Quality Control — class reports on teaching and learning, with administrator response and follow-up."
     >
       {state === "loading" && <p className="text-sm text-muted-foreground">Loading…</p>}

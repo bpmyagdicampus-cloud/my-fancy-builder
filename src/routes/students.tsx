@@ -93,7 +93,7 @@ function Students() {
   const selectedSource = visibleSources.find((s) => s.key === selectedSourceKey) ?? visibleSources[0] ?? null;
 
   return (
-    <Page title="Upgrade Students · विद्यार्थी व्यवस्थापन र अपग्रेड" sub="Add or pull students from other teachers' subjects of the same class, rename students, or upgrade classes.">
+    <Page title="Upgrade Students" sub="Add or pull students from other teachers' subjects of the same class, rename students, or upgrade classes.">
       <div className="no-print mb-3 flex flex-wrap items-center gap-3">
         <div className="w-72">
           <label className="lbl">Select class & subject · कक्षा र विषय छान्नुहोस्</label>
@@ -167,7 +167,7 @@ function Students() {
                       className="btn-soft"
                       onClick={() => setPreviewOpen((v) => !v)}
                     >
-                      {previewOpen ? "Hide list · लुकाउनुहोस्" : `View ${selectedSource?.students.length ?? 0} students · हेर्नुहोस्`}
+                      {previewOpen ? "Hide list · लुकाउनुहोस्" : `विद्यार्थी हेर्नुहोस् (${selectedSource?.students.length ?? 0})`}
                     </button>
                     <button
                       type="button"
@@ -308,7 +308,7 @@ function BulkMove({ run }: { run: (fn: (d: Data) => string | null | void) => voi
   };
   return (
     <section className="panel no-print mt-4">
-      <h2 className="mb-2 text-lg font-bold">Move a whole class (Upgrade) · एउटा कक्षाका सबै विद्यार्थी अर्को कक्षामा सार्नुहोस्</h2>
+      <h2 className="mb-2 text-lg font-bold">Move a whole class (Upgrade)</h2>
       <div className="grid gap-2 sm:grid-cols-2">
         <div><label className="lbl">From class</label>
           <select className="field" value={from} onChange={(e) => setFrom(e.target.value)}>
@@ -369,7 +369,7 @@ function RemoveByRoll({ list, run }: { list: { id: string; name: string; roll: n
   };
   return (
     <section className="panel no-print mt-4">
-      <h2 className="mb-1 text-lg font-bold">Remove wrongly added students · रोल नम्बरबाट हटाउने</h2>
+      <h2 className="mb-1 text-lg font-bold">Remove wrongly added students</h2>
       <p className="mb-2 text-xs text-muted-foreground">Type the roll numbers, for example <b>1, 27-57</b>. You will see the names first and must confirm.</p>
       <div className="flex flex-wrap gap-2">
         <input className="field !w-64" placeholder="1, 27-57" value={txt} onChange={(e) => setTxt(e.target.value)} />
