@@ -17,3 +17,4 @@
 - Reports use the `.rtable`, `.no-print` and `.print-only` classes from `src/styles.css` for printing via `window.print()`.
 - Saved collection rows open read-only details before explicit editing; lesson previews remain visible on screen and printable so View never targets print-only content.
 - Saved-list actions use the shared RowActions or ActionsMenu controls; independent legacy lists retain existing action handlers and permission conditions when moved into menus.
+- SQC Home notifications filter the persisted request opt-in and pending status through the signed-in data client; legacy issue columns remain available so merged entry fields never erase stored history implicitly.

@@ -47,6 +47,9 @@ export function reportPayload(d: ReportDraft) {
   if (d.held) o.not_held_reason = String(d.not_held_reason ?? "").trim(); else { o.arrival_time = null; o.departure_time = null; }
   o.arrival_time = d.held ? d.arrival_time || null : null;
   o.departure_time = d.held ? d.departure_time || null : null;
+  // Existing reports with no recorded opt-in remain unchanged when edited.
+  if (d.submit_for_request !== undefined) o.submit_for_request = d.submit_for_request;
+  else if (!d.id) o.submit_for_request = false;
   return o;
 }
 export async function saveReport(d: ReportDraft & { id?: string }): Promise<R<Report>> {

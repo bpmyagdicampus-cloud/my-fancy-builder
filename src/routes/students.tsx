@@ -107,7 +107,7 @@ function Students() {
         <>
           <section className="panel mb-4">
             <h2 className="mb-2 text-lg font-bold">
-              Add students · विद्यार्थी थप्नुहोस् ({curClass?.name} · {curClass?.subject})
+              Add students ({curClass?.name} · {curClass?.subject})
             </h2>
 
             {/* Pull from OTHER teachers' subjects (or own other subjects) of the SAME class */}
@@ -167,7 +167,7 @@ function Students() {
                       className="btn-soft"
                       onClick={() => setPreviewOpen((v) => !v)}
                     >
-                      {previewOpen ? "Hide list · लुकाउनुहोस्" : `विद्यार्थी हेर्नुहोस् (${selectedSource?.students.length ?? 0})`}
+                      {previewOpen ? "Hide list · लुकाउनुहोस्" : `View students (${selectedSource?.students.length ?? 0})`}
                     </button>
                     <button
                       type="button"

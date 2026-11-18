@@ -1,6 +1,8 @@
 # Account access
-- [ ] Move saved-list actions into three-dot menus throughout the app, use Nepali-only viewing labels, and check mobile lesson lists without changing stored data or permissions.
-- [ ] Use English-only menus, submenus and headings while retaining Nepali instructions and information; keep the requested Nepali View action.
+- [x] Move saved-list actions into three-dot menus; mobile lesson View checked with an isolated local profile, no horizontal overflow.
+- [x] Use English-only menus, submenus, interface headings and View actions while retaining Nepali instructions, information and user-entered titles.
+- [x] Add SQC Submit for request checkbox, opted-in pending Home notifications, and merged issue entry; additive migration applied without backfilling reports. Rule tests pass.
+- [ ] Verify SQC submission and Home read-back with the requesting user's account — automatic sign-in cannot match their account; requires preview sign-in.
 - [x] Make saved lesson plans, diary entries, unit plans and calendar events open their details from the list; retain editing and printing. Focused interaction tests pass and build OK.
 - [ ] Verify entry previews with the user's saved data — blocked on preview sign-in: no account matches the requesting user for automatic test access. The existing cloud-recovery test also fails independently of these UI changes; recovery behavior was left unchanged.
 - [x] Resolve publishing failure: restored missing recovery exports, corrected incompatible calls and optional types, removed links to the absent SQC page; build OK, 17 tests pass, repaired pages return 200 without runtime errors.

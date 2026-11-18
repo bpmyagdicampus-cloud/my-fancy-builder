@@ -1,0 +1,3 @@
+ALTER TABLE public.sqc_reports ADD COLUMN IF NOT EXISTS submit_for_request boolean;
+COMMENT ON COLUMN public.sqc_reports.submit_for_request IS 'Explicit opt-in for pending Home request notifications. NULL denotes an existing report with no opt-in recorded; existing reports are not backfilled.';
+CREATE INDEX IF NOT EXISTS sqc_reports_home_requests_idx ON public.sqc_reports (teacher_id, status) WHERE submit_for_request IS TRUE;

@@ -261,7 +261,7 @@ function Years() {
       <section className="panel mb-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-lg font-bold">Years · शैक्षिक वर्षहरू ({data.years.length})</h2>
+            <h2 className="text-lg font-bold">Years ({data.years.length})</h2>
             <p className="text-xs text-muted-foreground">
               कुनै पनि वर्षमा क्लिक गरेर खोल्नुहोस् वा गल्तीले बनेको वर्ष हटाउनुहोस्।
             </p>

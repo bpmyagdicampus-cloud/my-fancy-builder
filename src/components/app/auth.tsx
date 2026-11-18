@@ -114,7 +114,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (!isStaff(c.roles) && path !== "/account" && path !== "/sqc") {
     return (
       <Center>
-        <h1 className="font-display text-2xl text-primary">स्वागत छ, {c.me.name}</h1>
+        <h1 className="font-display text-2xl text-primary">Welcome, {c.me.name}</h1>
         <p className="text-sm text-muted-foreground">
           Class representatives can submit SQC reports. Everyone can change their photo, password and background.
         </p>

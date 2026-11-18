@@ -646,7 +646,7 @@ export function Dt({ d }: { d?: string }) {
 
 export function NeedProfile() {
   return (
-    <Page title="Welcome to Shikshak Diary · शिक्षक डायरीमा स्वागत छ">
+    <Page title="Welcome to Shikshak Diary">
       <div className="panel text-center py-8">
         <p className="mb-4 text-muted-foreground">
           तपाइँको शिक्षक प्रोफाइल छनोट वा निर्माण गरेर सुरु गर्नुहोस्।

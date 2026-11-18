@@ -4,7 +4,7 @@ import { PrintBtn } from "@/components/app/ui";
 import { PeriodPicker, defaultSpan, spanRange, type Span } from "@/components/sqc/PeriodPicker";
 import { fmtBs, todayBs } from "@/lib/bs";
 import { addAction, deleteReport } from "@/lib/sqc-data";
-import { STATUSES, STATUS_NE, className, durationMinutes, filterReports, fmtMin, hhmm, lateMinutes, type Action, type Filters, type Period, type Report, type SqcClass, type Status } from "@/lib/sqc";
+import { STATUSES, STATUS_NE, className, combinedIssues, durationMinutes, filterReports, fmtMin, hhmm, lateMinutes, type Action, type Filters, type Period, type Report, type SqcClass, type Status } from "@/lib/sqc";
 import { BsDate } from "@/components/app/ui";
 
 const short = (s: string, n = 60) => (s.length > n ? s.slice(0, n) + "…" : s);
@@ -119,7 +119,7 @@ function Detail({ r, classes, periods, actions, admin, canEdit, onEdit, onChange
         <div><div className="lbl">Submitted</div>{r.submitted_by_name || "—"}<div className="text-xs text-muted-foreground">{new Date(r.submitted_at).toLocaleString()}</div></div>
         <div><div className="lbl">Academic year</div>{r.year_name || "—"}</div>
       </div>
-      {row("Reason class was not held", r.not_held_reason)}{row("Teaching-learning issues", r.issues)}{row("Facility problems", r.facilities)}{row("Requests", r.requests)}{row("Suggestions", r.suggestions)}
+      {row("Reason class was not held", r.not_held_reason)}{row("Teaching-learning & facility issues", combinedIssues(r))}{row("Requests", r.requests)}{row("Suggestions", r.suggestions)}
 
       <div>
         <h4 className="mb-1 font-semibold">Administrator response & action history</h4>

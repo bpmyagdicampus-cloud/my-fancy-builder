@@ -1167,6 +1167,7 @@ export type Database = {
           requests: string
           status: string
           subject: string
+          submit_for_request: boolean | null
           submitted_at: string
           submitted_by: string | null
           submitted_by_name: string
@@ -1192,6 +1193,7 @@ export type Database = {
           requests?: string
           status?: string
           subject?: string
+          submit_for_request?: boolean | null
           submitted_at?: string
           submitted_by?: string | null
           submitted_by_name?: string
@@ -1217,6 +1219,7 @@ export type Database = {
           requests?: string
           status?: string
           subject?: string
+          submit_for_request?: boolean | null
           submitted_at?: string
           submitted_by?: string | null
           submitted_by_name?: string

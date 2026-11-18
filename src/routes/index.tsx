@@ -297,7 +297,6 @@ function Home() {
 
       {hasAlerts && actSum && (
         <section className="panel mb-5 border-primary/40">
-          <style>{`@keyframes sqc-blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(251,191,36,.9)}50%{opacity:.35;box-shadow:0 0 0 6px rgba(251,191,36,0)}}`}</style>
           <h2 className="mb-2 text-base font-bold">Action Notifications</h2>
           <div className="flex flex-wrap gap-2 text-xs">
             {admin && actSum.submittedPlans > 0 && (
@@ -315,11 +314,10 @@ function Home() {
                 बजेट संशोधन अनुरोध (Pending revisions): {actSum.pendingRevisions}
               </Link>
             )}
-            {admin && actSum.pendingSqcReports > 0 && (
+            {actSum.pendingSqcReports > 0 && (
               <Link
                 to="/sqc"
-                className="rounded-full bg-amber-400 px-3 py-1 font-extrabold text-amber-950 ring-2 ring-amber-200"
-                style={{ animation: "sqc-blink 1s ease-in-out infinite" }}
+                className="sqc-request-alert rounded-full bg-accent px-3 py-1 font-extrabold text-accent-foreground ring-2 ring-primary/30"
               >
                 ⚠ SQC रिपोर्ट सम्बोधन हुन बाँकी: {actSum.pendingSqcReports}
               </Link>
@@ -453,7 +451,7 @@ function Home() {
                   className="ml-1 font-semibold text-primary underline"
                   onClick={() => setShowAllYear(true)}
                 >
-                  वर्षभरिका सबै ({mergedAnnualEvents.length}) कार्यक्रम हेर्नुहोस्
+                  View all events ({mergedAnnualEvents.length})
                 </button>
               </p>
             ) : (

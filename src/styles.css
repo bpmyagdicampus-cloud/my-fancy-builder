@@ -157,3 +157,7 @@
   @page { size: A4; margin: 12mm; }
 }
 .print-only { display: none; }
+
+@keyframes sqc-request-blink { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+.sqc-request-alert { animation: sqc-request-blink 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .sqc-request-alert { animation: none; } }

@@ -301,7 +301,7 @@ function Admin() {
       <section className="panel">
         <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-bold">
-            👥 Accounts · प्रयोगकर्ता खाताहरू ({filteredUsers.length} / {users.length})
+            Accounts ({filteredUsers.length} / {users.length})
           </h2>
           <div className="flex flex-wrap items-center gap-2">
             <input

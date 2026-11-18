@@ -2,14 +2,15 @@ import { useState } from "react";
 import { BsDate } from "@/components/app/ui";
 import { todayBs } from "@/lib/bs";
 import { saveReport, type ClassTeaching, type Teacher } from "@/lib/sqc-data";
-import { className, hhmm, validateReport, type Period, type Report, type ReportDraft, type SqcClass } from "@/lib/sqc";
+import { className, combinedIssues, hhmm, validateReport, type Period, type Report, type ReportDraft, type SqcClass } from "@/lib/sqc";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const OTHER = "__other";
 
 export function ReportForm({ classes, teachers, periods, teaching = [], initial, onSaved, onCancel }: {
   classes: SqcClass[]; teachers: Teacher[]; periods: Period[]; teaching?: ClassTeaching[]; initial?: Report; onSaved: (r: Report) => void; onCancel?: () => void;
 }) {
-  const [d, setD] = useState<ReportDraft & { id?: string }>(() => initial ?? { class_id: classes.length === 1 ? classes[0]!.id : "", report_date: todayBs(), period_no: 1, held: true, teacher_id: null, teacher_name: "", subject: "" });
+  const [d, setD] = useState<ReportDraft & { id?: string }>(() => initial ?? { class_id: classes.length === 1 ? classes[0]?.id ?? "" : "", report_date: todayBs(), period_no: 1, held: true, teacher_id: null, teacher_name: "", subject: "", submit_for_request: false });
   const [other, setOther] = useState(!!initial && !initial.teacher_id && !!initial.teacher_name);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -53,7 +54,8 @@ export function ReportForm({ classes, teachers, periods, teaching = [], initial,
                 if (v === OTHER) { setSubOther(true); set({ subject: "" }); return; }
                 setSubOther(false);
                 const who = opts.filter((t) => t.subject === v);
-                if (v && who.length === 1) { setOther(false); set({ subject: v, teacher_id: who[0]!.teacher_id, teacher_name: who[0]!.teacher_name }); } else set({ subject: v });
+                const selected = who[0];
+                if (v && who.length === 1 && selected) { setOther(false); set({ subject: v, teacher_id: selected.teacher_id, teacher_name: selected.teacher_name }); } else set({ subject: v });
               }}>
                 <option value="">— Select —</option>
                 {subjects.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -93,9 +95,8 @@ export function ReportForm({ classes, teachers, periods, teaching = [], initial,
       )}
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <div><label className="lbl">Teaching-learning issues · शिक्षण सिकाइका समस्या</label><textarea className="field min-h-20" value={d.issues ?? ""} onChange={(e) => set({ issues: e.target.value })} /></div>
-        <div><label className="lbl">Facility problems · सुविधाका समस्या</label><textarea className="field min-h-20" value={d.facilities ?? ""} onChange={(e) => set({ facilities: e.target.value })} /></div>
-        <div><label className="lbl">Requests · अनुरोध</label><textarea className="field min-h-20" value={d.requests ?? ""} onChange={(e) => set({ requests: e.target.value })} /></div>
+        <div className="sm:col-span-2"><label className="lbl" htmlFor="sqc-issues">Teaching-learning & facility issues</label><textarea id="sqc-issues" className="field min-h-20" value={combinedIssues(d)} onChange={(e) => set({ issues: e.target.value, facilities: "" })} /></div>
+        <div><div className="mb-1 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2"><label className="lbl !mb-0" htmlFor="sqc-requests">Requests</label><label className="flex items-center gap-2 text-xs font-medium"><Checkbox checked={d.submit_for_request === true} onCheckedChange={(v) => set({ submit_for_request: v === true })} />Submit for request</label></div><textarea id="sqc-requests" className="field min-h-20" value={d.requests ?? ""} onChange={(e) => set({ requests: e.target.value })} /><p className="mt-1 text-xs text-muted-foreground">टिक लगाएपछि मात्र सम्बन्धित शिक्षक वा प्रशासनको गृहपानामा अनुरोध सूचना देखिन्छ।</p></div>
         <div><label className="lbl">Suggestions · सुझाव</label><textarea className="field min-h-20" value={d.suggestions ?? ""} onChange={(e) => set({ suggestions: e.target.value })} /></div>
       </div>
       {err && <p className="rounded-md border border-destructive p-2 text-sm text-destructive">{err}</p>}

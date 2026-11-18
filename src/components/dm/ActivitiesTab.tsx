@@ -738,7 +738,7 @@ export function ActivitiesTab({
                                 {new Date(ev.uploaded_at).toLocaleDateString()}
                               </span>
                               <button type="button" className="btn-soft !px-2 !py-0.5" onClick={() => void openEvidence(ev)}>
-                                Open · हेर्नुहोस्
+                                View
                               </button>
                               {canManage && (
                                 <button

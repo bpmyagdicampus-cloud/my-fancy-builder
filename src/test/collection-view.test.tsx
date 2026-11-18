@@ -33,15 +33,15 @@ describe("Saved entry viewing", () => {
   });
   it("keeps viewing available through the action menu without saving a record", () => {
     render(<Collection {...props} />);
-    const trigger = screen.getByRole("button", { name: "थप कार्य" });
+    const trigger = screen.getByRole("button", { name: "More actions" });
     fireEvent.keyDown(trigger, { key: "Enter" });
-    fireEvent.click(screen.getByRole("menuitem", { name: "हेर्नुहोस्" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "View" }));
     expect(screen.getByText("Full teaching details")).toBeVisible();
     expect(update).not.toHaveBeenCalled();
   });
   it("loads the saved entry for editing from the action menu without writing until Save", () => {
     render(<Collection {...props} />);
-    fireEvent.keyDown(screen.getByRole("button", { name: "थप कार्य" }), { key: "Enter" });
+    fireEvent.keyDown(screen.getByRole("button", { name: "More actions" }), { key: "Enter" });
     fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
     expect(screen.getByDisplayValue("Full teaching details")).toBeVisible();
     expect(update).not.toHaveBeenCalled();

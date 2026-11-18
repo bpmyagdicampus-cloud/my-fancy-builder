@@ -3,7 +3,7 @@ import { Eye, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
-export function ActionsMenu({ children, label = "थप कार्य" }: { children: ReactNode; label?: string }) {
+export function ActionsMenu({ children, label = "More actions" }: { children: ReactNode; label?: string }) {
   return <div className="no-print shrink-0" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
     <DropdownMenu>
       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" aria-label={label} title={label}><MoreVertical className="size-5" /></Button></DropdownMenuTrigger>
@@ -14,7 +14,7 @@ export function ActionsMenu({ children, label = "थप कार्य" }: { ch
 
 export function RowActions({ onView, onEdit, onDelete, label }: { onView?: () => void; onEdit?: () => void; onDelete?: () => void; label?: string }) {
   return <ActionsMenu label={label}>
-    {onView && <DropdownMenuItem onSelect={onView}><Eye />हेर्नुहोस्</DropdownMenuItem>}
+    {onView && <DropdownMenuItem onSelect={onView}><Eye />View</DropdownMenuItem>}
     {onEdit && <DropdownMenuItem onSelect={onEdit}><Pencil />Edit</DropdownMenuItem>}
     {onDelete && <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={onDelete}><Trash2 />Delete</DropdownMenuItem>}
   </ActionsMenu>;
@@ -31,7 +31,7 @@ export function ExistingActionsMenu({ children }: { children: ReactNode }) {
     const viewing = /^(View|Open|Hide details|Details & Evidence)/i.test(text);
     return <DropdownMenuItem asChild>{cloneElement(el, {
       className: `w-full min-h-10 ${el.props.className?.includes("btn-danger") ? "text-destructive focus:text-destructive" : ""}`,
-      children: viewing ? "हेर्नुहोस्" : text === "×" ? "Delete" : el.props.children,
+      children: viewing ? "View" : text === "×" ? "Delete" : el.props.children,
     })}</DropdownMenuItem>;
   });
   return <ActionsMenu>{items(children)}</ActionsMenu>;

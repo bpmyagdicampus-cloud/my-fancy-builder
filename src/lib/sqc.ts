@@ -14,8 +14,15 @@ export type Report = {
   present_count: number | null; total_count: number | null;
   issues: string; facilities: string; requests: string; suggestions: string;
   status: Status; submitted_by_name: string; submitted_at: string; year_name: string;
+  submit_for_request?: boolean | null;
 };
 export type ReportDraft = Partial<Report> & { class_id: string };
+
+export const PENDING_REQUEST_STATUSES = ["Submitted", "Under Review", "In Progress"] as const;
+export const isHomeRequest = (r: Pick<Report, "status" | "submit_for_request">) =>
+  r.submit_for_request === true && PENDING_REQUEST_STATUSES.some((s) => s === r.status);
+export const combinedIssues = (r: Pick<ReportDraft, "issues" | "facilities">) =>
+  [r.issues, r.facilities].filter((s) => s?.trim()).join("\n\n");
 
 export const className = (c?: SqcClass) => (c ? `${c.name}${c.section ? ` (${c.section})` : ""}` : "—");
 export const hhmm = (t?: string | null) => (t ? t.slice(0, 5) : "");

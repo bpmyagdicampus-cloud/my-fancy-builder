@@ -251,7 +251,7 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
 
   return (
     <section className="panel no-print mb-4">
-      <EntryDetails title={viewedEvent?.title || "Calendar event · कार्यक्रम"} open={!!viewedEvent} onClose={() => setViewedEvent(null)} onEdit={canEdit ? () => {
+      <EntryDetails title={viewedEvent?.title || "Calendar event"} open={!!viewedEvent} onClose={() => setViewedEvent(null)} onEdit={canEdit ? () => {
         if (!viewedEvent) return;
         setEdEvent({ ...viewedEvent });
         setViewedEvent(null);
@@ -265,7 +265,7 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-bold">
-            Campus Annual Calendar · क्याम्पस वार्षिक क्यालेन्डर ({allEvents.length})
+            Campus Annual Calendar ({allEvents.length})
           </h2>
           <p className="text-xs text-muted-foreground">
             यहाँ राखिएका कार्यक्रम, परीक्षा र बिदाहरू सबै शिक्षक, कर्मचारी र विद्यार्थीहरूको <b>Home पेज</b>मा देखिन्छन्।
@@ -593,7 +593,7 @@ function TeacherDetailsSection() {
             setNote("");
           }}
         >
-          {open ? "Hide · बन्द गर्नुहोस्" : "हेर्नुहोस्"}
+          {open ? "Hide · बन्द गर्नुहोस्" : "View"}
         </button>
       </div>
 
@@ -615,7 +615,7 @@ function TeacherDetailsSection() {
 
           {editing && (
             <div className="mb-4 rounded-lg border border-primary/40 bg-secondary/40 p-3">
-              <h3 className="mb-2 text-base font-bold">Edit teacher details · विवरण सम्पादन ({editing.name})</h3>
+              <h3 className="mb-2 text-base font-bold">Edit teacher details ({editing.name})</h3>
               <FormFields fields={PROFILE_FIELDS} value={editing} onChange={(v) => setEditing({ ...editing, ...v })} />
               <div className="mt-3 flex gap-2">
                 <button type="button" className="btn" onClick={() => void saveTeacher()}>
@@ -964,7 +964,7 @@ function ClassesByDept() {
                         className="btn-soft text-xs"
                         onClick={() => setPreviewOpen((v) => !v)}
                       >
-                        {previewOpen ? "Hide list · लुकाउनुहोस्" : `विद्यार्थी हेर्नुहोस् (${selectedSource?.students.length ?? 0})`}
+                        {previewOpen ? "Hide list · लुकाउनुहोस्" : `View students (${selectedSource?.students.length ?? 0})`}
                       </button>
                       <button
                         type="button"
@@ -1041,7 +1041,7 @@ function ClassesByDept() {
                 <div className="flex shrink-0 items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                   <ClassRowDots
                     items={[
-                      ["हेर्नुहोस्", () => setViewedClass(c)],
+                      ["View", () => setViewedClass(c)],
                       ["Students", () => { sessionStorage.setItem("shikshak-students-cls", c.id); void nav({ to: "/students" }); }],
                       ["Edit · सम्पादन", () => setEd(structuredClone(c))],
                       [

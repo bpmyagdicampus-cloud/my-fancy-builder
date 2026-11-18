@@ -8,6 +8,13 @@
       "when": 1792286184464,
       "tag": "0000_teacher_accounts_rbac",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794964122962,
+      "tag": "0001_sqc_request_opt_in",
+      "breakpoints": true
     }
   ]
 }

@@ -101,7 +101,7 @@ export function PeerFeedbackReport() {
               <h2 className="font-black text-base text-primary uppercase">MYAGDI MULTIPLE CAMPUS</h2>
               <div className="text-xs font-semibold text-muted-foreground">Beni, Myagdi</div>
               <h3 className="font-black text-sm mt-1 border-b border-border pb-1">
-                Peer Teaching Observation Report (सहकर्मी शिक्षण अवलोकन प्रतिवेदन)
+                Peer Teaching Observation Report
               </h3>
             </div>
 
@@ -252,7 +252,7 @@ export function PeerFeedbackReport() {
       <section className="panel">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <h4 className="font-bold text-sm text-primary">प्राप्त सहकर्मी अवलोकनहरू (Peer Observations on My Teaching)</h4>
+            <h4 className="font-bold text-sm text-primary">Peer Observations on My Teaching</h4>
             <p className="text-xs text-muted-foreground">
               अन्य सहकर्मी शिक्षकहरूले तपाईंको कक्षा अवलोकन गरी प्रदान गर्नुभएको पृष्ठपोषण फारामहरू
             </p>
@@ -307,7 +307,7 @@ export function PeerFeedbackReport() {
                           setAckText(l.teacherAck || "");
                         }}
                       >
-                        फारम हेर्नुहोस् (View Form)
+                        View
                       </button>
                     </td>
                   </tr>

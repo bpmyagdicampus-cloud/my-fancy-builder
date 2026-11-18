@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { friendly, type R } from "@/lib/sqc-data";
+import { isHomeRequest, PENDING_REQUEST_STATUSES, type Report } from "@/lib/sqc";
 
 // Department Management (docs/phase6/40_dept_mgmt.sql & 41_dept_evidence_storage.sql).
 // Every call runs WITH the signed-in user's login, so the database's row-level security
@@ -708,16 +709,14 @@ export async function loadActionSummary(userId: string, isAdmin: boolean, headDe
     if (isAdmin) {
       tasks.push(
         (async () => {
-          const [pl, bl, rv, sq] = await Promise.all([
+          const [pl, bl, rv] = await Promise.all([
             sb.from("dm_plans").select("id").eq("status", "submitted"),
             sb.from("dm_budget_lines").select("id").eq("status", "submitted"),
             sb.from("dm_budget_revisions").select("id").eq("status", "pending"),
-            sb.from("sqc_reports").select("id").in("status", ["Submitted", "Under Review", "In Progress"]),
           ]);
           if (!pl.error && pl.data) out.submittedPlans = pl.data.length;
           if (!bl.error && bl.data) out.pendingBudgetLines = bl.data.length;
           if (!rv.error && rv.data) out.pendingRevisions = rv.data.length;
-          if (!sq.error && sq.data) out.pendingSqcReports = sq.data.length;
         })()
       );
     } else if (headDeptIds.length > 0) {
@@ -732,6 +731,14 @@ export async function loadActionSummary(userId: string, isAdmin: boolean, headDe
         })()
       );
     }
+    tasks.push((async () => {
+      let query = sb.from("sqc_reports").select("id,status,submit_for_request")
+        .eq("submit_for_request", true).in("status", [...PENDING_REQUEST_STATUSES]);
+      // RLS still governs all reads; Home highlights only the teacher concerned or administration.
+      if (!isAdmin) query = query.eq("teacher_id", userId);
+      const sq = await query;
+      if (!sq.error && sq.data) out.pendingSqcReports = (sq.data as Report[]).filter(isHomeRequest).length;
+    })());
     tasks.push(
       (async () => {
         const ac = await sb

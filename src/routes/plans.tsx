@@ -147,7 +147,7 @@ function Plans() {
             <section className="panel no-print mb-3">
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <h2 className="flex-1 text-lg font-bold">Guide</h2>
-                <button type="button" className="btn-soft" onClick={() => setSample((v) => !v)}>{sample ? "Hide sample lesson plan" : "नमुना पाठ योजना हेर्नुहोस्"}</button>
+                <button type="button" className="btn-soft" onClick={() => setSample((v) => !v)}>{sample ? "Hide sample lesson plan" : "View sample lesson plan"}</button>
                 <button type="button" className="btn-soft" onClick={() => setGuide(false)}>Close</button>
               </div>
               <div className="space-y-4">
@@ -176,7 +176,7 @@ function Plans() {
                           date: todayBs(),
                         });
                       });
-                      alert("Research Methodology को नमुना पाठ योजना तपाईंको सूचीमा थपियो। तल सूचीबाट 'Edit' वा 'हेर्नुहोस्' थिचेर हेर्न सक्नुहुन्छ।");
+                      alert("Research Methodology को नमुना पाठ योजना तपाईंको सूचीमा थपियो। तल सूचीबाट 'Edit' वा 'View' थिचेर हेर्न सक्नुहुन्छ।");
                     } catch (err: any) {
                       alert("योजना थप्दा समस्या देखियो: " + (err?.message || err));
                     }
@@ -344,7 +344,7 @@ function ClassAcademicCalendarBanner({ c, yearName, plannedLh }: { c: Cls; yearN
           className="btn-soft !py-1 !px-2.5 text-xs font-semibold"
           onClick={() => setModalOpen(true)}
         >
-          View Full Calendar · पूर्ण कार्यतालिका हेर्नुहोस्
+          View Full Calendar
         </button>
       </div>
 

@@ -1,11 +1,23 @@
 import { describe, it, expect } from "vitest";
-import { filterReports, lateMinutes, monthRange, summarize, validateReport, type Period, type Report, type SqcClass } from "@/lib/sqc";
+import { combinedIssues, filterReports, isHomeRequest, lateMinutes, monthRange, summarize, validateReport, type Period, type Report, type SqcClass } from "@/lib/sqc";
 
 const classes: SqcClass[] = [{ id: "c1", name: "BBS I", section: "A" }, { id: "c2", name: "BBS II", section: "" }];
 const periods: Period[] = [{ period_no: 1, start_time: "07:00:00", end_time: "07:45:00" }, { period_no: 2, start_time: "07:45:00", end_time: "08:30:00" }];
 const rep = (o: Partial<Report>): Report => ({ id: "r", class_id: "c1", report_date: "2083-05-04", period_no: 1, teacher_id: "t1", teacher_name: "Ram", subject: "Acc", held: true, arrival_time: "07:10:00", departure_time: "07:45:00", not_held_reason: "", present_count: 20, total_count: 25, issues: "", facilities: "", requests: "", suggestions: "", status: "Submitted", submitted_by_name: "CR", submitted_at: "", year_name: "2083/84", ...o });
 
 describe("SQC logic", () => {
+  it("only highlights explicitly opted-in pending requests", () => {
+    expect(isHomeRequest(rep({ submit_for_request: true }))).toBe(true);
+    expect(isHomeRequest(rep({ submit_for_request: false }))).toBe(false);
+    expect(isHomeRequest(rep({}))).toBe(false);
+    expect(isHomeRequest(rep({ submit_for_request: null }))).toBe(false);
+  });
+  it("does not highlight settled requests", () => {
+    expect(isHomeRequest(rep({ submit_for_request: true, status: "Resolved" }))).toBe(false);
+  });
+  it("shows both legacy issue fields together without discarding either", () => {
+    expect(combinedIssues({ issues: "Lesson unclear", facilities: "Projector broken" })).toBe("Lesson unclear\n\nProjector broken");
+  });
   it("validates like the database does", () => {
     const ok = { class_id: "c1", report_date: "2083-05-04", period_no: 1, teacher_id: "t1", held: true, arrival_time: "07:10" };
     expect(validateReport(ok)).toBeNull();
