@@ -1,3 +1,4 @@
+import { confirmEditedSave, useEditScroll } from "@/components/app/editing";
 import { useCallback, useEffect, useState } from "react";
 import { PrintBtn, PrintHead } from "@/components/app/ui";
 import { useTeacher } from "@/lib/store";
@@ -37,6 +38,7 @@ export function ClassCalendarTab({
 
   // Edit form state
   const [isEditing, setIsEditing] = useState(false);
+  const editRef = useEditScroll(isEditing);
   const [startMonth, setStartMonth] = useState(1); // Baishakh (default)
   const [endMonth, setEndMonth] = useState(12);    // Chaitra (default)
   const [particulars, setParticulars] = useState<D.CalendarParticularRow[]>([]);
@@ -151,7 +153,7 @@ export function ClassCalendarTab({
   };
 
   const deleteRow = (rowId: string) => {
-    setParticulars((prev) => prev.filter((r) => r.id !== rowId));
+    if (confirm("के तपाईं यो पङ्क्ति हटाउन चाहनुहुन्छ?")) setParticulars((prev) => prev.filter((r) => r.id !== rowId));
   };
 
   const moveRow = (idx: number, dir: -1 | 1) => {
@@ -217,6 +219,7 @@ export function ClassCalendarTab({
 
   const save = async (newStatus: "draft" | "submitted" | "approved" = cal?.status || "draft") => {
     if (!dept || !year || !classId) return;
+    if (isEditing && cal?.id && !confirmEditedSave(true)) return;
     setNote("");
     // Re-calculate auto sums for working & teaching days
     const cleanParticulars = particulars.map((r) => {
@@ -271,7 +274,7 @@ export function ClassCalendarTab({
       {err && <p className="no-print mb-3 rounded-md border border-destructive p-3 text-sm text-destructive">{err}</p>}
 
       {/* Top selector and toolbar */}
-      <section className="panel no-print mb-4 space-y-3">
+      <section ref={editRef} className="panel scroll-mt-24 no-print mb-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
             <div>

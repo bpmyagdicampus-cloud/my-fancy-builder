@@ -1,3 +1,4 @@
+import { confirmEditedSave, useEditScroll } from "@/components/app/editing";
 import { ExistingActionsMenu } from "@/components/app/RowActions";
 import { useCallback, useEffect, useState } from "react";
 import { BsDate } from "@/components/app/ui";
@@ -14,6 +15,7 @@ export function PlansTab({ dept, year, admin, canManage, onChanged }: { dept: st
   const [err, setErr] = useState("");
   const [note, setNote] = useState("");
   const [ed, setEd] = useState<{ id?: string; f: D.PlanForm } | null>(null);
+  const editRef = useEditScroll(ed);
   const [open, setOpen] = useState<string>("");
   const [revs, setRevs] = useState<D.PlanRevision[]>([]);
   const [comment, setComment] = useState("");
@@ -36,7 +38,7 @@ export function PlansTab({ dept, year, admin, canManage, onChanged }: { dept: st
   };
 
   const save = async () => {
-    if (!ed) return;
+    if (!ed || !confirmEditedSave(ed.id)) return;
     const f = { ...ed.f, title: ed.f.title.trim(), estimated_budget: Math.max(0, Number(ed.f.estimated_budget) || 0) };
     if (!f.title) { setNote("Please write the plan title."); return; }
     if (!year) { setNote("Choose an academic year first."); return; }
@@ -70,7 +72,7 @@ export function PlansTab({ dept, year, admin, canManage, onChanged }: { dept: st
       {canManage && !ed && <button className="btn mb-3" disabled={!year} onClick={() => { setEd({ f: { ...EMPTY } }); setNote(""); }}>+ New annual plan · नयाँ वार्षिक योजना</button>}
 
       {ed && (
-        <section className="panel mb-4">
+        <section ref={editRef} className="panel scroll-mt-24 mb-4">
           <h2 className="mb-3 text-lg font-bold">{ed.id ? "Edit plan" : "New plan"} <span className="text-sm font-normal text-muted-foreground">({year})</span></h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {field("title", "Plan / programme title · योजना वा कार्यक्रम", true)}

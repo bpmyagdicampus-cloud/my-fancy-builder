@@ -1,3 +1,4 @@
+import { confirmEditedSave, useEditScroll } from "@/components/app/editing";
 import { ExistingActionsMenu } from "@/components/app/RowActions";
 import { useCallback, useEffect, useState } from "react";
 import { BsDate } from "@/components/app/ui";
@@ -103,8 +104,9 @@ export function ActivitiesTab({
     return r.ok;
   };
 
+  const editRef = useEditScroll(ed);
   const saveFull = async () => {
-    if (!ed) return;
+    if (!ed || !confirmEditedSave(ed.id)) return;
     const title = ed.f.title.trim();
     if (!title) {
       setNote("Please enter the activity title · गतिविधिको शीर्षक लेख्नुहोस्।");
@@ -127,7 +129,7 @@ export function ActivitiesTab({
   };
 
   const saveProgress = async () => {
-    if (!progEd) return;
+    if (!progEd || !confirmEditedSave(true)) return;
     const patch: D.ActivityProgressPatch = {
       ...progEd.p,
       progress_pct: progEd.p.status === "completed" && progEd.p.progress_pct < 100 ? 100 : progEd.p.progress_pct,
@@ -218,7 +220,7 @@ export function ActivitiesTab({
 
       {/* Full create/edit modal panel (HOD / Admin) */}
       {ed && (
-        <section className="panel mb-4 border-primary/40">
+        <section ref={editRef} className="panel scroll-mt-24 mb-4 border-primary/40">
           <h2 className="mb-3 text-lg font-bold">
             {ed.id ? "Edit activity" : "New activity"}{" "}
             <span className="text-sm font-normal text-muted-foreground">({year})</span>
@@ -453,7 +455,7 @@ export function ActivitiesTab({
 
       {/* Progress-only modal for assigned teacher or quick update */}
       {progEd && (
-        <section className="panel mb-4 border-primary/40">
+        <section ref={editRef} className="panel scroll-mt-24 mb-4 border-primary/40">
           <h2 className="mb-1 text-lg font-bold">Update Progress</h2>
           <p className="mb-3 text-sm text-muted-foreground">{progEd.title}</p>
           <div className="grid gap-3 sm:grid-cols-2">

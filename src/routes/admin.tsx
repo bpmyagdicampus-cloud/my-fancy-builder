@@ -1,3 +1,4 @@
+import { confirmEditedSave, useEditScroll } from "@/components/app/editing";
 import { ExistingActionsMenu } from "@/components/app/RowActions";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -68,6 +69,7 @@ function Admin() {
     hod: string;
     chief: string;
   } | null>(null);
+  const editRef = useEditScroll(ed);
 
   const call = async <T,>(fn: (a: any) => Promise<Result<T>>, data: unknown): Promise<Result<T>> => {
     try {
@@ -254,7 +256,7 @@ function Admin() {
       )}
 
       {ed && (
-        <section className="panel mb-4 border-primary/40 bg-secondary/30">
+        <section ref={editRef} className="scroll-mt-24 panel mb-4 border-primary/40 bg-secondary/30">
           <h2 className="mb-1 text-lg font-bold">✏️ Edit account details</h2>
           <p className="mb-3 text-xs text-muted-foreground">
             Login ID: <b>{ed.login}</b>
@@ -281,7 +283,7 @@ function Admin() {
             <button
               className="btn"
               onClick={() =>
-                void run(async () => {
+                confirmEditedSave(true) && void run(async () => {
                   const r = await call(adminUpdateProfile as any, ed);
                   if (r.ok) setEd(null);
                   return r;

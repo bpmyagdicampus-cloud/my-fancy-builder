@@ -1,3 +1,4 @@
+import { confirmEditedSave } from "@/components/app/editing";
 import { useCallback, useEffect, useState } from "react";
 import { useCloud } from "@/lib/cloud";
 import { adminListUsers, type AdminUser, type Result } from "@/lib/admin.functions";
@@ -112,7 +113,7 @@ function Institution({ d, admin, act }: { d: C.CampusData; admin: boolean; act: 
           {F("website", "Website")}{F("email", "Email")}{F("phone", "Phone · फोन नं.")}
         </div>
         <div className="mt-3 flex gap-2">
-          <button className="btn" onClick={async () => { if (await act(C.saveProfile(f))) setEdit(false); }}>Save</button>
+          <button className="btn" onClick={async () => { if (confirmEditedSave(true) && await act(C.saveProfile(f))) setEdit(false); }}>Save</button>
           <button className="btn-soft" onClick={() => { setF(p); setEdit(false); }}>Cancel</button>
         </div>
       </div>

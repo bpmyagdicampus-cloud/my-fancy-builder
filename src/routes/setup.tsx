@@ -1,3 +1,4 @@
+import { confirmEditedSave, useEditScroll } from "@/components/app/editing";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { Page, Tabs, FormFields, Collection, Dt, NeedProfile, BsDate, type Field } from "@/components/app/ui";
@@ -200,7 +201,9 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
       })),
   ].sort((a, b) => a.from.localeCompare(b.from));
 
+  const eventRef = useEditScroll(edEvent);
   const saveEvent = async () => {
+    if (!confirmEditedSave(edEvent?.id)) return;
     if (!edEvent || !edEvent.title.trim()) {
       alert("Please enter the event title · कार्यक्रमको शीर्षक लेख्नुहोस्।");
       return;
@@ -363,7 +366,7 @@ function CampusAnnualCalendarSection({ canEdit }: { canEdit: boolean }) {
 
       {/* Event Add/Edit Form */}
       {edEvent && canEdit && (
-        <div className="mb-4 rounded-lg border border-primary/40 bg-secondary/40 p-3 text-sm">
+        <div ref={eventRef} className="scroll-mt-24 mb-4 rounded-lg border border-primary/40 bg-secondary/40 p-3 text-sm">
           <h3 className="mb-3 font-bold">
             {edEvent.id ? "Edit Event" : "New Event"}
           </h3>
@@ -532,7 +535,9 @@ function TeacherDetailsSection() {
     if (open) void loadTeachers();
   }, [open, loadTeachers]);
 
+  const teacherRef = useEditScroll(editing);
   const saveTeacher = async () => {
+    if (!confirmEditedSave(editing?.id)) return;
     if (!editing) return;
     if (!editing.name.trim()) {
       setNote("Please enter the teacher's name · शिक्षकको नाम लेख्नुहोस्।");
@@ -614,7 +619,7 @@ function TeacherDetailsSection() {
           {loading && <p className="text-sm text-muted-foreground">Loading teacher details…</p>}
 
           {editing && (
-            <div className="mb-4 rounded-lg border border-primary/40 bg-secondary/40 p-3">
+            <div ref={teacherRef} className="scroll-mt-24 mb-4 rounded-lg border border-primary/40 bg-secondary/40 p-3">
               <h3 className="mb-2 text-base font-bold">Edit teacher details ({editing.name})</h3>
               <FormFields fields={PROFILE_FIELDS} value={editing} onChange={(v) => setEditing({ ...editing, ...v })} />
               <div className="mt-3 flex gap-2">
@@ -802,7 +807,9 @@ function ClassesByDept() {
     setMsg(`${linked} classes linked${made ? `, ${made} new classes added to the department` : ""}.${unlinked.length - linked ? ` ${unlinked.length - linked} could not be linked (ask the administrator or department head).` : ""}`);
   };
 
+  const classRef = useEditScroll(ed);
   const saveClass = (pullFromSource = false) => {
+    if (!confirmEditedSave(ed?.id)) return;
     if (!ed) return;
     if (!String(ed.name ?? "").trim()) {
       alert("Please choose or enter a class name · कक्षा छान्नुहोस्।");
@@ -905,7 +912,7 @@ function ClassesByDept() {
         </div>
 
         {ed && (
-          <div className="mb-4 rounded-lg border border-primary/30 bg-secondary/40 p-3">
+          <div ref={classRef} className="scroll-mt-24 mb-4 rounded-lg border border-primary/30 bg-secondary/40 p-3">
             <FormFields fields={CLASS_FIELDS} value={ed} onChange={setEd} />
 
             {/* Pull students from other teachers' subjects (or own subjects) of the same class right while creating/editing */}

@@ -1,3 +1,4 @@
+import { confirmEditedSave, useEditScroll } from "@/components/app/editing";
 import { ExistingActionsMenu } from "@/components/app/RowActions";
 import { useEffect, useMemo, useState } from "react";
 import { PrintBtn, PrintHead, Signatures } from "@/components/app/ui";
@@ -306,6 +307,8 @@ export function SupervisionTab({
     return [...list, item];
   };
 
+  const editRef = useEditScroll(isEditing);
+  const meetingRef = useEditScroll(isEditingMeeting);
   const handleSaveObservation = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.teacherName || !form.topic) {
@@ -313,6 +316,7 @@ export function SupervisionTab({
       return;
     }
 
+    if (form.id && !confirmEditedSave(true)) return;
     if (form.id) {
       const updated = logs.map((l) => (l.id === form.id ? ({ ...l, ...form } as ObservationLog) : l));
       saveLogs(updated);
@@ -364,6 +368,7 @@ export function SupervisionTab({
       return;
     }
 
+    if (meetingForm.id && !confirmEditedSave(true)) return;
     if (meetingForm.id) {
       const updated = meetings.map((m) => (m.id === meetingForm.id ? ({ ...m, ...meetingForm } as DeptMeeting) : m));
       saveMeetings(updated);
@@ -508,7 +513,7 @@ export function SupervisionTab({
         <>
           {/* Detailed Form Modal/Panel */}
           {isEditing && (
-            <section className="no-print panel mb-4 rounded-2xl border border-primary/40 bg-card p-5 shadow-lg space-y-4">
+            <section ref={editRef} className="scroll-mt-24 no-print panel mb-4 rounded-2xl border border-primary/40 bg-card p-5 shadow-lg space-y-4">
               <div className="flex items-center justify-between border-b border-border pb-2.5">
                 <div>
                   <h3 className="font-bold text-lg text-primary">
@@ -1354,7 +1359,7 @@ export function SupervisionTab({
         <>
           {/* Meeting Form */}
           {isEditingMeeting && (
-            <section className="no-print panel mb-4 rounded-xl border border-primary/40 bg-card p-5 shadow-lg space-y-4">
+            <section ref={meetingRef} className="scroll-mt-24 no-print panel mb-4 rounded-xl border border-primary/40 bg-card p-5 shadow-lg space-y-4">
               <div className="flex items-center justify-between border-b border-border pb-2.5">
                 <h3 className="font-bold text-base text-primary">
                   {meetingForm.id ? "Edit Meeting" : "New Department Meeting & Minutes"}

@@ -1,4 +1,5 @@
 # Account access
+- [ ] Require confirmation before deleting entries or saving edited entries, and scroll directly to the start of the edit form when any saved entry is edited.
 - [ ] Make saved peer observations visible to the observed teacher as well as the observer; preserve existing observation records and access boundaries.
 - [x] Move saved-list actions into three-dot menus; mobile lesson View checked with an isolated local profile, no horizontal overflow.
 - [x] Use English-only menus, submenus, interface headings and View actions while retaining Nepali instructions, information and user-entered titles.

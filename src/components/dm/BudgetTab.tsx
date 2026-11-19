@@ -1,3 +1,4 @@
+import { confirmEditedSave, useEditScroll } from "@/components/app/editing";
 import { ExistingActionsMenu } from "@/components/app/RowActions";
 import { useCallback, useEffect, useState } from "react";
 import { BsDate, Tabs } from "@/components/app/ui";
@@ -136,7 +137,7 @@ export function BudgetTab({
   const utilPct = totalApproved > 0 ? Math.round((totalSpent / totalApproved) * 100) : 0;
 
   const saveLine = async () => {
-    if (!lineEd) return;
+    if (!lineEd || !confirmEditedSave(lineEd.id)) return;
     if (!lineEd.f.title.trim()) {
       setNote("Please enter the budget heading · बजेट शीर्षक लेख्नुहोस्।");
       return;
@@ -161,8 +162,10 @@ export function BudgetTab({
     if (ok) setRevReq(null);
   };
 
+  const expenseRef = useEditScroll(expEd);
+  const lineRef = useEditScroll(lineEd);
   const saveExpense = async () => {
-    if (!expEd) return;
+    if (!expEd || !confirmEditedSave(expEd.id)) return;
     if (!expEd.f.description.trim()) {
       setNote("Please enter the expense description · खर्चको विवरण लेख्नुहोस्।");
       return;
@@ -252,7 +255,7 @@ export function BudgetTab({
           )}
 
           {lineEd && (
-            <section className="panel mb-4 border-primary/40">
+            <section ref={lineRef} className="panel scroll-mt-24 mb-4 border-primary/40">
               <h3 className="mb-3 text-lg font-bold">
                 {lineEd.id ? "Edit budget line" : "New budget line"}
               </h3>
@@ -629,7 +632,7 @@ export function BudgetTab({
           )}
 
           {expEd && (
-            <section className="panel mb-4 border-primary/40">
+            <section ref={expenseRef} className="panel scroll-mt-24 mb-4 border-primary/40">
               <h3 className="mb-3 text-lg font-bold">
                 {expEd.id ? "Edit expense" : "Record expense"}
               </h3>

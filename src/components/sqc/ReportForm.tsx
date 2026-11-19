@@ -4,6 +4,7 @@ import { todayBs } from "@/lib/bs";
 import { saveReport, type ClassTeaching, type Teacher } from "@/lib/sqc-data";
 import { className, combinedIssues, hhmm, validateReport, type Period, type Report, type ReportDraft, type SqcClass } from "@/lib/sqc";
 import { Checkbox } from "@/components/ui/checkbox";
+import { confirmEditedSave, useEditScroll } from "@/components/app/editing";
 
 const OTHER = "__other";
 
@@ -14,6 +15,7 @@ export function ReportForm({ classes, teachers, periods, teaching = [], initial,
   const [other, setOther] = useState(!!initial && !initial.teacher_id && !!initial.teacher_name);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const editRef = useEditScroll(initial?.id);
   // subjects (and their teachers) of the chosen class, taken from the Setup classes the teachers linked
   const opts = teaching.filter((t) => t.class_id === d.class_id);
   const subjects = [...new Set(opts.map((t) => t.subject))];
@@ -25,6 +27,7 @@ export function ReportForm({ classes, teachers, periods, teaching = [], initial,
   const submit = async () => {
     const v = validateReport(d);
     if (v) return setErr(v);
+    if (!confirmEditedSave(initial?.id)) return;
     setBusy(true); setErr("");
     const r = await saveReport(d);
     setBusy(false);
@@ -34,7 +37,7 @@ export function ReportForm({ classes, teachers, periods, teaching = [], initial,
   };
 
   return (
-    <div className="panel space-y-3">
+    <div ref={editRef} className="panel scroll-mt-24 space-y-3">
       <h2 className="text-lg font-bold">{initial ? "Edit report" : "New report"}</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div><label className="lbl">Class · कक्षा</label>

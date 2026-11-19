@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { PrintHead, Signatures } from "@/components/app/ui";
 import { fmtBs, todayBs } from "@/lib/bs";
 import { useTeacher } from "@/lib/store";
+import { confirmEditedSave } from "@/components/app/editing";
 import {
   calcGrade,
   getObservationsForTeacher,
@@ -35,6 +36,7 @@ export function PeerFeedbackReport() {
 
   const handleSaveAck = async (obs: PeerObservation) => {
     if (!ackText.trim()) return;
+    if (!confirmEditedSave(true)) return;
     const updated: PeerObservation = {
       ...obs,
       teacherAck: ackText.trim(),

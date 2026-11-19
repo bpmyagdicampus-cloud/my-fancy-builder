@@ -1,4 +1,5 @@
 import { RowActions } from "@/components/app/RowActions";
+import { confirmEditedSave, useEditScroll } from "@/components/app/editing";
 import { EntryDetails, DetailFields } from "@/components/app/EntryDetails";
 import { PeerObservationSection } from "@/components/records/PeerObservationSection";
 import { createFileRoute } from "@tanstack/react-router";
@@ -46,6 +47,7 @@ function Assessments() {
   const { data } = useTeacher();
   const [cls, setCls] = useState("");
   const [ed, setEd] = useState<Assess | null>(null);
+  const editRef = useEditScroll(ed?.id);
   const [viewed, setViewed] = useState<Assess | null>(null);
   const c = data.classes.find((x) => x.id === (ed?.classId || cls));
   const stu = studentsOf(c);
@@ -53,6 +55,7 @@ function Assessments() {
   const setMark = (s: string, k: "m" | "c", v: string) => setEd((e) => e && { ...e, marks: { ...e.marks, [s]: { ...(e.marks[s] ?? { m: "", c: "" }), [k]: v } } });
   const save = () => {
     if (!ed?.classId) return alert("Select a class");
+    if (!confirmEditedSave(ed.id)) return;
     updateData((d) => { const i = d.assess.findIndex((x) => x.id === ed.id); if (i >= 0) d.assess[i] = ed; else d.assess.push({ ...ed, id: uid() }); });
     setEd(null);
   };
@@ -69,7 +72,7 @@ function Assessments() {
         {!ed && <button className="btn" onClick={() => setEd({ id: "", classId: cls, date: todayBs(), kind: (ASSESS_KINDS[0] ?? ""), title: "", max: 10, marks: {} })}>+ New assessment</button>}
       </div>
       {ed && (
-        <div className="mb-4 space-y-3 rounded-lg border border-primary/30 bg-secondary/40 p-3">
+        <div ref={editRef} className="scroll-mt-24 mb-4 space-y-3 rounded-lg border border-primary/30 bg-secondary/40 p-3">
           <div className="grid gap-3 sm:grid-cols-3">
             <div><label className="lbl">Class</label><ClassSelect active value={ed.classId} onChange={(v) => setEd({ ...ed, classId: v })} /></div>
             <div><label className="lbl">Date</label><BsDate value={ed.date} onChange={(v) => setEd({ ...ed, date: v })} /></div>

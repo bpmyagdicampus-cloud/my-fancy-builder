@@ -93,7 +93,11 @@ export async function savePeerObservation(obs: PeerObservation): Promise<void> {
   const cloud = getCloudState();
   if (cloud.userId) {
     if (!obs.teacherId || !obs.observerId) throw new Error("सम्बन्धित शिक्षकलाई खाताको सूचीबाट छान्नुहोस्।");
-    const { error } = await supabase.from("peer_observations").upsert({ id: obs.id, observer_id: obs.observerId, teacher_id: obs.teacherId, content: JSON.parse(JSON.stringify(obs)) }, { onConflict: "id" });
+    const content = JSON.parse(JSON.stringify(obs));
+    const request = cloud.userId === obs.observerId
+      ? supabase.from("peer_observations").upsert({ id: obs.id, observer_id: obs.observerId, teacher_id: obs.teacherId, content }, { onConflict: "id" })
+      : supabase.from("peer_observations").update({ content }).eq("id", obs.id);
+    const { error } = await request;
     if (error) throw new Error(error.message);
     window.dispatchEvent(new CustomEvent("shikshak-peer-obs-changed"));
     return;
@@ -118,6 +122,8 @@ export async function deletePeerObservation(id: string): Promise<void> {
   if (getCloudState().userId) {
     const { error } = await supabase.from("peer_observations").delete().eq("id", id);
     if (error) throw new Error(error.message);
+    // Intentional deletion also retires its legacy copy to avoid re-publishing it.
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(loadAllPeerObservations().filter((o) => o.id !== id)));
     window.dispatchEvent(new CustomEvent("shikshak-peer-obs-changed"));
     return;
   }

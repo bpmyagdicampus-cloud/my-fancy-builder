@@ -1,4 +1,5 @@
 import { RowActions } from "@/components/app/RowActions";
+import { confirmEditedSave, useEditScroll } from "@/components/app/editing";
 import { EntryDetails } from "@/components/app/EntryDetails";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +20,7 @@ export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
   const [ok, setOk] = useState("");
   const [form, setForm] = useState({ title: "", content: "", type: "general" as NoticeType, active: true });
   const [editingId, setEditingId] = useState<string | null>(null);
+  const editRef = useEditScroll(editingId);
 
   const load = useCallback(async () => {
     const { data, error } = await db().select("*").order("created_at", { ascending: false });
@@ -48,6 +50,7 @@ export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
   };
 
   const publish = async () => {
+    if (!confirmEditedSave(editingId)) return;
     setOk("");
     if (!form.title.trim() || !form.content.trim()) {
       setErr("शीर्षक र सामग्री दुवै आवश्यक छ (Title and content are required).");
@@ -98,7 +101,7 @@ export function PopupNoticeAdmin({ userId }: { userId?: string | null }) {
       )}
       {ok && <div className="mb-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-2.5 text-sm">{ok}</div>}
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div ref={editRef} className="scroll-mt-24 grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label className="lbl">शीर्षक · Title</label>
           <input

@@ -4,6 +4,7 @@ import { BS_MONTHS, daysInBsMonth, parseBs, bsKey, todayBs, fmtBs, weekday } fro
 import { updateData, uid, useTeacher, type ListKey } from "@/lib/store";
 import { EntryDetails, DetailFields } from "@/components/app/EntryDetails";
 import { RowActions } from "@/components/app/RowActions";
+import { confirmEditedSave, useEditScroll } from "@/components/app/editing";
 
 export function Page({
   title,
@@ -401,6 +402,7 @@ export function Collection({
   const { data } = useTeacher();
   const [ed, setEd] = useState<Rec | null>(null);
   const [viewed, setViewed] = useState<Rec | null>(null);
+  const editRef = useEditScroll(ed);
   const view = (row: Rec) => {
     if (onView) onView(row);
     else setViewed(row);
@@ -411,6 +413,7 @@ export function Collection({
   );
   const save = () => {
     if (!ed) return;
+    if (!confirmEditedSave(ed.id)) return;
     updateData((d) => {
       const arr = d[k] as Rec[];
       const i = arr.findIndex((x) => x.id === ed.id);
@@ -466,7 +469,7 @@ export function Collection({
         )}
       </div>
       {ed && (
-        <div className="mb-4 rounded-xl border border-primary/30 bg-secondary/40 p-4 shadow-sm">
+        <div ref={editRef} className="scroll-mt-24 mb-4 rounded-xl border border-primary/30 bg-secondary/40 p-4 shadow-sm">
           <FormFields fields={fields} value={ed} onChange={setEd} />
           <div className="mt-4 flex flex-wrap gap-2">
             <button className="btn" onClick={save}>

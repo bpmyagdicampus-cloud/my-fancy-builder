@@ -16,6 +16,7 @@ import { CODES, HOLIDAY_TYPES } from "@/lib/constants";
 import { weeklyOffOf } from "@/lib/migrate";
 import { EntryDetails, DetailFields } from "@/components/app/EntryDetails";
 import { RowActions } from "@/components/app/RowActions";
+import { confirmEditedSave, useEditScroll } from "@/components/app/editing";
 
 export const Route = createFileRoute("/diary")({
   head: () => ({
@@ -54,6 +55,7 @@ const blank = (classId = "", defaultTotal = 0): Diary => ({
 function DiaryPage() {
   const { profile, data } = useTeacher();
   const [ed, setEd] = useState<Diary | null>(null);
+  const editRef = useEditScroll(ed?.id);
   const [viewed, setViewed] = useState<Diary | null>(null);
   const [fc, setFc] = useState("");
   const [searchQ, setSearchQ] = useState("");
@@ -155,6 +157,7 @@ function DiaryPage() {
 
   const save = () => {
     if (!ed?.classId) return alert("Select a class");
+    if (!confirmEditedSave(ed.id)) return;
     const isOff = weeklyOffOf(data).includes(weekday(ed.date));
     const isHoliday = data.cal.some((e) => HOLIDAY_TYPES.includes(e.type) && inRange(ed.date, e.from, e.to));
     const onLeave = data.leaves.some((l) => inRange(ed.date, l.from, l.to));
@@ -236,7 +239,7 @@ function DiaryPage() {
         ]} />}
       </EntryDetails>
       {ed && (
-        <section className="panel mb-5 space-y-4 border-primary/30 shadow-md">
+        <section ref={editRef} className="panel scroll-mt-24 mb-5 space-y-4 border-primary/30 shadow-md">
           <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
             <h2 className="text-base font-bold text-primary">
               {ed.id ? "Edit Entry" : "New Daily Entry"}

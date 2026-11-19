@@ -5,6 +5,7 @@ import { todayBs, fmtBs } from "@/lib/bs";
 import * as C from "@/lib/campus";
 import * as D from "@/lib/dm";
 import { useTeacher } from "@/lib/store";
+import { confirmEditedSave, useEditScroll } from "@/components/app/editing";
 import {
   calcGrade,
   calcTotalScore,
@@ -23,6 +24,7 @@ export function PeerObservationSection() {
   const [deptTeachers, setDeptTeachers] = useState<D.DeptTeacher[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [singlePrint, setSinglePrint] = useState<PeerObservation | null>(null);
+  const editRef = useEditScroll(isEditing);
 
   // Form State
   const [form, setForm] = useState<Partial<PeerObservation>>({
@@ -80,6 +82,7 @@ export function PeerObservationSection() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!confirmEditedSave(form.id)) return;
     if (!form.teacherName || !form.topic) {
       alert("कृपया सम्बन्धित शिक्षकको नाम र पाठको शीर्षक भर्नुहोस्।");
       return;
@@ -177,7 +180,7 @@ export function PeerObservationSection() {
 
       {/* 1. INTERACTIVE OBSERVATION FORM */}
       {isEditing && (
-        <section className="no-print panel rounded-2xl border border-primary/40 bg-card p-5 shadow-xl space-y-6">
+        <section ref={editRef} className="scroll-mt-24 no-print panel rounded-2xl border border-primary/40 bg-card p-5 shadow-xl space-y-6">
           <div className="flex items-center justify-between border-b border-border pb-3">
             <div>
               <div className="text-xs font-bold text-primary tracking-wide uppercase">Myagdi Multiple Campus, Beni, Myagdi</div>
