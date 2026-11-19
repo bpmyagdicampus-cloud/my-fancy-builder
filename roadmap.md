@@ -1,4 +1,5 @@
 # Account access
+- [ ] Make saved peer observations visible to the observed teacher as well as the observer; preserve existing observation records and access boundaries.
 - [x] Move saved-list actions into three-dot menus; mobile lesson View checked with an isolated local profile, no horizontal overflow.
 - [x] Use English-only menus, submenus, interface headings and View actions while retaining Nepali instructions, information and user-entered titles.
 - [x] Add SQC Submit for request checkbox, opted-in pending Home notifications, and merged issue entry; additive migration applied without backfilling reports. Rule tests pass.

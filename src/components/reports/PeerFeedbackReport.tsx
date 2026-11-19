@@ -16,10 +16,10 @@ export function PeerFeedbackReport() {
   const [selectedObs, setSelectedObs] = useState<PeerObservation | null>(null);
   const [ackText, setAckText] = useState("");
 
-  const loadData = () => {
+  const loadData = async () => {
     if (!profile?.name) return;
-    const received = getObservationsForTeacher(profile.name, profile.id);
-    setLogs(received);
+    try { setLogs(await getObservationsForTeacher(profile.name, profile.id)); }
+    catch (e) { alert(e instanceof Error ? e.message : String(e)); }
   };
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export function PeerFeedbackReport() {
   const avgScore = totalCount > 0 ? Math.round(logs.reduce((acc, l) => acc + l.totalScore, 0) / totalCount) : 0;
   const avgGradeObj = calcGrade(avgScore);
 
-  const handleSaveAck = (obs: PeerObservation) => {
+  const handleSaveAck = async (obs: PeerObservation) => {
     if (!ackText.trim()) return;
     const updated: PeerObservation = {
       ...obs,
@@ -41,7 +41,8 @@ export function PeerFeedbackReport() {
       teacherDate: todayBs(),
       updatedAt: new Date().toISOString(),
     };
-    savePeerObservation(updated);
+    try { await savePeerObservation(updated); }
+    catch (error) { alert(error instanceof Error ? error.message : String(error)); return; }
     setSelectedObs(updated);
     loadData();
     alert("तपाईंको प्रतिक्रिया सफलतापूर्वक सुरक्षित गरियो!");

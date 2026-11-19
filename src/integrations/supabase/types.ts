@@ -857,6 +857,33 @@ export type Database = {
           },
         ]
       }
+      peer_observations: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          observer_id: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          id: string
+          observer_id: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          observer_id?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       popup_notices: {
         Row: {
           content: string

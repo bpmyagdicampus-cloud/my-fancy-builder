@@ -1,5 +1,5 @@
-import { getDB, type Profile } from "./store";
-import { todayBs } from "./bs";
+import { supabase } from "@/integrations/supabase/client";
+import { getCloudState } from "./cloud";
 
 export type PeerObsCriterion = {
   id: number;
@@ -89,7 +89,15 @@ export function loadAllPeerObservations(): PeerObservation[] {
   }
 }
 
-export function savePeerObservation(obs: PeerObservation): void {
+export async function savePeerObservation(obs: PeerObservation): Promise<void> {
+  const cloud = getCloudState();
+  if (cloud.userId) {
+    if (!obs.teacherId || !obs.observerId) throw new Error("सम्बन्धित शिक्षकलाई खाताको सूचीबाट छान्नुहोस्।");
+    const { error } = await supabase.from("peer_observations").upsert({ id: obs.id, observer_id: obs.observerId, teacher_id: obs.teacherId, content: JSON.parse(JSON.stringify(obs)) }, { onConflict: "id" });
+    if (error) throw new Error(error.message);
+    window.dispatchEvent(new CustomEvent("shikshak-peer-obs-changed"));
+    return;
+  }
   const list = loadAllPeerObservations();
   const idx = list.findIndex((x) => x.id === obs.id);
   let next: PeerObservation[];
@@ -106,7 +114,13 @@ export function savePeerObservation(obs: PeerObservation): void {
   }
 }
 
-export function deletePeerObservation(id: string): void {
+export async function deletePeerObservation(id: string): Promise<void> {
+  if (getCloudState().userId) {
+    const { error } = await supabase.from("peer_observations").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+    window.dispatchEvent(new CustomEvent("shikshak-peer-obs-changed"));
+    return;
+  }
   const list = loadAllPeerObservations();
   const next = list.filter((x) => x.id !== id);
   try {
@@ -118,7 +132,8 @@ export function deletePeerObservation(id: string): void {
 }
 
 /** Get observations conducted by a teacher (Observer view in Records) */
-export function getObservationsByObserver(observerName: string, observerId?: string): PeerObservation[] {
+export async function getObservationsByObserver(observerName: string, observerId?: string): Promise<PeerObservation[]> {
+  if (getCloudState().userId && observerId) return sharedObservations("observer_id", observerId, observerName);
   const all = loadAllPeerObservations();
   const nameNorm = observerName.trim().toLowerCase();
   return all.filter(
@@ -129,7 +144,8 @@ export function getObservationsByObserver(observerName: string, observerId?: str
 }
 
 /** Get observations conducted on a teacher (Observed view in Reports) */
-export function getObservationsForTeacher(teacherName: string, teacherId?: string): PeerObservation[] {
+export async function getObservationsForTeacher(teacherName: string, teacherId?: string): Promise<PeerObservation[]> {
+  if (getCloudState().userId && teacherId) return sharedObservations("teacher_id", teacherId, teacherName);
   const all = loadAllPeerObservations();
   const nameNorm = teacherName.trim().toLowerCase();
   return all.filter(
@@ -137,4 +153,26 @@ export function getObservationsForTeacher(teacherName: string, teacherId?: strin
       (teacherId && o.teacherId === teacherId) ||
       (o.teacherName && o.teacherName.trim().toLowerCase() === nameNorm)
   );
+}
+
+async function sharedObservations(column: "observer_id" | "teacher_id", id: string, name: string): Promise<PeerObservation[]> {
+  // Publish only the signed-in observer's legacy copies, retaining the originals on this device.
+  const userId = getCloudState().userId;
+  if (column === "observer_id" && userId === id) {
+    const legacy = loadAllPeerObservations().filter((o) => o.observerId === id && !!o.teacherId);
+    if (legacy.length) {
+      const { error } = await supabase.from("peer_observations").upsert(legacy.map((o) => ({ id: o.id, observer_id: id, teacher_id: o.teacherId || "", content: JSON.parse(JSON.stringify(o)) })), { onConflict: "id", ignoreDuplicates: true });
+      if (error) throw new Error(error.message);
+    }
+  }
+  const { data, error } = await supabase.from("peer_observations").select("content").eq(column, id).order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  const shared = (data ?? []).map((r) => r.content as unknown as PeerObservation);
+  // Name fallback applies only to legacy rows lacking an ID; never match a different account by name.
+  const local = loadAllPeerObservations().filter((o) => {
+    const participant = column === "observer_id" ? o.observerId : o.teacherId;
+    const participantName = column === "observer_id" ? o.observerName : o.teacherName;
+    return participant === id || (!participant && participantName.trim().toLowerCase() === name.trim().toLowerCase());
+  });
+  return [...shared, ...local.filter((o) => !shared.some((s) => s.id === o.id))];
 }

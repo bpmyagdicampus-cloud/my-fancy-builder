@@ -18,3 +18,4 @@
 - Saved collection rows open read-only details before explicit editing; lesson previews remain visible on screen and printable so View never targets print-only content.
 - Saved-list actions use the shared RowActions or ActionsMenu controls; independent legacy lists retain existing action handlers and permission conditions when moved into menus.
 - SQC Home notifications filter the persisted request opt-in and pending status through the signed-in data client; legacy issue columns remain available so merged entry fields never erase stored history implicitly.
+- Account peer observations use participant-scoped Cloud records; publish an observer's ID-linked legacy copies without overwriting shared records or removing local originals, and restrict observed-teacher updates to acknowledgement fields.

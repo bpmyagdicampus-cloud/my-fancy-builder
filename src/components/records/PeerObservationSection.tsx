@@ -45,10 +45,10 @@ export function PeerObservationSection() {
     teacherAck: "",
   });
 
-  const loadData = () => {
+  const loadData = async () => {
     if (!profile?.name) return;
-    const myLogs = getObservationsByObserver(profile.name, profile.id);
-    setLogs(myLogs);
+    try { setLogs(await getObservationsByObserver(profile.name, profile.id)); }
+    catch (e) { alert(e instanceof Error ? e.message : String(e)); }
   };
 
   useEffect(() => {
@@ -78,7 +78,7 @@ export function PeerObservationSection() {
     });
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.teacherName || !form.topic) {
       alert("कृपया सम्बन्धित शिक्षकको नाम र पाठको शीर्षक भर्नुहोस्।");
@@ -116,15 +116,17 @@ export function PeerObservationSection() {
       updatedAt: new Date().toISOString(),
     };
 
-    savePeerObservation(payload);
+    try { await savePeerObservation(payload); }
+    catch (error) { alert(error instanceof Error ? error.message : String(error)); return; }
     setIsEditing(false);
     loadData();
     alert("सहकर्मी शिक्षण अवलोकन फाराम सफलतापूर्वक सुरक्षित गरियो!");
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("के तपाईं यो सहकर्मी अवलोकन अभिलेख हटाउन निश्चित हुनुहुन्छ?")) return;
-    deletePeerObservation(id);
+    try { await deletePeerObservation(id); }
+    catch (error) { alert(error instanceof Error ? error.message : String(error)); return; }
     loadData();
   };
 
