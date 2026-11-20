@@ -3,6 +3,7 @@ const { cloud, saved, upsert } = vi.hoisted(() => ({ cloud: { userId: "observer"
 vi.mock("@/lib/cloud", () => ({ getCloudState: () => cloud }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: () => ({
   upsert: async (value: any, options: any) => { upsert(value, options); for (const row of Array.isArray(value) ? value : [value]) { const i = saved.findIndex((r) => r.id === row.id); if (i < 0) saved.push(row); else if (!options?.ignoreDuplicates) saved[i] = row; } return { error: null }; },
+  update: (value: any) => ({ eq: async (_column: string, id: string) => { const row = saved.find((r) => r.id === id); if (row) Object.assign(row, value); return { error: null }; } }),
   select: () => ({ eq: (column: string, id: string) => ({ order: async () => ({ data: saved.filter((r) => r[column] === id), error: null }) }) }),
 }) } }));
 import { getObservationsByObserver, getObservationsForTeacher, savePeerObservation, type PeerObservation } from "@/lib/peer-obs";
@@ -15,6 +16,8 @@ describe("Shared peer observations", () => {
     cloud.userId = "teacher";
     expect((await getObservationsForTeacher("Teacher", "teacher"))[0]?.id).toBe("peer");
     expect(await getObservationsForTeacher("Teacher", "unrelated")).toEqual([]);
+    await savePeerObservation({ ...observation, teacherAck: "Received" });
+    expect((await getObservationsForTeacher("Teacher", "teacher"))[0]?.teacherAck).toBe("Received");
   });
   it("copies linked legacy observations without erasing local originals or overwriting shared records", async () => {
     localStorage.setItem("shikshak-peer-observations-v1", JSON.stringify([observation]));

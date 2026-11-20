@@ -5,7 +5,7 @@ export const confirmEditedSave = (editing: unknown) => !editing || window.confir
 /** Scroll the actual edit surface, including within the desktop content scroller. */
 export function useEditScroll(active: unknown) {
   const ref = useRef<HTMLDivElement>(null);
-  const key = active && typeof active === "object" && "id" in active ? String(active.id || "new") : Boolean(active);
+  const key = active && typeof active === "object" && "id" in active ? String(active.id || "new") : active;
   useEffect(() => {
     if (!active) return;
     const timer = window.setTimeout(() => ref.current?.scrollIntoView({ block: "start", behavior: "instant" }), 80);

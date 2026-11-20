@@ -46,4 +46,17 @@ describe("Saved entry viewing", () => {
     expect(screen.getByDisplayValue("Full teaching details")).toBeVisible();
     expect(update).not.toHaveBeenCalled();
   });
+  it("does not write an edited record after Cancel, and writes once after OK", () => {
+    const confirmation = vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<Collection {...props} />);
+    fireEvent.keyDown(screen.getByRole("button", { name: "More actions" }), { key: "Enter" });
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save · सुरक्षित गर्नुहोस्" }));
+    expect(update).not.toHaveBeenCalled();
+    expect(screen.getByDisplayValue("Full teaching details")).toBeVisible();
+    confirmation.mockReturnValue(true);
+    fireEvent.click(screen.getByRole("button", { name: "Save · सुरक्षित गर्नुहोस्" }));
+    expect(update).toHaveBeenCalledOnce();
+    confirmation.mockRestore();
+  });
 });
