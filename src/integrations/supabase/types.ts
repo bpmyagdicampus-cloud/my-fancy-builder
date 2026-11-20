@@ -1415,6 +1415,7 @@ export type Database = {
           teacher_name: string
         }[]
       }
+      profile_exists: { Args: { _id: string }; Returns: boolean }
       set_active_academic_year: { Args: { _id: string }; Returns: undefined }
       setup_class_delete: { Args: { _id: string }; Returns: string }
       setup_class_dept: { Args: { _class: string }; Returns: string }
