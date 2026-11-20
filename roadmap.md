@@ -1,6 +1,6 @@
 # Account access
-- [ ] Require confirmation before deleting entries or saving edited entries, and scroll directly to the start of the edit form when any saved entry is edited.
-- [ ] Make saved peer observations visible to the observed teacher as well as the observer; preserve existing observation records and access boundaries.
+- [x] Require confirmation before deleting entries or saving edited entries, and scroll directly to the start of the edit form when any saved entry is edited. Confirmation tests pass.
+- [x] Make saved peer observations visible to the observed teacher as well as the observer; preserve existing observation records and access boundaries. Authenticated temporary-account save and Reports read-back passed without runtime errors; separate-participant behavior covered by tests.
 - [x] Move saved-list actions into three-dot menus; mobile lesson View checked with an isolated local profile, no horizontal overflow.
 - [x] Use English-only menus, submenus, interface headings and View actions while retaining Nepali instructions, information and user-entered titles.
 - [x] Add SQC Submit for request checkbox, opted-in pending Home notifications, and merged issue entry; additive migration applied without backfilling reports. Rule tests pass.

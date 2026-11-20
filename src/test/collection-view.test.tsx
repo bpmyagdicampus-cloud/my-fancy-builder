@@ -59,4 +59,16 @@ describe("Saved entry viewing", () => {
     expect(update).toHaveBeenCalledOnce();
     confirmation.mockRestore();
   });
+  it("deletes a saved record only after OK", () => {
+    const confirmation = vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<Collection {...props} />);
+    fireEvent.keyDown(screen.getByRole("button", { name: "More actions" }), { key: "Enter" });
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    expect(update).not.toHaveBeenCalled();
+    confirmation.mockReturnValue(true);
+    fireEvent.keyDown(screen.getByRole("button", { name: "More actions" }), { key: "Enter" });
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    expect(update).toHaveBeenCalledOnce();
+    confirmation.mockRestore();
+  });
 });
